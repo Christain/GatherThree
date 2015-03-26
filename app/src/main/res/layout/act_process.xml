@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical"
+    android:layout_height="match_parent">
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title"/>
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:fadingEdge="none"
+        android:fillViewport="true"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/llProcess"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.gather.android.widget.NoScrollListView
+                android:id="@+id/listview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:cacheColorHint="#00000000"
+                android:divider="@null"
+                android:drawSelectorOnTop="false"
+                android:fadingEdge="none"
+                android:headerDividersEnabled="false"
+                android:listSelector="#00000000"
+                android:scrollingCache="true">
+            </com.gather.android.widget.NoScrollListView>
+
+            <View
+                android:layout_marginTop="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="1.0px"
+                android:background="@color/user_fragment_item_line"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right">
+
+
+                    <ImageView
+                        android:layout_width="4dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginTop="1dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/icon_user_center_mark"/>
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="5dp"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="菜单"
+                        android:textColor="#FF6F7376"
+                        android:textSize="@dimen/user_item_text_size"/>
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llAttention"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right">
+
+
+                    <ImageView
+                        android:layout_width="4dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginTop="1dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/icon_user_center_mark"/>
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="5dp"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="注意事项"
+                        android:textColor="#FF6F7376"
+                        android:textSize="@dimen/user_item_text_size"/>
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llIntro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right">
+
+
+                    <ImageView
+                        android:layout_width="4dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginTop="1dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/icon_user_center_mark"/>
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="5dp"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="主办方介绍"
+                        android:textColor="#FF6F7376"
+                        android:textSize="@dimen/user_item_text_size"/>
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line"/>
+
+
+            </LinearLayout>
+`
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="40dp"/>
+        </LinearLayout>
+    </ScrollView>
+
+
+</LinearLayout>

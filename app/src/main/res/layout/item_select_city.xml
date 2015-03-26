@@ -1,0 +1,62 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/user_fragment_item_bg"
+        android:orientation="vertical" >
+
+        <View
+            android:id="@+id/topline"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:background="@color/user_fragment_item_line" />
+
+        <LinearLayout
+            android:id="@+id/llCity"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/user_item_high"
+            android:background="@drawable/shape_user_fragment_item_click_style"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/user_item_padding_left_right"
+            android:paddingRight="@dimen/user_item_padding_left_right" >
+
+            <TextView
+                android:id="@+id/tvCity"
+                android:layout_width="0.0dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1.0"
+                android:gravity="left|center_vertical"
+                android:text="成都"
+                android:textColor="@color/user_fragment_item_text"
+                android:textSize="@dimen/user_item_text_size" />
+
+            <ImageView
+                android:id="@+id/ivSelect"
+                android:layout_width="@dimen/user_item_arrow_size"
+                android:layout_height="@dimen/user_item_arrow_size"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/icon_select_city" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/midline"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:layout_marginLeft="@dimen/user_item_padding_left_right"
+            android:layout_marginRight="@dimen/user_item_padding_left_right"
+            android:background="@color/user_fragment_item_line" />
+
+        <View
+            android:id="@+id/bottomline"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:background="@color/user_fragment_item_line" />
+    </LinearLayout>
+
+</LinearLayout>

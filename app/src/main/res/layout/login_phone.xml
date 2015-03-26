@@ -1,0 +1,123 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_login_index"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/login_register_title_margintop" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="手机登录"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_register_title_size" />
+
+        <TextView
+            android:id="@+id/tvNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:paddingBottom="5dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5dp"
+            android:text="下一步"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_register_next_size" />
+    </RelativeLayout>
+
+    <EditText
+        android:id="@+id/etPhone"
+        android:layout_width="match_parent"
+        android:layout_height="53dp"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:layout_marginTop="40dp"
+        android:background="#00000000"
+        android:gravity="bottom|left"
+        android:hint=" 请输入手机号"
+        android:inputType="number"
+        android:maxLength="13"
+        android:paddingBottom="5dp"
+        android:paddingLeft="3dp"
+        android:textColor="@color/font_white"
+        android:textColorHint="@color/font_white"
+        android:textSize="@dimen/login_phone_edit_text_size"
+        android:typeface="serif" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2.0px"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="@drawable/white_line" />
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="53dp"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="#00000000"
+        android:gravity="bottom|left"
+        android:hint=" 请输入密码"
+        android:inputType="textPassword"
+        android:maxLength="16"
+        android:paddingBottom="5dp"
+        android:paddingLeft="3dp"
+        android:textColor="@color/font_white"
+        android:textColorHint="@color/font_white"
+        android:textSize="@dimen/login_phone_edit_text_size"
+        android:typeface="serif" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2.0px"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="@drawable/white_line" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:layout_marginTop="15dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:layout_marginLeft="5dp"
+            android:id="@+id/tvFindPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/login_phone_distance"
+            android:paddingTop="@dimen/login_phone_distance"
+            android:text="忘记密码？"
+            android:textColor="@color/font_white"
+            android:textSize="18sp" />
+
+        <View
+            android:layout_width="0.0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1.0" />
+
+        <TextView
+            android:layout_marginRight="5dp"
+            android:id="@+id/tvRegister"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/login_phone_distance"
+            android:paddingTop="@dimen/login_phone_distance"
+            android:text="创建帐号"
+            android:textColor="@color/font_white"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+</LinearLayout>

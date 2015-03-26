@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <FrameLayout
+        android:id="@+id/flItemAll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <ImageView
+            android:id="@+id/ivActPic"
+            android:layout_width="match_parent"
+            android:layout_height="170dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/default_image" />
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="12dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/shape_progress_bar_background"
+            android:indeterminate="false"
+            android:max="100"
+            android:padding="3dp"
+            android:progress="2"
+            android:progressDrawable="@drawable/shape_progressbar_style"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/viewBackground"
+            android:layout_width="match_parent"
+            android:layout_height="170dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/bg_list_act" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|bottom"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/tvActTitle"
+                style="@style/act_item_title_style"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/act_item_padding_left_right"
+                android:layout_marginRight="@dimen/act_item_padding_left_right"
+                android:singleLine="true"
+                android:text="活动标题"
+                android:textColor="@color/font_white"
+                android:textSize="@dimen/act_item_title_size" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/act_item_padding_top_bottom"
+                android:layout_marginTop="@dimen/act_item_message_verticalSpacing"
+                android:orientation="horizontal" >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/act_item_padding_left_right"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal" >
+
+                    <ImageView
+                        android:layout_width="@dimen/act_item_location_icon_size"
+                        android:layout_height="@dimen/act_item_location_icon_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_act_list_location" />
+
+                    <TextView
+                        android:id="@+id/tvActAddress"
+                        style="@style/act_item_title_style"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginLeft="4dp"
+                        android:maxLength="15"
+                        android:singleLine="true"
+                        android:text="天府大道"
+                        android:textColor="@color/font_white"
+                        android:textSize="@dimen/act_item_tlocation_text_size" />
+
+                    <TextView
+                        android:id="@+id/tvDistance"
+                        style="@style/act_item_title_style"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=", 12KM"
+                        android:textColor="@color/font_white"
+                        android:textSize="@dimen/act_item_tlocation_text_size" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal" >
+
+                    <ImageView
+                        android:layout_width="@dimen/act_item_location_icon_size"
+                        android:layout_height="@dimen/act_item_location_icon_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_act_list_time" />
+
+                    <TextView
+                        android:id="@+id/tvActTime"
+                        style="@style/act_item_title_style"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginLeft="4dp"
+                        android:text="10月20日"
+                        android:textColor="@color/font_white"
+                        android:textSize="@dimen/act_item_tlocation_text_size" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+</LinearLayout>

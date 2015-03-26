@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/bg_app"
+              android:orientation="vertical">
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title"/>
+
+    <LinearLayout
+        android:id="@+id/llMain"
+        android:layout_width="match_parent"
+        android:layout_height="0.0dp"
+        android:layout_weight="1.0"
+        android:orientation="vertical">
+
+        <com.gather.android.widget.StickyScrollView
+            android:id="@+id/stickyScrollview"
+            android:layout_width="match_parent"
+            android:layout_height="0.0dp"
+            android:layout_weight="1.0">
+
+            <LinearLayout
+                android:layout_height="match_parent"
+                android:layout_width="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="都江堰双遗马拉松"
+                    android:textSize="17sp"
+                    android:layout_marginTop="12dp"
+                    android:textColor="@color/user_fragment_item_text"/>
+
+                <LinearLayout
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginBottom="12dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:src="@drawable/icon_enroll_stauts_time"/>
+
+                    <TextView
+                        android:layout_marginLeft="3dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2015年04月18日 20:00"
+                        android:textSize="13sp"
+                        android:textColor="#FF6F7376"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/llMember"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/bg_white"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:background="@drawable/shape_user_fragment_item_click_style"
+                        android:orientation="horizontal"
+                        android:paddingLeft="@dimen/user_item_padding_left_right"
+                        android:paddingRight="@dimen/user_item_padding_left_right">
+
+                        <ImageView
+                            android:layout_width="4dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginTop="1dp"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/icon_user_center_mark"/>
+
+                        <TextView
+                            android:layout_width="0.0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginLeft="5dp"
+                            android:layout_weight="1.0"
+                            android:gravity="left|center_vertical"
+                            android:text="活动成员"
+                            android:textColor="#FF6F7376"
+                            android:textSize="17sp"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/llNoMember"
+                        android:layout_width="match_parent"
+                        android:gravity="center"
+                        android:layout_marginBottom="30dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:src="@drawable/icon_act_null"/>
+
+                        <TextView
+                            android:layout_marginTop="2dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="    还没有人报名"
+                            android:textSize="12sp"
+                            android:textColor="#FF6F7376"/>
+                    </LinearLayout>
+
+                    <com.gather.android.widget.NoScrollGridView
+                        android:id="@+id/memberGridView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#00000000"
+                        android:fadingEdge="none"
+                        android:horizontalSpacing="@dimen/act_detail_item_gridview_padding"
+                        android:listSelector="#00000000"
+                        android:numColumns="4"
+                        android:paddingLeft="@dimen/act_detail_item_gridview_padding"
+                        android:paddingRight="@dimen/act_detail_item_gridview_padding">
+                    </com.gather.android.widget.NoScrollGridView>
+
+                    <TextView
+                        android:id="@+id/tvMemberMore"
+                        android:layout_width="70dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="right"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginRight="10dp"
+                        android:background="@drawable/shape_act_detail_enroll_click_style"
+                        android:gravity="center"
+                        android:text="查看更多"
+                        android:textColor="@drawable/text_color_vip_classify_text"
+                        android:textSize="13sp"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/edit_stroke"
+                        android:background="@color/user_fragment_item_line"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/llManager"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/bg_white"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:background="@drawable/shape_user_fragment_item_click_style"
+                        android:orientation="horizontal"
+                        android:paddingLeft="@dimen/user_item_padding_left_right"
+                        android:paddingRight="@dimen/user_item_padding_left_right">
+
+                        <ImageView
+                            android:layout_width="4dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginTop="1dp"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/icon_user_center_mark"/>
+
+                        <TextView
+                            android:layout_width="0.0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginLeft="5dp"
+                            android:layout_weight="1.0"
+                            android:gravity="left|center_vertical"
+                            android:text="管理员"
+                            android:textColor="#FF6F7376"
+                            android:textSize="17sp"/>
+
+                    </LinearLayout>
+
+                    <com.gather.android.widget.NoScrollGridView
+                        android:id="@+id/managerGradView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#00000000"
+                        android:fadingEdge="none"
+                        android:horizontalSpacing="@dimen/act_detail_item_gridview_padding"
+                        android:listSelector="#00000000"
+                        android:numColumns="4"
+                        android:paddingLeft="@dimen/act_detail_item_gridview_padding"
+                        android:paddingRight="@dimen/act_detail_item_gridview_padding">
+                    </com.gather.android.widget.NoScrollGridView>
+
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/edit_stroke"
+                        android:background="@color/user_fragment_item_line"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="110dp"
+                    android:orientation="horizontal"
+                    android:tag="sticky"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:background="@color/bg_white"
+                        android:id="@+id/llActProcess"
+                        android:layout_width="0.0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.0"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingBottom="5dp"
+                        android:paddingTop="5dp">
+
+                        <ImageView
+                            android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:layout_height="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:src="@drawable/icon_act_enroll_status_process"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="活动流程"
+                            android:textColor="#FF6F7376"
+                            android:textSize="@dimen/detail_share_text_size"/>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="1dp"/>
+
+                    <LinearLayout
+                        android:background="@color/bg_white"
+                        android:id="@+id/llActShowPic"
+                        android:layout_width="0.0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.0"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingBottom="5dp"
+                        android:paddingTop="5dp">
+
+                        <ImageView
+                            android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:layout_height="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:src="@drawable/icon_act_enroll_status_show_pic"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="图示"
+                            android:textColor="#FF6F7376"
+                            android:textSize="@dimen/detail_share_text_size"/>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="1dp"/>
+
+                    <LinearLayout
+                        android:background="@color/bg_white"
+                        android:id="@+id/llActNotify"
+                        android:layout_width="0.0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.0"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingBottom="5dp"
+                        android:paddingTop="5dp">
+
+                        <ImageView
+                            android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:layout_height="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:src="@drawable/icon_act_enroll_status_notify"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="最新通知"
+                            android:textColor="#FF6F7376"
+                            android:textSize="@dimen/detail_share_text_size"/>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="1dp"/>
+
+                    <LinearLayout
+                        android:background="@color/bg_white"
+                        android:id="@+id/llActPhoto"
+                        android:layout_width="0.0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.0"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingBottom="5dp"
+                        android:paddingTop="5dp">
+
+                        <ImageView
+                            android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:layout_height="@dimen/act_enroll_stauts_menu_icon_size"
+                            android:src="@drawable/icon_act_enroll_status_pic"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="照片"
+                            android:textColor="#FF6F7376"
+                            android:textSize="@dimen/detail_share_text_size"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/llComment"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="#FFFFFFFF"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right">
+
+                    <ImageView
+                        android:layout_width="4dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginTop="1dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/icon_user_center_mark"/>
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="5dp"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="留言板"
+                        android:textColor="#FF6F7376"
+                        android:textSize="17sp"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/llNoComment"
+                    android:layout_width="match_parent"
+                    android:gravity="center"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="30dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:src="@drawable/icon_act_null"/>
+
+                    <TextView
+                        android:layout_marginTop="2dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="    还没有人抢沙发"
+                        android:textSize="12sp"
+                        android:textColor="#FF6F7376"/>
+                </LinearLayout>
+
+
+                <com.gather.android.widget.NoScrollListView
+                    android:id="@+id/listview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:cacheColorHint="#00000000"
+                    android:divider="@null"
+                    android:drawSelectorOnTop="false"
+                    android:fadingEdge="none"
+                    android:headerDividersEnabled="false"
+                    android:listSelector="#00000000"
+                    android:scrollingCache="true">
+                </com.gather.android.widget.NoScrollListView>
+
+            </LinearLayout>
+        </com.gather.android.widget.StickyScrollView>
+
+        <LinearLayout
+            android:id="@+id/llEditText"
+            android:layout_gravity="bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FFFCFCFC"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.0px"
+                android:background="@color/actionbar_line"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="8dp">
+
+                <EditText
+                    android:id="@+id/etContent"
+                    android:layout_width="0.0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.0"
+                    android:background="@drawable/shape_chat_edittext_bg"
+                    android:lineSpacingExtra="1dp"
+                    android:maxLength="120"
+                    android:maxLines="4"
+                    android:minHeight="35.0dip"
+                    android:padding="5dp"
+                    android:textColor="@color/bg_black"
+                    android:textSize="15sp"/>
+
+                <Button
+                    android:id="@+id/btComment"
+                    android:layout_width="50dp"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="8dp"
+                    android:background="@drawable/shape_chat_send_button_click_style"
+                    android:text="发送"
+                    android:textColor="@drawable/chat_send_text_color"
+                    android:textSize="15sp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+
+</LinearLayout>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/actionbar_marginbottom"
+        android:background="@color/user_fragment_item_bg"
+        android:orientation="vertical" >
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:background="@color/user_fragment_item_line" />
+
+        <LinearLayout
+            android:id="@+id/llRecommend"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/user_item_high"
+            android:background="@drawable/shape_user_fragment_item_click_style"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/user_item_padding_left_right"
+            android:paddingRight="@dimen/user_item_padding_left_right" >
+
+            <TextView
+                android:layout_width="0.0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0"
+                android:gravity="left|center_vertical"
+                android:text="推荐给我的好友"
+                android:textColor="@color/user_fragment_item_text"
+                android:textSize="@dimen/user_item_text_size" />
+
+            <ImageView
+                android:layout_width="@dimen/user_item_arrow_size"
+                android:layout_height="@dimen/user_item_arrow_size"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/icon_user_fragment_arrow" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:layout_marginLeft="@dimen/user_item_padding_left_right"
+            android:layout_marginRight="@dimen/user_item_padding_left_right"
+            android:background="@color/user_fragment_item_line" />
+
+        <LinearLayout
+            android:id="@+id/llBind"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/user_item_high"
+            android:background="@drawable/shape_user_fragment_item_click_style"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/user_item_padding_left_right"
+            android:paddingRight="@dimen/user_item_padding_left_right" >
+
+            <TextView
+                android:layout_width="0.0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0"
+                android:gravity="left|center_vertical"
+                android:text="帐号绑定"
+                android:textColor="@color/user_fragment_item_text"
+                android:textSize="@dimen/user_item_text_size" />
+
+            <ImageView
+                android:layout_width="@dimen/user_item_arrow_size"
+                android:layout_height="@dimen/user_item_arrow_size"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/icon_user_fragment_arrow" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:layout_marginLeft="@dimen/user_item_padding_left_right"
+            android:layout_marginRight="@dimen/user_item_padding_left_right"
+            android:background="@color/user_fragment_item_line" />
+
+        <LinearLayout
+            android:id="@+id/llClean"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/user_item_high"
+            android:background="@drawable/shape_user_fragment_item_click_style"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/user_item_padding_left_right"
+            android:paddingRight="@dimen/user_item_padding_left_right" >
+
+            <TextView
+                android:layout_width="0.0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0"
+                android:gravity="left|center_vertical"
+                android:text="清除缓存"
+                android:textColor="@color/user_fragment_item_text"
+                android:textSize="@dimen/user_item_text_size" />
+
+            <TextView
+                android:id="@+id/tvCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:textColor="@color/user_info_item_text"
+                android:textSize="@dimen/user_item_text_size" />
+
+            <ImageView
+                android:layout_width="@dimen/user_item_arrow_size"
+                android:layout_height="@dimen/user_item_arrow_size"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/icon_user_fragment_arrow" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:background="@color/user_fragment_item_line" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/nothingView"
+        android:layout_width="match_parent"
+        android:layout_height="0.0dp"
+        android:layout_weight="1.0" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/user_fragment_item_bg"
+        android:orientation="vertical" >
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:background="@color/user_fragment_item_line" />
+
+        <LinearLayout
+            android:id="@+id/llExit"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/user_item_high"
+            android:background="@drawable/shape_user_fragment_item_click_style"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/user_item_padding_left_right"
+            android:paddingRight="@dimen/user_item_padding_left_right" >
+
+            <TextView
+                android:layout_width="0.0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0"
+                android:gravity="left|center_vertical"
+                android:text="退出登录"
+                android:textColor="@color/user_fragment_item_text"
+                android:textSize="@dimen/user_item_text_size" />
+
+            <ImageView
+                android:layout_width="@dimen/user_item_arrow_size"
+                android:layout_height="@dimen/user_item_arrow_size"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/icon_user_fragment_arrow" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:background="@color/user_fragment_item_line" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="50dp" />
+
+</LinearLayout>

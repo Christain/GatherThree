@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app" >
+
+    <com.gather.android.widget.ListViewImagePro
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:cacheColorHint="#00000000"
+        android:divider="@null"
+        android:drawSelectorOnTop="false"
+        android:fadingEdge="none"
+        android:focusable="true"
+        android:headerDividersEnabled="false"
+        android:listSelector="#00000000"
+        android:scrollbars="none"
+        android:scrollingCache="true" >
+    </com.gather.android.widget.ListViewImagePro>
+
+    <ImageView
+        android:id="@+id/ivBack"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_gravity="top|left"
+        android:background="@drawable/title_item_click_style"
+        android:padding="10dp"
+        android:src="@drawable/icon_title_arrow_white" />
+
+    <TextView
+        android:id="@+id/tvFocus"
+        android:layout_width="wrap_content"
+        android:layout_height="27dp"
+        android:layout_gravity="top|right"
+        android:layout_margin="10dp"
+        android:background="@drawable/shape_user_center_button_click_style"
+        android:gravity="center"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:text="关注"
+        android:textColor="@drawable/text_color_white_to_black"
+        android:textSize="@dimen/user_focus_fans_size" />
+
+    <LinearLayout
+        android:id="@+id/llChat"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/shape_white_bg_click_gray_style"
+        android:orientation="vertical" >
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_stroke"
+            android:background="@color/user_fragment_item_line" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="私信"
+            android:textColor="@color/user_fragment_item_text"
+            android:textSize="@dimen/user_center_item_mark_text_size" />
+    </LinearLayout>
+
+</FrameLayout>

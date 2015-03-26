@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/tvTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="15dp"
+        android:layout_marginTop="7dp"
+        android:background="@drawable/shape_chat_time_bg"
+        android:gravity="center"
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp"
+        android:text="下午3：30"
+        android:textColor="#FF808080"
+        android:textSize="11sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:layout_marginTop="5dp"
+            android:id="@+id/ivUserIcon"
+            android:layout_width="45.0dp"
+            android:layout_height="45.0dp"
+            android:layout_marginLeft="7.0dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/default_user_icon" />
+
+        <FrameLayout
+            android:id="@+id/flBackground"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="7.0dp"
+            android:layout_marginRight="50dp"
+            android:background="@drawable/bg_chat_in"
+            android:minHeight="42dp"
+            android:minWidth="65dp" >
+
+            <TextView
+                android:id="@+id/tvChatMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:lineSpacingExtra="1dp"
+                android:text="测试输入情况测试输入况测试输入况测试输入况测试输入"
+                android:textColor="@color/bg_black"
+                android:textSize="15sp" />
+        </FrameLayout>
+    </LinearLayout>
+    
+    <View 
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="15dp"/>
+
+</LinearLayout>

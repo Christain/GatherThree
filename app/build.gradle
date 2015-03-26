@@ -1,0 +1,42 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+        release {
+            keyAlias 'gather'
+            keyPassword 'zero2all'
+            storeFile file('C:/Users/Christain/Desktop/jhla-app.keystore')
+            storePassword 'zero2all'
+        }
+    }
+    compileSdkVersion 22
+    buildToolsVersion "22.0.0"
+    defaultConfig {
+        applicationId "com.gather.android"
+        minSdkVersion 10
+        targetSdkVersion 22
+        versionCode 5
+        versionName "1.0"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v4:22.0.0'
+    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'com.nineoldandroids:library:2.4.0'
+    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+}

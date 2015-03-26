@@ -1,0 +1,166 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title" />
+
+    <ScrollView
+        android:id="@+id/ScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fadingEdge="none"
+        android:scrollbars="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/tvTip"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:background="@drawable/bg_login_index"
+                android:gravity="center"
+                android:lineSpacingExtra="1.5dp"
+                android:text="爆料有趣的活动信息线索\n赢取精美礼品"
+                android:textColor="@color/font_white"
+                android:textSize="21sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/publish_trends_gridview_margin"
+                android:layout_marginLeft="@dimen/publish_trends_gridview_margin"
+                android:layout_marginRight="@dimen/publish_trends_gridview_margin"
+                android:layout_marginTop="@dimen/publish_trends_gridview_margin"
+                android:orientation="vertical" >
+
+                <com.gather.android.widget.NoScrollGridView
+                    android:id="@+id/gridView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fadingEdge="none"
+                    android:horizontalSpacing="@dimen/publish_trends_gridview_padding"
+                    android:listSelector="@null"
+                    android:numColumns="3"
+                    android:scrollbars="none"
+                    android:scrollingCache="true"
+                    android:verticalSpacing="@dimen/publish_trends_gridview_padding" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="1.5dp"
+                android:paddingLeft="@dimen/tip_off_padding_left_right"
+                android:paddingRight="@dimen/tip_off_padding_left_right"
+                android:text="请将您认为有趣的，有意思的同城活动信息线索爆料给我们，包括活动主题、主办方/发起人、活动内容、活动地点、活动时间以及是否收费等情况如实描述出来，方便我们核实活动的真实性。如有价值，将有奖励送出"
+                android:textColor="@color/edit_data_text_hint"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/actionbar_marginbottom"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical" >
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+
+                <EditText
+                    android:id="@+id/etPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="#00000000"
+                    android:gravity="left|center_vertical"
+                    android:hint="输入您的联系电话"
+                    android:inputType="number"
+                    android:maxLength="11"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right"
+                    android:textColor="@color/user_fragment_item_text"
+                    android:textColorHint="@color/edit_data_text_hint"
+                    android:textSize="@dimen/user_item_text_size" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:layout_marginLeft="@dimen/user_item_padding_left_right"
+                    android:layout_marginRight="@dimen/user_item_padding_left_right"
+                    android:background="@color/user_fragment_item_line" />
+
+                <EditText
+                    android:id="@+id/etAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#00000000"
+                    android:gravity="left|center_vertical"
+                    android:hint="详细地址（30字内）"
+                    android:maxLength="30"
+                    android:minHeight="@dimen/user_item_high"
+                    android:paddingBottom="7dp"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right"
+                    android:paddingTop="7dp"
+                    android:textColor="@color/user_fragment_item_text"
+                    android:textColorHint="@color/edit_data_text_hint"
+                    android:textSize="@dimen/user_item_text_size" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edit_stroke"
+                android:layout_marginTop="30dp"
+                android:background="@color/user_fragment_item_line" />
+
+            <EditText
+                android:id="@+id/etOther"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFFFF"
+                android:gravity="left|top"
+                android:hint="您的心里话（200字内，可选填）"
+                android:maxLength="200"
+                android:minHeight="200dp"
+                android:paddingBottom="7dp"
+                android:paddingLeft="@dimen/user_item_padding_left_right"
+                android:paddingRight="@dimen/user_item_padding_left_right"
+                android:paddingTop="7dp"
+                android:textColor="@color/user_fragment_item_text"
+                android:textColorHint="@color/edit_data_text_hint"
+                android:textSize="15sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edit_stroke"
+                android:background="@color/user_fragment_item_line" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="25dp"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:lineSpacingExtra="1.5dp"
+                android:text="本奖励发送不需要您支付任何费用\n信息提交后请保持电话开机方便我们联系您。"
+                android:textColor="@color/edit_data_text_hint"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

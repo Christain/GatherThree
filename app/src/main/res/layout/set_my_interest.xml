@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+    
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="@dimen/set_interest_padding"
+        android:layout_marginTop="@dimen/set_interest_padding"
+        android:text="我的爱好"
+        android:textColor="@color/font_orange"
+        android:textSize="@dimen/set_interest_tip_size" />
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <com.gather.android.widget.NoScrollGridView
+            android:id="@+id/gridView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/set_interest_padding"
+            android:layout_marginRight="@dimen/set_interest_padding"
+            android:cacheColorHint="#00000000"
+            android:fadingEdge="none"
+            android:horizontalSpacing="10.0dp"
+            android:listSelector="#00000000"
+            android:numColumns="5"
+            android:scrollbars="none"
+            android:scrollingCache="true" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="@dimen/set_interest_padding"
+        android:layout_marginTop="10dp"
+        android:text="全部爱好"
+        android:textColor="@color/font_orange"
+        android:textSize="@dimen/set_interest_tip_size" />
+
+    <com.gather.android.widget.KeywordsFlow
+        android:id="@+id/keyWords"
+        android:layout_width="match_parent"
+        android:layout_height="0.0dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="@dimen/set_interest_padding"
+        android:layout_marginRight="@dimen/set_interest_padding"
+        android:layout_weight="1.0" >
+    </com.gather.android.widget.KeywordsFlow>
+
+</LinearLayout>

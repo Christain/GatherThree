@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:id="@+id/rlTitle"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        android:background="#FFFFFFFF"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="@dimen/actionbar_high"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/title_item_click_style"
+            android:padding="@dimen/title_item_padding"
+            android:src="@drawable/title_back_click_style" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:text="本周活动"
+            android:textColor="#FFFF9933"
+            android:textSize="@dimen/title_text_size" />
+
+        <TextView
+            android:id="@+id/tvSearch"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/title_item_click_style"
+            android:gravity="center"
+            android:paddingLeft="7dp"
+            android:paddingRight="7dp"
+            android:text="搜索"
+            android:textColor="@drawable/chat_send_text_color"
+            android:textSize="@dimen/title_item_text_size" />
+
+        <TextView
+            android:id="@+id/tvNearby"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/tvSearch"
+            android:background="@drawable/title_item_click_style"
+            android:gravity="center"
+            android:paddingLeft="7dp"
+            android:paddingRight="7dp"
+            android:text="附近"
+            android:textColor="@drawable/chat_send_text_color"
+            android:textSize="@dimen/title_item_text_size" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rlBar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/friends_list_tab_high"
+        android:background="@color/font_white"
+        android:paddingLeft="@dimen/collection_tabs_padding_left_right"
+        android:paddingRight="@dimen/collection_tabs_padding_left_right" >
+
+        <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal" >
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/cursor"
+            android:layout_width="wrap_content"
+            android:layout_height="3dp"
+            android:layout_alignParentBottom="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/tab_friends_list" />
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1.0px"
+        android:background="@color/actionbar_line" />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>

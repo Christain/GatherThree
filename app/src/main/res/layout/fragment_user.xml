@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        android:background="#FFFFFFFF"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:text="我"
+            android:textColor="#FFFF9933"
+            android:textSize="@dimen/title_text_size" />
+
+        <ImageView
+            android:id="@+id/ivPreview"
+            android:layout_width="@dimen/actionbar_high"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:padding="6dp"
+            android:src="@drawable/title_preview_click_style" />
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1.0px"
+        android:background="@color/user_fragment_item_line" />
+
+    <com.gather.android.widget.OverScrollView
+        android:id="@+id/ScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/actionbar_marginbottom"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical" >
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:id="@+id/llUser"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingBottom="12dp"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right"
+                    android:paddingTop="12dp" >
+
+                    <ImageView
+                        android:id="@+id/ivUserIcon"
+                        android:layout_width="@dimen/user_user_icon_size"
+                        android:layout_height="@dimen/user_user_icon_size"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/default_user_icon" />
+
+                    <LinearLayout
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="15dp"
+                        android:layout_weight="1.0"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical" >
+
+                        <TextView
+                            android:id="@+id/tvUserName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="15dp"
+                            android:layout_marginTop="5dp"
+                            android:gravity="center_vertical"
+                            android:singleLine="true"
+                            android:text="集合啦集合啦"
+                            android:textColor="@color/user_fragment_item_text"
+                            android:textSize="18sp" />
+
+                        <LinearLayout
+                            android:id="@+id/llFocusAndFans"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:orientation="horizontal" >
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:orientation="vertical" >
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:singleLine="true"
+                                    android:text="关注"
+                                    android:textColor="@color/user_fragment_item_text"
+                                    android:textSize="@dimen/user_focus_fans_size" />
+
+                                <TextView
+                                    android:id="@+id/tvFocusNum"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:singleLine="true"
+                                    android:text="100"
+                                    android:textColor="@color/user_fragment_item_text"
+                                    android:textSize="@dimen/user_focus_fans_size"
+                                    android:typeface="serif" />
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="2.0px"
+                                android:layout_height="match_parent"
+                                android:layout_marginBottom="7dp"
+                                android:layout_marginLeft="7dp"
+                                android:layout_marginRight="7dp"
+                                android:layout_marginTop="7dp"
+                                android:background="@color/user_fragment_item_text" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:orientation="vertical" >
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:singleLine="true"
+                                    android:text="粉丝"
+                                    android:textColor="@color/user_fragment_item_text"
+                                    android:textSize="@dimen/user_focus_fans_size" />
+
+                                <TextView
+                                    android:id="@+id/tvFansNum"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:singleLine="true"
+                                    android:text="100"
+                                    android:textColor="@color/user_fragment_item_text"
+                                    android:textSize="@dimen/user_focus_fans_size"
+                                    android:typeface="serif" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/actionbar_marginbottom"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical" >
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:id="@+id/llPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right" >
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="相册"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:layout_marginLeft="@dimen/user_item_padding_left_right"
+                    android:layout_marginRight="@dimen/user_item_padding_left_right"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:id="@+id/llCollection"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right" >
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="收藏"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:layout_marginLeft="@dimen/user_item_padding_left_right"
+                    android:layout_marginRight="@dimen/user_item_padding_left_right"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:id="@+id/llAct"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right" >
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="活动"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginTop="@dimen/actionbar_marginbottom"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical" >
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:id="@+id/llBuy"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right" >
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="我的订单"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llApplyVip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/actionbar_marginbottom"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical" >
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right" >
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="申请达人"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/actionbar_marginbottom"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical" >
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:id="@+id/llSet"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right" >
+
+                    <TextView
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="设置"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <ImageView
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_user_fragment_arrow" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/actionbar_marginbottom"
+                android:layout_marginBottom="@dimen/tab_host_high" />
+        </LinearLayout>
+    </com.gather.android.widget.OverScrollView>
+
+</LinearLayout>

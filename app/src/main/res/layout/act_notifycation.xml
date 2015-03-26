@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical"
+    android:layout_height="match_parent">
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title"/>
+
+    <LinearLayout
+        android:id="@+id/llEditText"
+        android:layout_gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1.0px"
+            android:background="@color/actionbar_line"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:paddingTop="8dp">
+
+            <EditText
+                android:id="@+id/etContent"
+                android:layout_width="0.0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"
+                android:background="@drawable/shape_chat_edittext_bg"
+                android:lineSpacingExtra="1dp"
+                android:maxLength="120"
+                android:maxLines="1"
+                android:minHeight="35.0dip"
+                android:padding="5dp"
+                android:textColor="@color/bg_black"
+                android:textSize="15sp"/>
+
+            <Button
+                android:id="@+id/btResult"
+                android:layout_width="50dp"
+                android:layout_height="35dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="8dp"
+                android:background="@drawable/shape_chat_send_button_click_style"
+                android:text="确认"
+                android:textColor="@drawable/chat_send_text_color"
+                android:textSize="15sp"/>
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/listview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:cacheColorHint="#00000000"
+            android:divider="@null"
+            android:drawSelectorOnTop="false"
+            android:fadingEdge="none"
+            android:headerDividersEnabled="false"
+            android:listSelector="#00000000"
+            android:scrollingCache="true">
+        </ListView>
+
+    </LinearLayout>
+
+</LinearLayout>

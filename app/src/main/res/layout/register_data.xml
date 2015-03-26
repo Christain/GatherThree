@@ -1,0 +1,224 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_login_index"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/login_register_title_margintop" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="完善资料"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_register_title_size" />
+
+        <TextView
+            android:id="@+id/tvNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:paddingBottom="5dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5dp"
+            android:text="下一步"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_register_next_size" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:orientation="horizontal" >
+
+        <LinearLayout
+            android:id="@+id/llSexFemale"
+            android:layout_width="0.0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:gravity="center_vertical|right"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="女"
+                android:textColor="@color/font_white"
+                android:textSize="@dimen/register_sex_text_size" />
+
+            <FrameLayout
+                android:layout_width="@dimen/register_big_sex_size"
+                android:layout_height="@dimen/register_big_sex_size" >
+
+                <ImageView
+                    android:id="@+id/ivFemaleSmall"
+                    android:layout_width="@dimen/register_small_sex_size"
+                    android:layout_height="@dimen/register_small_sex_size"
+                    android:layout_gravity="center"
+                    android:src="@drawable/register_sex_female_small"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/ivFemaleBig"
+                    android:layout_width="@dimen/register_big_sex_size"
+                    android:layout_height="@dimen/register_big_sex_size"
+                    android:src="@drawable/register_sex_female_big" />
+            </FrameLayout>
+        </LinearLayout>
+        
+        <View 
+            android:layout_width="10dp"
+            android:layout_height="1dp"/>
+
+        <LinearLayout
+            android:id="@+id/llSexMale"
+            android:layout_width="0.0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:gravity="center_vertical|left"
+            android:orientation="horizontal" >
+
+            <FrameLayout
+                android:layout_width="@dimen/register_big_sex_size"
+                android:layout_height="@dimen/register_big_sex_size" >
+
+                <ImageView
+                    android:id="@+id/ivMaleSmall"
+                    android:layout_width="@dimen/register_small_sex_size"
+                    android:layout_height="@dimen/register_small_sex_size"
+                    android:layout_gravity="center"
+                    android:src="@drawable/register_sex_male_small"/>
+
+                <ImageView
+                    android:id="@+id/ivMaleBig"
+                    android:visibility="gone" 
+                    android:layout_width="@dimen/register_big_sex_size"
+                    android:layout_height="@dimen/register_big_sex_size"
+                    android:src="@drawable/register_sex_male_big" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="男"
+                android:textColor="@color/font_white"
+                android:textSize="@dimen/register_sex_text_size" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/etNickName"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:layout_marginTop="5dp"
+        android:background="#00000000"
+        android:gravity="bottom|left"
+        android:hint="请输入昵称"
+        android:maxLength="8"
+        android:paddingBottom="5dp"
+        android:paddingLeft="3dp"
+        android:textColor="@color/font_white"
+        android:textColorHint="@color/font_white"
+        android:textSize="@dimen/login_phone_edit_text_size"
+        android:typeface="serif" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2.0px"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="@drawable/white_line" />
+
+    <LinearLayout
+        android:id="@+id/llBirthday"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:gravity="bottom|left"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="5dp"
+            android:paddingLeft="3dp"
+            android:text="出生日期"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_phone_edit_text_size" />
+
+        <View
+            android:layout_width="0.0dp"
+            android:layout_height="1.0dp"
+            android:layout_weight="1.0" />
+
+        <TextView
+            android:id="@+id/tvBirthday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="3dp"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_phone_edit_text_size"
+            android:typeface="serif" />
+
+        <ImageView
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:paddingBottom="2dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/icon_arrow_white_right" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2.0px"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="@drawable/white_line" />
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="#00000000"
+        android:gravity="bottom|left"
+        android:hint="请输入6-16位新密码"
+        android:inputType="textPassword"
+        android:maxLength="16"
+        android:paddingBottom="5dp"
+        android:paddingLeft="3dp"
+        android:textColor="@color/font_white"
+        android:textColorHint="@color/font_white"
+        android:textSize="@dimen/login_phone_edit_text_size"
+        android:typeface="serif" />
+
+    <View
+        android:id="@+id/PasswordLine"
+        android:layout_width="match_parent"
+        android:layout_height="2.0px"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="@drawable/white_line" />
+    
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="性别选择确认后无法更改"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="15dp"
+        android:textColor="@color/font_white"
+        android:textSize="12sp"/>
+
+</LinearLayout>

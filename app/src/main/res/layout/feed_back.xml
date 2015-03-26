@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title" />
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fadingEdge="none"
+        android:scrollbars="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:orientation="vertical" >
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.0px"
+                android:background="@color/user_fragment_item_line" />
+
+            <EditText
+                android:id="@+id/etContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/font_white"
+                android:gravity="top|left"
+                android:hint="有什么想说的尽管来吐槽吧（200字内）"
+                android:lineSpacingExtra="2dp"
+                android:maxLength="200"
+                android:minHeight="150dp"
+                android:padding="7dp"
+                android:textColor="@color/edit_data_text"
+                android:textColorHint="@color/edit_data_text_hint"
+                android:textSize="15sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.0px"
+                android:background="@color/user_fragment_item_line" />
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="15dp" >
+
+                <ImageView
+                    android:id="@+id/ivAddPic"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:src="@drawable/shape_add_pic_click_style" />
+
+                <ImageView
+                    android:id="@+id/ivPic"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp" />
+            </FrameLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

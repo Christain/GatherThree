@@ -1,0 +1,18 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+    
+    <TextView 
+        android:id="@+id/tvInterest"
+        android:layout_width="60dp"
+        android:layout_height="26dp"
+        android:background="@drawable/shape_vip_classify_item_click_style"
+        android:textSize="@dimen/vip_classify_mark_text_size"
+        android:text="公益"
+        android:textColor="@drawable/text_color_vip_classify_text"
+        android:gravity="center"
+        android:layout_gravity="center"/>
+
+</LinearLayout>

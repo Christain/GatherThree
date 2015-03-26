@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title" />
+
+    <ScrollView
+        android:id="@+id/ScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:fadingEdge="none"
+        android:scrollbars="none" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:background="@color/user_fragment_item_bg"
+                android:orientation="vertical" >
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+
+                <LinearLayout
+                    android:id="@+id/llLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/user_item_high"
+                    android:background="@drawable/shape_user_fragment_item_click_style"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/user_item_padding_left_right"
+                    android:paddingRight="@dimen/user_item_padding_left_right" >
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="left|center_vertical"
+                        android:text="GPS定位城市"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <TextView
+                        android:id="@+id/tvLocation"
+                        android:layout_width="0.0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="10dp"
+                        android:layout_weight="1.0"
+                        android:gravity="left|center_vertical"
+                        android:text="成都"
+                        android:textColor="@color/user_fragment_item_text"
+                        android:textSize="@dimen/user_item_text_size" />
+
+                    <ImageView
+                        android:id="@+id/ivSelect"
+                        android:layout_width="@dimen/user_item_arrow_size"
+                        android:layout_height="@dimen/user_item_arrow_size"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/icon_select_city"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_stroke"
+                    android:background="@color/user_fragment_item_line" />
+            </LinearLayout>
+
+            <com.gather.android.widget.NoScrollListView
+                android:id="@+id/listview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:cacheColorHint="#00000000"
+                android:divider="@null"
+                android:drawSelectorOnTop="false"
+                android:fadingEdge="none"
+                android:headerDividersEnabled="false"
+                android:listSelector="#00000000"
+                android:scrollingCache="true" >
+            </com.gather.android.widget.NoScrollListView>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_login_index"
+    android:orientation="vertical" >
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/login_register_title_margintop" >
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="找回密码"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_register_title_size" />
+
+        <TextView
+            android:id="@+id/tvNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:paddingBottom="5dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5dp"
+            android:text="下一步"
+            android:textColor="@color/font_white"
+            android:textSize="@dimen/login_register_next_size" />
+    </RelativeLayout>
+
+    <EditText
+        android:id="@+id/etPhone"
+        android:layout_width="match_parent"
+        android:layout_height="53dp"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:layout_marginTop="40dp"
+        android:background="#00000000"
+        android:gravity="bottom|left"
+        android:hint=" 请填写手机号"
+        android:inputType="number"
+        android:maxLength="13"
+        android:paddingBottom="5dp"
+        android:paddingLeft="3dp"
+        android:textColor="@color/font_white"
+        android:textColorHint="@color/font_white"
+        android:textSize="@dimen/login_phone_edit_text_size"
+        android:typeface="serif" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2.0px"
+        android:layout_marginLeft="@dimen/login_item_padding_left_right"
+        android:layout_marginRight="@dimen/login_item_padding_left_right"
+        android:background="@drawable/white_line" />
+
+</LinearLayout>

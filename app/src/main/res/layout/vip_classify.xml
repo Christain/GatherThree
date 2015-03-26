@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app"
+    android:orientation="vertical" >
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title" />
+
+    <ScrollView
+        android:id="@+id/ScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fadingEdge="none"
+        android:scrollbars="none" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/vip_classify_margin_top_bottom" />
+
+            <com.gather.android.widget.NoScrollGridView
+                android:id="@+id/tagIdGridView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:cacheColorHint="#00000000"
+                android:fadingEdge="none"
+                android:horizontalSpacing="@dimen/vip_classify_gridview_padding"
+                android:listSelector="#00000000"
+                android:numColumns="3"
+                android:paddingLeft="@dimen/vip_classify_margin_left_right"
+                android:paddingRight="@dimen/vip_classify_margin_left_right"
+                android:scrollbars="none"
+                android:scrollingCache="true"
+                android:verticalSpacing="@dimen/vip_classify_gridview_padding" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:orientation="horizontal"
+                android:paddingLeft="@dimen/vip_classify_margin_left_right"
+                android:paddingRight="@dimen/vip_classify_margin_left_right" >
+
+                <TextView
+                    android:id="@+id/tvSexMale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_vip_classify_item_click_style"
+                    android:text="男"
+                    android:gravity="center"
+                    android:textColor="@drawable/text_color_vip_classify_text"
+                    android:textSize="@dimen/vip_classify_mark_text_size" />
+                
+                <View 
+                    android:layout_width="@dimen/vip_classify_gridview_padding"
+                    android:layout_height="1dp"/>
+
+                <TextView
+                    android:id="@+id/tvSexFemale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:background="@drawable/shape_vip_classify_item_click_style"
+                    android:text="女"
+                    android:textColor="@drawable/text_color_vip_classify_text"
+                    android:textSize="@dimen/vip_classify_mark_text_size" />
+            </LinearLayout>
+
+            <com.gather.android.widget.NoScrollGridView
+                android:id="@+id/userGridView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:cacheColorHint="#00000000"
+                android:fadingEdge="none"
+                android:horizontalSpacing="@dimen/vip_classify_gridview_padding"
+                android:listSelector="#00000000"
+                android:numColumns="3"
+                android:paddingLeft="@dimen/vip_classify_margin_left_right"
+                android:paddingRight="@dimen/vip_classify_margin_left_right"
+                android:scrollbars="none"
+                android:scrollingCache="true"
+                android:verticalSpacing="@dimen/vip_classify_gridview_padding" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/vip_classify_margin_top_bottom" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

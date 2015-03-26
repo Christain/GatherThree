@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <RelativeLayout
+        android:id="@+id/rlFooter"
+        android:background="@drawable/trends_comment_footer_click_style"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/trends_comment_footer_high" >
+
+        <ProgressBar
+            android:id="@+id/pbFooter"
+            android:layout_width="@dimen/trends_comment_footer_high"
+            android:layout_height="@dimen/trends_comment_footer_high"
+            android:layout_centerInParent="true"
+            android:indeterminateDrawable="@drawable/progress_bg_big"
+            android:padding="9dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvFooter"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/trends_comment_footer_high"
+            android:gravity="center"
+            android:textColor="#FF6E7378"
+            android:textSize="@dimen/trends_comment_text_size" />
+    </RelativeLayout>
+
+</LinearLayout>

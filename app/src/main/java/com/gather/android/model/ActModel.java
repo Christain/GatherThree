@@ -20,35 +20,35 @@ public class ActModel implements Serializable {
     private String contact_way;// 联系方式
     private String b_time;// 开始时间（例：1997-07-01 09:00:00）
     private String e_time;// 结束时间（例：1997-07-01 09:00:00）
-    private String organizer;// 组织者
+    //    private String organizer;// 组织者
     private int t_status;// 时间状态：1即将开始，2进行中，3筹备中，4已结束
     private String detail;// 详情
-    private String share_url;// 图文详情url
-    private int can_enroll;// 是否可以报名：0否，1是
+    private String share_url;// 分享url
+    //    private int can_enroll;// 是否可以报名：0否，1是
     private String head_img_url;// 活动首图url
     private int is_loved;// 是否已添加感兴趣：-1不可再添加，0未添加，1已添加
     private int loved_num;// 感兴趣的用户数
     private int shared_num;// 分享数
     private ArrayList<TrendsPicModel> act_imgs;
     private String lov_time;// 收藏时间
-    private int enroll_status;//报名状态：-1未开放报名，0未报名，1已报名，2已通过，3已拒绝
-    private int admin;//管理员：-1未设置管理员，0不是管理员，1是管理员
+//    private int enroll_status;//报名状态：-1未开放报名，0未报名，1已报名，2已通过，3已拒绝
+//    private int admin;//管理员：-1未设置管理员，0不是管理员，1是管理员
 
-    public int getEnroll_status() {
-        return enroll_status;
-    }
-
-    public void setEnroll_status(int enroll_status) {
-        this.enroll_status = enroll_status;
-    }
-
-    public int getAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(int admin) {
-        this.admin = admin;
-    }
+//    public int getEnroll_status() {
+//        return enroll_status;
+//    }
+//
+//    public void setEnroll_status(int enroll_status) {
+//        this.enroll_status = enroll_status;
+//    }
+//
+//    public int getAdmin() {
+//        return admin;
+//    }
+//
+//    public void setAdmin(int admin) {
+//        this.admin = admin;
+//    }
 
     public int getId() {
         return id;
@@ -214,18 +214,18 @@ public class ActModel implements Serializable {
         this.e_time = e_time;
     }
 
-    public String getOrganizer() {
-        if (organizer != null) {
-            return organizer;
-        } else {
-            return "";
-        }
-    }
-
-    public void setOrganizer(String organizer) {
-        this.organizer = organizer;
-    }
-
+//    public String getOrganizer() {
+//        if (organizer != null) {
+//            return organizer;
+//        } else {
+//            return "";
+//        }
+//    }
+//
+//    public void setOrganizer(String organizer) {
+//        this.organizer = organizer;
+//    }
+//
     public int getT_status() {
         return t_status;
     }
@@ -258,13 +258,13 @@ public class ActModel implements Serializable {
         this.share_url = detail_url;
     }
 
-    public int getCan_enroll() {
-        return can_enroll;
-    }
-
-    public void setCan_enroll(int can_enroll) {
-        this.can_enroll = can_enroll;
-    }
+//    public int getCan_enroll() {
+//        return can_enroll;
+//    }
+//
+//    public void setCan_enroll(int can_enroll) {
+//        this.can_enroll = can_enroll;
+//    }
 
     public String getHead_img_url() {
         if (head_img_url != null) {

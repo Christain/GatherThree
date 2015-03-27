@@ -24,6 +24,13 @@ public class ActModulesStatusModel implements Serializable{
     private int show_prize;//奖品模块：-1无，0未设置，1已设置
     private int show_checkin;//签到模块：-1无，0未设置，1已设置
 
+    private int show_enroll;//	报名模块：-1无，0未设置，1已设置
+    private int show_enroll_custom;//	自定义报名信息模块：-1无，0未设置，1已设置
+    private int show_manager;//	管理员模块：-1无，0未设置，1已设置
+    private int show_video;//	视频：-1无，0未设置，1已设置
+    private int show_order;//	订购模块：-1无，0未设置，1已设置
+
+
     public int getId() {
         return id;
     }
@@ -150,5 +157,45 @@ public class ActModulesStatusModel implements Serializable{
 
     public void setShow_checkin(int show_checkin) {
         this.show_checkin = show_checkin;
+    }
+
+    public int getShow_enroll() {
+        return show_enroll;
+    }
+
+    public void setShow_enroll(int show_enroll) {
+        this.show_enroll = show_enroll;
+    }
+
+    public int getShow_enroll_custom() {
+        return show_enroll_custom;
+    }
+
+    public void setShow_enroll_custom(int show_enroll_custom) {
+        this.show_enroll_custom = show_enroll_custom;
+    }
+
+    public int getShow_manager() {
+        return show_manager;
+    }
+
+    public void setShow_manager(int show_manager) {
+        this.show_manager = show_manager;
+    }
+
+    public int getShow_video() {
+        return show_video;
+    }
+
+    public void setShow_video(int show_video) {
+        this.show_video = show_video;
+    }
+
+    public int getShow_order() {
+        return show_order;
+    }
+
+    public void setShow_order(int show_order) {
+        this.show_order = show_order;
     }
 }

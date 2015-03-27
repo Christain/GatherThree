@@ -110,7 +110,7 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
                     JSONObject object = new JSONObject(result);
                     Gson gson = new Gson();
                     ActMoreInfoModel actMoreInfoModel = gson.fromJson(object.getString("act_info"), ActMoreInfoModel.class);
-                    tvAttention.setText(actMoreInfoModel.getAttention());
+                    tvAttention.setText("");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

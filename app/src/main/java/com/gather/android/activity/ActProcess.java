@@ -131,9 +131,7 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
             case R.id.llAttention:
                 if (!ClickUtil.isFastClick()) {
                     Intent intent = new Intent(ActProcess.this, ActAttention.class);
-                    if (actMoreInfoModel != null) {
-                        intent.putExtra("ATTENTION", actMoreInfoModel.getAttention());
-                    }
+
                     startActivity(intent);
                 }
                 break;

@@ -50,9 +50,13 @@ import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
 import com.gather.android.http.HttpStringPost;
 import com.gather.android.http.ResponseListener;
+import com.gather.android.model.ActAddressAndCarLocationListModel;
+import com.gather.android.model.ActAddressModel;
 import com.gather.android.model.ActCommentModelList;
 import com.gather.android.model.ActDetailModel;
 import com.gather.android.model.ActModel;
+import com.gather.android.model.ActModulesStatusModel;
+import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.model.NewsModel;
 import com.gather.android.model.NewsModelList;
 import com.gather.android.model.UserInfoModel;
@@ -62,6 +66,9 @@ import com.gather.android.params.ActDetailEnrollParam;
 import com.gather.android.params.ActDetailParam;
 import com.gather.android.params.ActDetailRelationParam;
 import com.gather.android.params.ActDetailVipParam;
+import com.gather.android.params.ActModulesStatusParam;
+import com.gather.android.params.ActMoreAddressParam;
+import com.gather.android.params.ActMoreInfoParam;
 import com.gather.android.params.CancelCollectActParam;
 import com.gather.android.params.CollectActParam;
 import com.gather.android.preference.AppPreference;
@@ -100,6 +107,9 @@ import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
 import com.tendcloud.tenddata.TCAgent;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +120,7 @@ import java.util.Map;
  */
 public class ActDetail extends SwipeBackActivity implements OnClickListener {
 
-	private LinearLayout llError, llAddress, llActStrategy, llActMemory, llActVip, llActBus, llActComment, llActCommentItem, llWeChat, llSquare, llZoon, llSina, llMenuBar, llEnroll, llComment, llEnrollStatus;
+	private LinearLayout llError, llAddress, llActStrategy, llActMemory, llActVip, llActBus, llActComment, llActCommentItem, llWeChat, llSquare, llZoon, llSina, llMenuBar, llEnroll, llComment, llEnrollStatus, llAddressLayout;
 	private ImageView ivBack, ivActLove, ivUserIcon, ivErrorImg, ivOnePic;
 	private TextView tvTitle, tvActMark, tvActCost, tvAddress, tvAddressDetail, tvActDetailContent, tvActStrategy, tvActMemory, tvActBus, tvActCommentNum, tvActCommentAll, tvUserName, tvUserComment;
 	private NoScrollGridView vipGridView;
@@ -121,6 +131,9 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 
 	private int actId;
 	private ActModel actModel;
+    private ActMoreInfoModel actMoreInfoModel;
+    private ArrayList<ActAddressModel> addressList;
+    private ActModulesStatusModel modulesStatusModel;
 	private boolean hasLogin;
 
 	private DialogTipsBuilder dialog;
@@ -193,6 +206,7 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 			this.llEnroll = (LinearLayout) findViewById(R.id.llEnroll);
 			this.llComment = (LinearLayout) findViewById(R.id.llComment);
             this.llEnrollStatus = (LinearLayout) findViewById(R.id.llEnrollStatus);
+            this.llAddressLayout = (LinearLayout) findViewById(R.id.llAddressLayout);
 
 			this.tvTitle = (TextView) findViewById(R.id.tvTitle);
 			this.tvActMark = (TextView) findViewById(R.id.tvActMark);
@@ -269,6 +283,7 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		getActDetailMemory();
 		getActDetailVip();
 		getActDetailComment();
+        getActMoreAddress();
 		getActDetail();
 	}
 
@@ -286,6 +301,7 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 				getActDetailMemory();
 				getActDetailVip();
 				getActDetailComment();
+                getActMoreAddress();
 				getActDetail();
 			}
 			break;
@@ -316,10 +332,10 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 			}
 			break;
 		case R.id.llAddress:
-			if (!ClickUtil.isFastClick() && null != actModel && actModel.getLat() != 0) {
+			if (!ClickUtil.isFastClick() && null != addressList && addressList.get(0).getLat() != 0) {
 				Intent intent = new Intent(ActDetail.this, ActDetailMapLocation.class);
-				intent.putExtra("LAT", actModel.getLat());
-				intent.putExtra("LON", actModel.getLon());
+				intent.putExtra("LAT", addressList.get(0).getLat());
+				intent.putExtra("LON", addressList.get(0).getLon());
 				startActivity(intent);
 			}
 			break;
@@ -385,9 +401,11 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 			}
 			break;
         case R.id.llEnrollStatus:
-            if (!ClickUtil.isFastClick()){
+            if (!ClickUtil.isFastClick() && actModel != null && modulesStatusModel != null && actMoreInfoModel != null){
                 Intent intent = new Intent(ActDetail.this, ActEnrollStatus.class);
                 intent.putExtra("MODEL", actModel);
+                intent.putExtra("MODULE", modulesStatusModel);
+                intent.putExtra("MORE_INFO", actMoreInfoModel);
                 startActivity(intent);
             }
             break;
@@ -411,8 +429,6 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		} else {
 			ivActLove.setImageResource(R.drawable.icon_act_title_love_normal);
 		}
-		tvAddress.setText(setAddressInfo());
-		tvAddressDetail.setText(actModel.getAddr_name());
 		tvActDetailContent.setText(actModel.getDetail());
 		if (!actModel.getAddr_route().equals("")) {
 			llActBus.setVisibility(View.VISIBLE);
@@ -421,37 +437,16 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 			llActBus.setVisibility(View.GONE);
 		}
         if (hasLogin) {
-            switch (actModel.getEnroll_status()) {
-                case -1://不能报名
-                    llEnroll.setVisibility(View.GONE);
-                    menuLine.setVisibility(View.GONE);
-                    llEnrollStatus.setVisibility(View.GONE);
-                    enrollstatusLine.setVisibility(View.GONE);
-                    break;
-                case 0://未报名
-                    llEnroll.setVisibility(View.VISIBLE);
-                    menuLine.setVisibility(View.VISIBLE);
-                    llEnrollStatus.setVisibility(View.VISIBLE);
-                    enrollstatusLine.setVisibility(View.VISIBLE);
-                    break;
-                case 1://已报名
-                    llEnroll.setVisibility(View.GONE);
-                    menuLine.setVisibility(View.GONE);
-                    llEnrollStatus.setVisibility(View.VISIBLE);
-                    enrollstatusLine.setVisibility(View.VISIBLE);
-                    break;
-                case 2://报名通过
-                    llEnroll.setVisibility(View.GONE);
-                    menuLine.setVisibility(View.GONE);
-                    llEnrollStatus.setVisibility(View.VISIBLE);
-                    enrollstatusLine.setVisibility(View.VISIBLE);
-                    break;
-                case 3://报名拒绝
-                    llEnroll.setVisibility(View.GONE);
-                    menuLine.setVisibility(View.GONE);
-                    llEnrollStatus.setVisibility(View.VISIBLE);
-                    enrollstatusLine.setVisibility(View.VISIBLE);
-                    break;
+            if (modulesStatusModel.getShow_enroll() == 1) {
+                llEnroll.setVisibility(View.VISIBLE);
+                menuLine.setVisibility(View.VISIBLE);
+                llEnrollStatus.setVisibility(View.VISIBLE);
+                enrollstatusLine.setVisibility(View.VISIBLE);
+            } else {
+                llEnroll.setVisibility(View.GONE);
+                menuLine.setVisibility(View.GONE);
+                llEnrollStatus.setVisibility(View.GONE);
+                enrollstatusLine.setVisibility(View.GONE);
             }
         } else {
             llEnroll.setVisibility(View.VISIBLE);
@@ -548,24 +543,11 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
 			@Override
 			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
 				Gson gson = new Gson();
 				ActDetailModel model = gson.fromJson(result, ActDetailModel.class);
 				if (model.getAct() != null) {
-					actModel = model.getAct();
-					setActDetailMessage();
-					if (llError.isShown()) {
-						llError.setVisibility(View.GONE);
-					}
-					if (!scrollView.isShown()) {
-						scrollView.setVisibility(View.VISIBLE);
-						scrollView.startAnimation(alphaIn);
-					}
-					if (!llMenuBar.isShown()) {
-						llMenuBar.setVisibility(View.VISIBLE);
-					}
+                    actModel = model.getAct();
+                    getActMoreInfo();
 				} else {
 					toast("活动信息有误");
 					finish();
@@ -598,6 +580,127 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		}, param.getParameters());
 		executeRequest(task);
 	}
+
+    /**
+     * 获取更多活动信息
+     */
+    private void getActMoreInfo() {
+        ActMoreInfoParam param = new ActMoreInfoParam(ActDetail.this, actId);
+        HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+            @Override
+            public void success(int code, String msg, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    Gson gson = new Gson();
+                    actMoreInfoModel = gson.fromJson(object.getString("act_info"), ActMoreInfoModel.class);
+                    if (actMoreInfoModel != null) {
+                        getActModulesStatus();
+                    } else {
+                        toast("活动信息有误");
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    actMoreInfoModel = null;
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void relogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void error(int code, String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                errorView();
+            }
+        }, new ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                errorView();
+            }
+        }, param.getParameters());
+        executeRequest(task);
+    }
+
+    /**
+     * 获取活动模块信息
+     */
+    private void getActModulesStatus() {
+        ActModulesStatusParam param = new ActModulesStatusParam(ActDetail.this, actId);
+        HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+            @Override
+            public void success(int code, String msg, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    Gson gson = new Gson();
+                    modulesStatusModel = gson.fromJson(object.getString("act_modules"), ActModulesStatusModel.class);
+                    if (modulesStatusModel != null) {
+                        modulesStatusModel = new ActModulesStatusModel();
+                        modulesStatusModel.setShow_process(1);
+                        modulesStatusModel.setShow_attention(1);
+                        modulesStatusModel.setShow_busi(1);
+                        modulesStatusModel.setShow_menu(1);
+                        modulesStatusModel.setShow_message(1);
+                        modulesStatusModel.setShow_enroll(1);
+                        setActDetailMessage();
+                        if (llError.isShown()) {
+                            llError.setVisibility(View.GONE);
+                        }
+                        if (!scrollView.isShown()) {
+                            scrollView.setVisibility(View.VISIBLE);
+                            scrollView.startAnimation(alphaIn);
+                        }
+                        if (!llMenuBar.isShown()) {
+                            llMenuBar.setVisibility(View.VISIBLE);
+                        }
+                    } else {
+                        toast("活动信息有误");
+                        finish();
+                    }
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void relogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void error(int code, String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                errorView();
+            }
+        },new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                errorView();
+            }
+        }, param.getParameters());
+        executeRequest(task);
+    }
 
 	/**
 	 * 活动相关攻略
@@ -707,6 +810,43 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		}, param.getParameters());
 		executeRequest(task);
 	}
+
+    /**
+     * 获取更多地址信息
+     */
+    private void getActMoreAddress() {
+        ActMoreAddressParam param = new ActMoreAddressParam(ActDetail.this, actId);
+        HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+            @Override
+            public void success(int code, String msg, String result) {
+                Gson gson = new Gson();
+                ActAddressAndCarLocationListModel list = gson.fromJson(result, ActAddressAndCarLocationListModel.class);
+                if (list != null && list.getAct_addrs().size() > 0) {
+                    addressList = new ArrayList<ActAddressModel>();
+                    addressList = list.getAct_addrs();
+                    tvAddress.setText(setAddressInfo(list.getAct_addrs().get(0)));
+                    tvAddressDetail.setText(list.getAct_addrs().get(0).getAddr_name());
+                    llAddressLayout.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void relogin(String msg) {
+                needLogin(msg);
+            }
+
+            @Override
+            public void error(int code, String msg) {
+                toast("获取地址失败");
+            }
+        }, new ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+                toast("获取地址失败");
+            }
+        }, param.getParameters());
+        executeRequest(task);
+    }
 
 	/**
 	 * 攻略，回顾点击
@@ -1329,26 +1469,26 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 	/**
 	 * 活动地址显示规则
 	 */
-	private String setAddressInfo() {
+	private String setAddressInfo(ActAddressModel actAddressModel) {
 		StringBuffer sb = new StringBuffer();
-		if (!actModel.getAddr_city().equals("")) {
-			sb.append(actModel.getAddr_city());
-			if (!actModel.getAddr_area().equals("") || !actModel.getAddr_road().equals("")) {
+		if (!actAddressModel.getAddr_city().equals("")) {
+			sb.append(actAddressModel.getAddr_city());
+			if (!actAddressModel.getAddr_area().equals("") || !actAddressModel.getAddr_road().equals("")) {
 				sb.append("，");
 			} else {
 				return sb.toString();
 			}
 		}
-		if (!actModel.getAddr_area().equals("")) {
-			sb.append(actModel.getAddr_area());
-			if (!actModel.getAddr_road().equals("")) {
+		if (!actAddressModel.getAddr_area().equals("")) {
+			sb.append(actAddressModel.getAddr_area());
+			if (!actAddressModel.getAddr_road().equals("")) {
 				sb.append("，");
 			} else {
 				return sb.toString();
 			}
 		}
-		if (!actModel.getAddr_road().equals("")) {
-			sb.append(actModel.getAddr_road());
+		if (!actAddressModel.getAddr_road().equals("")) {
+			sb.append(actAddressModel.getAddr_road());
 		}
 		return sb.toString();
 	}

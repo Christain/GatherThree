@@ -6,8 +6,8 @@ import java.io.File;
 
 public final class Constant {
 	
-//	public static final String DEFOULT_REQUEST_URL = "http://staging.app.jhla.com.cn/";// 外网数据访问地址
-	public static final String DEFOULT_REQUEST_URL = "http://app.jhla.com.cn/";// 外网数据访问地址
+	public static final String DEFOULT_REQUEST_URL = "http://staging.app.jhla.com.cn/";// 外网数据访问地址
+//	public static final String DEFOULT_REQUEST_URL = "http://app.jhla.com.cn/";// 外网数据访问地址
 	public static final boolean SHOW_LOG = true;// 显示log信息
 	public static final String VERSION_SIZE = "5.0M";
 	public static final String OFFICIAL_WEB = "http://www.jhla.com.cn";

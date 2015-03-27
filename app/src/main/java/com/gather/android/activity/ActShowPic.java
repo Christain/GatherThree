@@ -17,7 +17,6 @@ import com.gather.android.http.ResponseListener;
 import com.gather.android.model.ActModel;
 import com.gather.android.model.ActModulesStatusModel;
 import com.gather.android.model.ActMoreInfoModel;
-import com.gather.android.model.TrendsPicModel;
 import com.gather.android.params.ActModulesStatusParam;
 import com.gather.android.params.ActMoreInfoParam;
 import com.gather.android.utils.ClickUtil;
@@ -26,8 +25,6 @@ import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
 
 /**
  * 活动图示
@@ -112,23 +109,23 @@ public class ActShowPic extends SwipeBackActivity implements View.OnClickListene
                 break;
             case R.id.llActLocationPic:
                 if (!ClickUtil.isFastClick()) {
-                    if (actMoreInfoModel != null) {
-                        if (!actMoreInfoModel.getPlace_img_url().equals("")) {
-                            ArrayList<TrendsPicModel> list = new ArrayList<TrendsPicModel>();
-                            TrendsPicModel picModel = new TrendsPicModel();
-                            picModel.setImg_url(actMoreInfoModel.getPlace_img_url());
-                            list.add(picModel);
-                            Intent intent = new Intent(ActShowPic.this, TrendsPicGallery.class);
-                            intent.putExtra("LIST", list);
-                            intent.putExtra("POSITION", 0);
-                            startActivity(intent);
-                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                        } else {
-                            toast("活动没有场地图片");
-                        }
-                    } else {
-                        getActMoreInfo(true);
-                    }
+//                    if (actMoreInfoModel != null) {
+//                        if (!actMoreInfoModel.getPlace_img_url().equals("")) {
+//                            ArrayList<TrendsPicModel> list = new ArrayList<TrendsPicModel>();
+//                            TrendsPicModel picModel = new TrendsPicModel();
+//                            picModel.setImg_url(actMoreInfoModel.getPlace_img_url());
+//                            list.add(picModel);
+//                            Intent intent = new Intent(ActShowPic.this, TrendsPicGallery.class);
+//                            intent.putExtra("LIST", list);
+//                            intent.putExtra("POSITION", 0);
+//                            startActivity(intent);
+//                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+//                        } else {
+//                            toast("活动没有场地图片");
+//                        }
+//                    } else {
+//                        getActMoreInfo(true);
+//                    }
                 }
                 break;
         }
@@ -225,15 +222,15 @@ public class ActShowPic extends SwipeBackActivity implements View.OnClickListene
                         Gson gson = new Gson();
                         ActMoreInfoModel model = gson.fromJson(object.getString("act_info"), ActMoreInfoModel.class);
                         if (isClick) {
-                            ArrayList<TrendsPicModel> list = new ArrayList<TrendsPicModel>();
-                            TrendsPicModel picModel = new TrendsPicModel();
-                            picModel.setImg_url(model.getPlace_img_url());
-                            list.add(picModel);
-                            Intent intent = new Intent(ActShowPic.this, TrendsPicGallery.class);
-                            intent.putExtra("LIST", list);
-                            intent.putExtra("POSITION", 0);
-                            startActivity(intent);
-                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+//                            ArrayList<TrendsPicModel> list = new ArrayList<TrendsPicModel>();
+//                            TrendsPicModel picModel = new TrendsPicModel();
+//                            picModel.setImg_url(model.getPlace_img_url());
+//                            list.add(picModel);
+//                            Intent intent = new Intent(ActShowPic.this, TrendsPicGallery.class);
+//                            intent.putExtra("LIST", list);
+//                            intent.putExtra("POSITION", 0);
+//                            startActivity(intent);
+//                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();

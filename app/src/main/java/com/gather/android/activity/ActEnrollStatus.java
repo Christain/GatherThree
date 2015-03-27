@@ -23,7 +23,6 @@ import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActEnrollStatusCommentAdapter;
 import com.gather.android.adapter.ActEnrollStatusGridViewAdapter;
-import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
@@ -37,11 +36,10 @@ import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.params.ActEnrollStatusCommentParam;
 import com.gather.android.params.ActEnrollStatusCommentSendParam;
-import com.gather.android.params.ActModulesStatusParam;
-import com.gather.android.params.ActMoreInfoParam;
 import com.gather.android.params.UpdateVersionParam;
 import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
+import com.gather.android.utils.TimeUtil;
 import com.gather.android.widget.NoScrollGridView;
 import com.gather.android.widget.NoScrollListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
@@ -62,7 +60,8 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
     private ImageView ivLeft, ivRight;
     private TextView tvLeft, tvTitle, tvRight;
 
-    private LinearLayout llMember, llManager, llActProcess, llActShowPic, llActNotify, llActPhoto, llMain, llComment, llEditText, llNoMember, llNoComment;
+    private LinearLayout llMember, llManager, llActProcess, llActShowPic, llActNotify, llActPhoto, llMain, llComment, llEditText, llNoMember, llNoComment, llPay;
+    private TextView tvActTitle, tvActTime;
     private NoScrollGridView memberGridView, managerGradView;
     private ActEnrollStatusGridViewAdapter memberAdapter, managerAdapter;
     private TextView tvMemberMore;
@@ -92,8 +91,10 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
     @Override
     protected void onCreateActivity(Bundle savedInstanceState) {
         Intent intent = getIntent();
-        if (intent.hasExtra("MODEL")) {
+        if (intent.hasExtra("MODEL") && intent.hasExtra("MODULE") && intent.hasExtra("MORE_INFO")) {
             this.model = (ActModel) intent.getSerializableExtra("MODEL");
+            this.modulesStatusModel = (ActModulesStatusModel) intent.getSerializableExtra("MODULE");
+            this.actMoreInfoModel = (ActMoreInfoModel) intent.getSerializableExtra("MORE_INFO");
             this.ivLeft = (ImageView) findViewById(R.id.ivLeft);
             this.ivRight = (ImageView) findViewById(R.id.ivRight);
             this.tvLeft = (TextView) findViewById(R.id.tvLeft);
@@ -125,9 +126,12 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             this.llEditText = (LinearLayout) findViewById(R.id.llEditText);
             this.llNoMember = (LinearLayout) findViewById(R.id.llNoMember);
             this.llNoComment = (LinearLayout) findViewById(R.id.llNoComment);
+            this.llPay = (LinearLayout) findViewById(R.id.llPay);
             this.memberGridView = (NoScrollGridView) findViewById(R.id.memberGridView);
             this.managerGradView = (NoScrollGridView) findViewById(R.id.managerGradView);
             this.tvMemberMore = (TextView) findViewById(R.id.tvMemberMore);
+            this.tvActTitle = (TextView) findViewById(R.id.tvActTitle);
+            this.tvActTime = (TextView) findViewById(R.id.tvActTime);
             this.listView = (NoScrollListView) findViewById(R.id.listview);
             this.etContent = (EditText) findViewById(R.id.etContent);
             this.btComment = (Button) findViewById(R.id.btComment);
@@ -144,6 +148,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             this.llActShowPic.setOnClickListener(this);
             this.llActNotify.setOnClickListener(this);
             this.llActPhoto.setOnClickListener(this);
+            this.llPay.setOnClickListener(this);
             this.btComment.setOnClickListener(this);
             this.footer_all.setOnClickListener(this);
 
@@ -172,15 +177,28 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 }
             });
             this.llMain.setVisibility(View.INVISIBLE);
-            this.llComment.setVisibility(View.GONE);
-            this.listView.setVisibility(View.GONE);
-            this.llEditText.setVisibility(View.GONE);
-            this.getActModulesStatus();
+            this.initView();
             this.getMemberList();
-            this.getActMoreInfo();
         } else {
             toast("查看失败，请重试");
             finish();
+        }
+    }
+
+    private void initView() {
+        if (model != null) {
+            tvActTitle.setText(model.getIntro());
+            tvActTime.setText(TimeUtil.getActEnrollStatus(model.getB_time()));
+        }
+        if (modulesStatusModel.getShow_message() == 1) {
+            this.llComment.setVisibility(View.VISIBLE);
+            this.listView.setVisibility(View.VISIBLE);
+            this.llEditText.setVisibility(View.VISIBLE);
+            this.getCommentList();
+        } else {
+            this.llComment.setVisibility(View.GONE);
+            this.listView.setVisibility(View.GONE);
+            this.llEditText.setVisibility(View.GONE);
         }
     }
 
@@ -263,97 +281,11 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                     getCommentList();
                 }
                 break;
+            case R.id.llPay:
+
+                break;
 
         }
-    }
-
-    /**
-     * 获取活动模块信息
-     */
-    private void getActModulesStatus() {
-        ActModulesStatusParam param = new ActModulesStatusParam(ActEnrollStatus.this, model.getId());
-        HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new ResponseListener() {
-            @Override
-            public void success(int code, String msg, String result) {
-                try {
-                    JSONObject object = new JSONObject(result);
-                    Gson gson = new Gson();
-                    modulesStatusModel = gson.fromJson(object.getString("act_modules"), ActModulesStatusModel.class);
-
-                    modulesStatusModel = new ActModulesStatusModel();
-                    modulesStatusModel.setShow_process(1);
-                    modulesStatusModel.setShow_attention(1);
-                    modulesStatusModel.setShow_busi(1);
-                    modulesStatusModel.setShow_menu(1);
-                    modulesStatusModel.setShow_message(1);
-
-                    if (modulesStatusModel != null && modulesStatusModel.getShow_message() == 1) {
-                        llComment.setVisibility(View.VISIBLE);
-                        listView.setVisibility(View.VISIBLE);
-                        llEditText.setVisibility(View.VISIBLE);
-                        getCommentList();
-                    }
-                }catch (JSONException e){
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void relogin(String msg) {
-                needLogin(msg);
-            }
-
-            @Override
-            public void error(int code, String msg) {
-                if (Constant.SHOW_LOG) {
-                    toast("获取活动模块信息失败");
-                }
-            }
-        },new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (Constant.SHOW_LOG) {
-                    toast("获取活动模块信息失败");
-                }
-            }
-        }, param.getParameters());
-        executeRequest(task);
-    }
-
-    /**
-     * 活动更多信息
-     */
-    private void getActMoreInfo() {
-        ActMoreInfoParam param = new ActMoreInfoParam(ActEnrollStatus.this, model.getId());
-        HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new ResponseListener() {
-            @Override
-            public void success(int code, String msg, String result) {
-                try {
-                    JSONObject object = new JSONObject(result);
-                    Gson gson = new Gson();
-                    actMoreInfoModel = gson.fromJson(object.getString("act_info"), ActMoreInfoModel.class);
-                } catch (JSONException e) {
-                    actMoreInfoModel = null;
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void relogin(String msg) {
-                needLogin(msg);
-            }
-
-            @Override
-            public void error(int code, String msg) {
-                actMoreInfoModel = null;
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                actMoreInfoModel = null;
-            }
-        }, param.getParameters());
-        executeRequest(task);
     }
 
     /**
@@ -384,28 +316,6 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 if (!llMain.isShown()) {
                     llMain.setVisibility(View.VISIBLE);
                     llMain.startAnimation(alphaIn);
-                }
-                switch (model.getEnroll_status()) {
-                    case 0:
-                        if (dialog != null && !dialog.isShowing()) {
-                            dialog.setMessage("您还未报名").withEffect(Effectstype.Fadein).show();
-                        }
-                        break;
-                    case 1:
-                        if (dialog != null && !dialog.isShowing()) {
-                            dialog.setMessage("报名审核中").withEffect(Effectstype.Fadein).show();
-                        }
-                        break;
-                    case 2:
-                        if (dialog != null && !dialog.isShowing()) {
-                            dialog.setMessage("您已报名成功").withEffect(Effectstype.Fadein).show();
-                        }
-                        break;
-                    case 3:
-                        if (dialog != null && !dialog.isShowing()) {
-                            dialog.setMessage("您的报名被拒绝").withEffect(Effectstype.Fadein).show();
-                        }
-                        break;
                 }
             }
 

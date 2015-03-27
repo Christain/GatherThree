@@ -20,6 +20,24 @@ public class TimeUtil {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
 		return dateFormat.format(timeMills);
 	}
+
+    /**
+     * 活动报名情况时间
+     * @param oldStyleTime
+     * @return
+     */
+    public static String getActEnrollStatus(String oldStyleTime) {
+        if (oldStyleTime.contains("-") && oldStyleTime.length() > 5) {
+            SimpleDateFormat oldFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            ParsePosition pos = new ParsePosition(0);
+            Date strtodate = oldFormat.parse(oldStyleTime, pos);
+            SimpleDateFormat format = new SimpleDateFormat("yyyy年M月d日 HH:mm");
+            String dateString = format.format(strtodate);
+            return dateString;
+        } else {
+            return "";
+        }
+    }
 	
 	/**
 	 * 活动列表时间格式

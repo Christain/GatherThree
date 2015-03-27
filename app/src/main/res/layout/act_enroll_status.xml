@@ -29,19 +29,20 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/tvActTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:text="都江堰双遗马拉松"
                     android:textSize="17sp"
-                    android:layout_marginTop="12dp"
-                    android:textColor="@color/user_fragment_item_text"/>
+                    android:layout_marginTop="10dp"
+                    android:textColor="#FF6F7277"/>
 
                 <LinearLayout
                     android:layout_gravity="center_horizontal"
                     android:gravity="center"
                     android:layout_marginTop="3dp"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -52,12 +53,13 @@
                         android:src="@drawable/icon_enroll_stauts_time"/>
 
                     <TextView
+                        android:id="@+id/tvActTime"
                         android:layout_marginLeft="3dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="2015年04月18日 20:00"
                         android:textSize="13sp"
-                        android:textColor="#FF6F7376"/>
+                        android:textColor="#FFCCCCCC"/>
 
                 </LinearLayout>
 
@@ -97,6 +99,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:visibility="gone"
                         android:id="@+id/llNoMember"
                         android:layout_width="match_parent"
                         android:gravity="center"
@@ -201,6 +204,7 @@
 
 
                     <View
+                        android:layout_marginTop="10dp"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/edit_stroke"
                         android:background="@color/user_fragment_item_line"/>
@@ -211,6 +215,7 @@
                     android:layout_height="110dp"
                     android:orientation="horizontal"
                     android:tag="sticky"
+                    android:background="#FFF1F2F4"
                     android:paddingLeft="12dp"
                     android:paddingRight="12dp"
                     android:paddingTop="12dp"
@@ -218,15 +223,15 @@
                     android:gravity="center_vertical">
 
                     <LinearLayout
-                        android:background="@color/bg_white"
+                        android:background="@drawable/act_enroll_status_bar_bg_click_style"
                         android:id="@+id/llActProcess"
                         android:layout_width="0.0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1.0"
                         android:gravity="center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="5dp"
-                        android:paddingTop="5dp">
+                        android:paddingBottom="7dp"
+                        android:paddingTop="7dp">
 
                         <ImageView
                             android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
@@ -236,9 +241,9 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
+                            android:layout_marginTop="10dp"
                             android:text="活动流程"
-                            android:textColor="#FF6F7376"
+                            android:textColor="#FFBEBEBE"
                             android:textSize="@dimen/detail_share_text_size"/>
                     </LinearLayout>
 
@@ -247,15 +252,15 @@
                         android:layout_height="1dp"/>
 
                     <LinearLayout
-                        android:background="@color/bg_white"
+                        android:background="@drawable/act_enroll_status_bar_bg_click_style"
                         android:id="@+id/llActShowPic"
                         android:layout_width="0.0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1.0"
                         android:gravity="center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="5dp"
-                        android:paddingTop="5dp">
+                        android:paddingBottom="7dp"
+                        android:paddingTop="7dp">
 
                         <ImageView
                             android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
@@ -265,9 +270,9 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
+                            android:layout_marginTop="10dp"
                             android:text="图示"
-                            android:textColor="#FF6F7376"
+                            android:textColor="#FFBEBEBE"
                             android:textSize="@dimen/detail_share_text_size"/>
                     </LinearLayout>
 
@@ -276,15 +281,15 @@
                         android:layout_height="1dp"/>
 
                     <LinearLayout
-                        android:background="@color/bg_white"
+                        android:background="@drawable/act_enroll_status_bar_bg_click_style"
                         android:id="@+id/llActNotify"
                         android:layout_width="0.0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1.0"
                         android:gravity="center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="5dp"
-                        android:paddingTop="5dp">
+                        android:paddingBottom="7dp"
+                        android:paddingTop="7dp">
 
                         <ImageView
                             android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
@@ -294,9 +299,9 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
+                            android:layout_marginTop="10dp"
                             android:text="最新通知"
-                            android:textColor="#FF6F7376"
+                            android:textColor="#FFBEBEBE"
                             android:textSize="@dimen/detail_share_text_size"/>
                     </LinearLayout>
 
@@ -305,15 +310,15 @@
                         android:layout_height="1dp"/>
 
                     <LinearLayout
-                        android:background="@color/bg_white"
+                        android:background="@drawable/act_enroll_status_bar_bg_click_style"
                         android:id="@+id/llActPhoto"
                         android:layout_width="0.0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1.0"
                         android:gravity="center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="5dp"
-                        android:paddingTop="5dp">
+                        android:paddingBottom="7dp"
+                        android:paddingTop="7dp">
 
                         <ImageView
                             android:layout_width="@dimen/act_enroll_stauts_menu_icon_size"
@@ -323,13 +328,44 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
+                            android:layout_marginTop="10dp"
                             android:text="照片"
-                            android:textColor="#FF6F7376"
+                            android:textColor="#FFBEBEBE"
                             android:textSize="@dimen/detail_share_text_size"/>
                     </LinearLayout>
                 </LinearLayout>
 
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#FFF1F2F4">
+
+
+                    <LinearLayout
+                        android:id="@+id/llPay"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:orientation="horizontal"
+                        android:layout_marginLeft="12dp"
+                        android:layout_marginRight="12dp"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center"
+                        android:background="@drawable/act_enroll_pay_click_style">
+
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:src="@drawable/icon_act_enroll_pay"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="活动缴费"
+                            android:layout_marginLeft="5dp"
+                            android:textColor="@color/font_white"
+                            android:textSize="16sp"/>
+                    </LinearLayout>
+                </FrameLayout>
 
                 <LinearLayout
                     android:id="@+id/llComment"
@@ -360,6 +396,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:visibility="gone"
                     android:id="@+id/llNoComment"
                     android:layout_width="match_parent"
                     android:gravity="center"

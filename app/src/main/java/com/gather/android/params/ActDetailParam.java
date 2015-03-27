@@ -10,7 +10,7 @@ import com.gather.android.baseclass.StringParams;
 public class ActDetailParam extends StringParams {
 
 	public ActDetailParam(Context context, int actId) {
-		super(context, "act/activity/act");
+		super(context, "act/actMore/info");
 		setParameter("actId", actId);
 	}
 

@@ -1,13 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -74,6 +66,14 @@ import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
 import com.tendcloud.tenddata.TCAgent;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 网页（攻略）
@@ -199,6 +199,9 @@ public class WebStrategy extends SwipeBackActivity implements OnClickListener {
 			case 4:
 				tvTitle.setText("专访详情");
 				break;
+            case 5:
+                tvTitle.setText("资讯详情");
+                break;
 			}
 			if (tvTitle.getText().toString().contains("订")) {
 				this.llMenuBar.setVisibility(View.VISIBLE);

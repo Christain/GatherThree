@@ -23,16 +23,11 @@ import com.gather.android.model.ActModulesStatusModel;
 import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.model.ActProcessListModel;
 import com.gather.android.model.ActProcessModel;
-import com.gather.android.params.ActModulesStatusParam;
-import com.gather.android.params.ActMoreInfoParam;
 import com.gather.android.params.ActProcessParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.NoScrollListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -45,6 +40,7 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
     private TextView tvLeft, tvTitle, tvRight;
 
     private LinearLayout llMenu, llAttention, llIntro, llProcess;
+    private ImageView ivActProcess;
     private NoScrollListView listView;
     private ActProcessAdapter adapter;
     private View headerView;
@@ -64,11 +60,10 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
     @Override
     protected void onCreateActivity(Bundle savedInstanceState) {
         Intent intent = getIntent();
-        if (intent.hasExtra("ID")) {
+        if (intent.hasExtra("ID") && intent.hasExtra("MODULE") && intent.hasExtra("MORE_INFO")) {
             this.actId = intent.getExtras().getInt("ID");
-            if (intent.hasExtra("MORE_INFO_MODEL")) {
-                this.actMoreInfoModel = (ActMoreInfoModel) intent.getSerializableExtra("MORE_INFO_MODEL");
-            }
+            this.actMoreInfoModel = (ActMoreInfoModel) intent.getSerializableExtra("MORE_INFO");
+            this.modulesStatusModel = (ActModulesStatusModel) intent.getSerializableExtra("MODULE");
             this.alphaIn = AnimationUtils.loadAnimation(this, R.anim.alpha_in);
             this.mLoadingDialog = LoadingDialog.createDialog(ActProcess.this, true);
             this.ivLeft = (ImageView) findViewById(R.id.ivLeft);
@@ -91,6 +86,7 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
             this.adapter = new ActProcessAdapter(ActProcess.this);
             this.listView.setAdapter(adapter);
             this.llProcess = (LinearLayout) findViewById(R.id.llProcess);
+            this.ivActProcess = (ImageView) findViewById(R.id.ivActProcess);
             this.llMenu = (LinearLayout) findViewById(R.id.llMenu);
             this.llAttention = (LinearLayout) findViewById(R.id.llAttention);
             this.llIntro = (LinearLayout) findViewById(R.id.llIntro);
@@ -98,17 +94,10 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
             this.llMenu.setOnClickListener(this);
             this.llAttention.setOnClickListener(this);
             this.llIntro.setOnClickListener(this);
+            this.ivActProcess.setOnClickListener(this);
             this.llProcess.setVisibility(View.GONE);
-            if (intent.hasExtra("MODEL")) {
-                this.modulesStatusModel = (ActModulesStatusModel) intent.getSerializableExtra("MODEL");
-                setActModulesStatus();
-            } else {
-                scrollView.setVisibility(View.INVISIBLE);
-                getActModulesStatus();
-            }
-            if (actMoreInfoModel == null) {
-                getActMoreInfo(false);
-            }
+
+            setActModulesStatus();
         } else {
             toast("获取活动流程错误");
             finish();
@@ -125,13 +114,16 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
                 break;
             case R.id.llMenu:
                 if (!ClickUtil.isFastClick()) {
-
+                    Intent intent = new Intent(ActProcess.this, ActMenu.class);
+                    intent.putExtra("ID", actId);
+                    intent.putExtra("MODULE", modulesStatusModel);
+                    startActivity(intent);
                 }
                 break;
             case R.id.llAttention:
                 if (!ClickUtil.isFastClick()) {
                     Intent intent = new Intent(ActProcess.this, ActAttention.class);
-
+                    intent.putExtra("ID", actId);
                     startActivity(intent);
                 }
                 break;
@@ -142,8 +134,15 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
                         intent.putExtra("TITLE", "主办方介绍");
                         intent.putExtra("URL", actMoreInfoModel.getBusi_url());
                         startActivity(intent);
+                    }
+                }
+                break;
+            case R.id.ivActProcess:
+                if (!ClickUtil.isFastClick()) {
+                    if (listView.isShown()) {
+                        listView.setVisibility(View.GONE);
                     } else {
-                        getActMoreInfo(true);
+                        listView.setVisibility(View.VISIBLE);
                     }
                 }
                 break;
@@ -180,63 +179,6 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
         }
     }
 
-    /**
-     * 活动更多信息
-     */
-    private void getActMoreInfo(final boolean isClickUrl) {
-        if (isClickUrl) {
-            mLoadingDialog.setMessage("加载中...");
-            mLoadingDialog.show();
-        }
-        ActMoreInfoParam param = new ActMoreInfoParam(ActProcess.this, actId);
-        HttpStringPost task = new HttpStringPost(ActProcess.this, param.getUrl(), new ResponseListener() {
-            @Override
-            public void success(int code, String msg, String result) {
-                if (isClickUrl && mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                try {
-                    JSONObject object = new JSONObject(result);
-                    Gson gson = new Gson();
-                    actMoreInfoModel = gson.fromJson(object.getString("act_info"), ActMoreInfoModel.class);
-                    if (isClickUrl) {
-                        Intent intent = new Intent(ActProcess.this, Web.class);
-                        intent.putExtra("TITLE", "主办方介绍");
-                        intent.putExtra("URL", actMoreInfoModel.getBusi_url());
-                        startActivity(intent);
-                    }
-                } catch (JSONException e) {
-                    actMoreInfoModel = null;
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void relogin(String msg) {
-                if (isClickUrl && mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                needLogin(msg);
-            }
-
-            @Override
-            public void error(int code, String msg) {
-                if (isClickUrl && mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                actMoreInfoModel = null;
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (isClickUrl && mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                actMoreInfoModel = null;
-            }
-        }, param.getParameters());
-        executeRequest(task);
-    }
 
     /**
      * 设置活动流程数据
@@ -246,73 +188,12 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
         llProcess.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * 获取活动模块信息
-     */
-    private void getActModulesStatus() {
-        mLoadingDialog.setMessage("加载中...");
-        mLoadingDialog.show();
-        ActModulesStatusParam param = new ActModulesStatusParam(ActProcess.this, actId);
-        HttpStringPost task = new HttpStringPost(ActProcess.this, param.getUrl(), new ResponseListener() {
-            @Override
-            public void success(int code, String msg, String result) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                try {
-                    JSONObject object = new JSONObject(result);
-                    Gson gson = new Gson();
-                    modulesStatusModel = gson.fromJson(object.getString("act_modules"), ActModulesStatusModel.class);
-                    if (modulesStatusModel != null) {
-                        setActModulesStatus();
-                    }
-                }catch (JSONException e){
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void relogin(String msg) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                needLogin(msg);
-            }
-
-            @Override
-            public void error(int code, String msg) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                if (Constant.SHOW_LOG) {
-                    toast("获取活动模块信息失败");
-                }
-            }
-        },new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                modulesStatusModel = new ActModulesStatusModel();
-                modulesStatusModel.setShow_process(1);
-                modulesStatusModel.setShow_attention(1);
-                modulesStatusModel.setShow_busi(1);
-                modulesStatusModel.setShow_menu(1);
-                setActModulesStatus();;
-                if (Constant.SHOW_LOG) {
-                    toast("获取活动模块信息失败");
-                }
-            }
-        }, param.getParameters());
-        executeRequest(task);
-    }
 
     /**
      * 获取活动流程信息
      */
     private void getActProcess() {
-        ActProcessParam param = new ActProcessParam(ActProcess.this, actId, 1, 3);
+        ActProcessParam param = new ActProcessParam(ActProcess.this, actId, 1, 30);
         HttpStringPost task = new HttpStringPost(ActProcess.this, param.getUrl(), new ResponseListener() {
             @Override
             public void success(int code, String msg, String result) {

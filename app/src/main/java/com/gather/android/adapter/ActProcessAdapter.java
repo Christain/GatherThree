@@ -1,10 +1,12 @@
 package com.gather.android.adapter;
 
 import android.content.Context;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.gather.android.R;
@@ -49,7 +51,8 @@ public class ActProcessAdapter extends BaseAdapter {
             convertView = mInflater.inflate(R.layout.item_act_process_list, null);
             holder.tvTime = (TextView) convertView.findViewById(R.id.tvTime);
             holder.tvName = (TextView) convertView.findViewById(R.id.tvName);
-            holder.tvStatus = (TextView) convertView.findViewById(R.id.tvStatus);
+            holder.ivStatusSmall = (ImageView) convertView.findViewById(R.id.ivStatusSmall);
+            holder.ivStatusBig = (ImageView) convertView.findViewById(R.id.ivStatusBIg);
 
             convertView.setTag(holder);
         } else {
@@ -59,28 +62,49 @@ public class ActProcessAdapter extends BaseAdapter {
         holder.tvTime.setText(model.getB_time()+"-"+ model.getE_time());
         holder.tvName.setText(model.getSubject());
         switch (model.getStatus()) {
-            case 0:
-                holder.tvStatus.setText("未设置");
-                holder.tvStatus.setTextColor(0xFFD3D3D3);
+            case 0://未设置
+                holder.tvTime.setTextColor(0xFF6F7376);
+                holder.tvName.setTextColor(0xFF6F7376);
+                holder.tvTime.getPaint().setFlags(0);
+                holder.tvName.getPaint().setFlags(0);
+                holder.ivStatusSmall.setImageResource(R.drawable.icon_act_process_point);
+                holder.ivStatusSmall.setVisibility(View.VISIBLE);
+                holder.ivStatusBig.setVisibility(View.GONE);
                 break;
-            case 1:
-                holder.tvStatus.setText("即将开始");
-                holder.tvStatus.setTextColor(0xFFD3D3D3);
+            case 1://即将开始
+                holder.tvTime.setTextColor(0xFF6E7379);
+                holder.tvName.setTextColor(0xFF6E7379);
+                holder.tvTime.getPaint().setFlags(0);
+                holder.tvName.getPaint().setFlags(0);
+                holder.ivStatusSmall.setImageResource(R.drawable.icon_act_process_point);
+                holder.ivStatusSmall.setVisibility(View.VISIBLE);
+                holder.ivStatusBig.setVisibility(View.GONE);
                 break;
-            case 2:
-                holder.tvStatus.setText("正在进行");
-                holder.tvStatus.setTextColor(0xFFFF9933);
+            case 2://正在进行
+                holder.tvTime.setTextColor(0xFFFF9933);
+                holder.tvName.setTextColor(0xFFFF9933);
+                holder.tvTime.getPaint().setFlags(0);
+                holder.tvName.getPaint().setFlags(0);
+                holder.ivStatusBig.setImageResource(R.drawable.icon_act_process_point_big);
+                holder.ivStatusSmall.setVisibility(View.GONE);
+                holder.ivStatusBig.setVisibility(View.VISIBLE);
                 break;
-            case 3:
-                holder.tvStatus.setText("已完成 ");
-                holder.tvStatus.setTextColor(0xFF67BE5F);
+            case 3://已完成
+                holder.tvTime.setTextColor(0xFFCCCCCC);
+                holder.tvName.setTextColor(0xFFCCCCCC);
+                holder.tvTime.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG);
+                holder.tvName.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG);
+                holder.ivStatusSmall.setImageResource(R.drawable.icon_act_process_point_gray);
+                holder.ivStatusSmall.setVisibility(View.VISIBLE);
+                holder.ivStatusBig.setVisibility(View.GONE);
                 break;
         }
         return convertView;
     }
 
     private static class ViewHolder {
-        public TextView tvTime, tvName, tvStatus;
+        public TextView tvTime, tvName;
+        public ImageView ivStatusSmall, ivStatusBig;
     }
 
     public void setActProcessList(ArrayList<ActProcessModel> list) {

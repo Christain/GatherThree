@@ -15,6 +15,7 @@
         android:background="@drawable/pop"
         android:gravity="center|left"
         android:minHeight="55dp"
+        android:maxWidth="150dp"
         android:paddingLeft="15dp"
         android:paddingRight="15dp"
         android:text="今天是风蓝，明天是天是风蓝，明天是"

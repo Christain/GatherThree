@@ -1,8 +1,5 @@
 package com.gather.android.adapter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -15,7 +12,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.VolleyError;
 import com.gather.android.R;
@@ -41,6 +37,9 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @SuppressLint({ "InflateParams", "HandlerLeak" })
 public class CollectionNewsListAdapter extends SuperAdapter {
@@ -241,6 +240,16 @@ public class CollectionNewsListAdapter extends SuperAdapter {
 					intent.putExtra("MODEL", model);
 					context.startActivity(intent);
 					break;
+                case 4:
+                    intent = new Intent(context, WebStrategy.class);
+                    intent.putExtra("MODEL", model);
+                    context.startActivity(intent);
+                    break;
+                case 5:
+                    intent = new Intent(context, WebStrategy.class);
+                    intent.putExtra("MODEL", model);
+                    context.startActivity(intent);
+                    break;
 				}
 			}
 		}

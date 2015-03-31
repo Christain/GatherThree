@@ -1,9 +1,11 @@
 package com.gather.android.model;
 
+import java.io.Serializable;
+
 /**
  * Created by Christain on 2015/3/27.
  */
-public class ActCarLocationModel {
+public class ActCarLocationModel implements Serializable{
 
     private int id;//停车点ID
     private double lon;

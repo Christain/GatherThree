@@ -12,17 +12,16 @@ import android.widget.TextView;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.gather.android.R;
+import com.gather.android.adapter.ActAttentionAdapter;
 import com.gather.android.dialog.LoadingDialog;
 import com.gather.android.http.HttpStringPost;
 import com.gather.android.http.ResponseListener;
-import com.gather.android.model.ActMoreInfoModel;
-import com.gather.android.params.ActMoreInfoParam;
+import com.gather.android.model.ActAttentionListModel;
+import com.gather.android.params.ActAttentionParam;
 import com.gather.android.utils.ClickUtil;
+import com.gather.android.widget.NoScrollListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * 活动注意事项
@@ -33,13 +32,14 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
     private ImageView ivLeft, ivRight;
     private TextView tvLeft, tvTitle, tvRight;
 
+    private NoScrollListView listView;
+    private ActAttentionAdapter adapter;
     private TextView tvAttention;
     private ScrollView scrollView;
     private Animation alphaIn;
     private LoadingDialog mLoadingDailog;
 
     private int actId;
-    private String attention = "";
 
     @Override
     protected int layoutResId() {
@@ -51,9 +51,6 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
         Intent intent = getIntent();
         if (intent.hasExtra("ID")) {
             this.actId = intent.getExtras().getInt("ID");
-            if (intent.hasExtra("ATTENTION")) {
-                this.attention = intent.getStringExtra("ATTENTION");
-            }
             this.mLoadingDailog = LoadingDialog.createDialog(ActAttention.this, true);
             this.alphaIn = AnimationUtils.loadAnimation(this, R.anim.alpha_in);
             this.ivLeft = (ImageView) findViewById(R.id.ivLeft);
@@ -69,14 +66,12 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
             this.ivLeft.setImageResource(R.drawable.title_back_click_style);
             this.ivLeft.setOnClickListener(this);
 
+            this.listView = (NoScrollListView) findViewById(R.id.listview);
             this.scrollView = (ScrollView) findViewById(R.id.scrollView);
             this.tvAttention = (TextView) findViewById(R.id.tvAttention);
 
-            if (attention.equals("")) {
-                getAttention();
-            } else {
-                this.tvAttention.setText(attention);
-            }
+            this.scrollView.setVisibility(View.INVISIBLE);
+            getAttention();
         } else {
             toast("注意事项信息错误");
             finish();
@@ -99,20 +94,21 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
             mLoadingDailog.setMessage("加载中...");
             mLoadingDailog.show();
         }
-        ActMoreInfoParam param = new ActMoreInfoParam(ActAttention.this, actId);
+        ActAttentionParam param = new ActAttentionParam(ActAttention.this, actId);
         HttpStringPost task = new HttpStringPost(ActAttention.this, param.getUrl(), new ResponseListener() {
             @Override
             public void success(int code, String msg, String result) {
                 if (mLoadingDailog != null && mLoadingDailog.isShowing()) {
                     mLoadingDailog.dismiss();
                 }
-                try {
-                    JSONObject object = new JSONObject(result);
-                    Gson gson = new Gson();
-                    ActMoreInfoModel actMoreInfoModel = gson.fromJson(object.getString("act_info"), ActMoreInfoModel.class);
-                    tvAttention.setText("");
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                Gson gson = new Gson();
+                ActAttentionListModel list = gson.fromJson(result, ActAttentionListModel.class);
+                if (list != null && list.getAct_attentions().size() > 0) {
+                    adapter = new ActAttentionAdapter(ActAttention.this, list.getAct_attentions());
+                    listView.setAdapter(adapter);
+                } else {
+                    toast("没有注意事项");
+                    finish();
                 }
                 if (!scrollView.isShown()) {
                     scrollView.setVisibility(View.VISIBLE);

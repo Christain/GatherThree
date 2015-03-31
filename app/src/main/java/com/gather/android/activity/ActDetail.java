@@ -333,9 +333,8 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 			break;
 		case R.id.llAddress:
 			if (!ClickUtil.isFastClick() && null != addressList && addressList.get(0).getLat() != 0) {
-				Intent intent = new Intent(ActDetail.this, ActDetailMapLocation.class);
-				intent.putExtra("LAT", addressList.get(0).getLat());
-				intent.putExtra("LON", addressList.get(0).getLon());
+				Intent intent = new Intent(ActDetail.this, ActLocationAndCarPlaceMap.class);
+				intent.putExtra("MODEL", addressList.get(0));
 				startActivity(intent);
 			}
 			break;
@@ -655,6 +654,9 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
                         modulesStatusModel.setShow_menu(1);
                         modulesStatusModel.setShow_message(1);
                         modulesStatusModel.setShow_enroll(1);
+                        modulesStatusModel.setShow_place_img(1);
+                        modulesStatusModel.setShow_navi(1);
+                        modulesStatusModel.setShow_location_share(1);
                         setActDetailMessage();
                         if (llError.isShown()) {
                             llError.setVisibility(View.GONE);

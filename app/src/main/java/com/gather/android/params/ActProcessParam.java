@@ -10,7 +10,7 @@ import com.gather.android.baseclass.StringParams;
  */
 public class ActProcessParam extends StringParams {
     public ActProcessParam(Context context, int actId, int page, int size) {
-        super(context, "act/actmore/process");
+        super(context, "act/actMore/process");
         setParameter("actId", actId);
         setParameter("page", page);
         setParameter("size", size);

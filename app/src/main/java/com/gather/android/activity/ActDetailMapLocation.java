@@ -119,7 +119,7 @@ public class ActDetailMapLocation extends BaseActivity implements OnClickListene
 
 			MapStatusUpdate u = MapStatusUpdateFactory.newLatLng(llact);
 			mBaiduMap.setMapStatus(u);
-			MapStatusUpdate i = MapStatusUpdateFactory.zoomTo(16);
+			MapStatusUpdate i = MapStatusUpdateFactory.zoomTo(14);
 			mBaiduMap.animateMapStatus(i);
 		} else {
 			finish();

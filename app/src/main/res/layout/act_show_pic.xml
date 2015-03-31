@@ -47,7 +47,7 @@
                 android:layout_marginLeft="5dp"
                 android:layout_weight="1.0"
                 android:gravity="left|center_vertical"
-                android:text="位置导航"
+                android:text="位置导航及停车点"
                 android:textColor="#FF6F7376"
                 android:textSize="@dimen/user_item_text_size"/>
 
@@ -119,7 +119,7 @@
 
 
     <LinearLayout
-        android:id="@+id/llMenu"
+        android:id="@+id/llMatchMap"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
@@ -154,7 +154,7 @@
                 android:layout_marginLeft="5dp"
                 android:layout_weight="1.0"
                 android:gravity="left|center_vertical"
-                android:text="位置导航"
+                android:text="比赛路线图"
                 android:textColor="#FF6F7376"
                 android:textSize="@dimen/user_item_text_size"/>
 

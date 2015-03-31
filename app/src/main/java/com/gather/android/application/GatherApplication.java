@@ -1,7 +1,5 @@
 package com.gather.android.application;
 
-import java.io.File;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
@@ -19,7 +17,6 @@ import com.gather.android.constant.Constant;
 import com.gather.android.constant.Constant.Config;
 import com.gather.android.http.RequestManager;
 import com.gather.android.model.UserInfoModel;
-import com.gather.android.preference.AppPreference;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
@@ -28,8 +25,10 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.tendcloud.tenddata.TCAgent;
 
-public class GatherApplication extends FrontiaApplication {
+import java.io.File;
 
+public class GatherApplication extends FrontiaApplication {
+    private static GatherApplication instance;
 	public boolean isDown;
 	public boolean isRun;
 
@@ -43,13 +42,13 @@ public class GatherApplication extends FrontiaApplication {
 	private UserInfoModel userInfoModel; // 用户信息Model
 	public static int cityId = 0; // 当前城市ID
 	private boolean hasNetWork; // 检查网络状态
-	private String cookie;
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	@SuppressWarnings("unused")
 	@Override
 	public void onCreate() {
 		super.onCreate();
+        instance = this;
 		mLocationClient = new LocationClient(this.getApplicationContext());
 		mMyLocationListener = new MyLocationListener();
 		mLocationClient.registerLocationListener(mMyLocationListener);
@@ -61,14 +60,16 @@ public class GatherApplication extends FrontiaApplication {
 		}
 		initVolley();
 		initImageLoader(getApplicationContext());
-		cookie = AppPreference.getCookie(this.getApplicationContext());
 
 		/**
 		 * 初始化统计
 		 */
 		TCAgent.init(this);
-
 	}
+
+    public static GatherApplication getInstance(){
+        return instance;
+    }
 
 	private void initVolley() {
 		RequestManager.init(this);
@@ -193,12 +194,4 @@ public class GatherApplication extends FrontiaApplication {
 		return hasNetWork;
 	}
 	
-	public void setCookie(String cookie) {
-		this.cookie = cookie;
-	}
-	
-	public String getCookie() {
-		return cookie;
-	}
-
 }

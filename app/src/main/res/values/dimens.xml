@@ -223,4 +223,7 @@
     <!-- 报名情况 -->
     <dimen name="act_enroll_stauts_menu_icon_size">45dp</dimen>
 
+    <dimen name="act_menu_text_padding">6dp</dimen>
+    <dimen name="act_location_and_car_place_item_padding">15dp</dimen>
+
 </resources>

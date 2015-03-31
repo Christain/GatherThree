@@ -10,7 +10,9 @@ import com.gather.android.baseclass.StringParams;
  */
 public class ActAttentionParam extends StringParams{
     public ActAttentionParam(Context context, int actId) {
-        super(context, "");
+        super(context, "act/actMore/attentions");
         setParameter("actId", actId);
+        setParameter("page", 1);
+        setParameter("size", 30);
     }
 }

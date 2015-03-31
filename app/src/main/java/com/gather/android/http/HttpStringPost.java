@@ -10,7 +10,6 @@ import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
-import com.gather.android.application.GatherApplication;
 import com.gather.android.constant.Constant;
 import com.gather.android.preference.AppPreference;
 
@@ -32,7 +31,6 @@ public class HttpStringPost extends Request<String> {
 	private String url;
 	private boolean isSuccess, isLogin = false;
 	private String cookies;
-	private GatherApplication application;
 	private Context context;
 
 	public HttpStringPost(Context context, String url, ResponseListener listener, ErrorListener errorListener, HashMap<String, String> map) {
@@ -46,7 +44,6 @@ public class HttpStringPost extends Request<String> {
 			startTime = System.currentTimeMillis();
 			this.url = url;
 		}
-		this.application = (GatherApplication) context.getApplicationContext();
 		this.isLogin = false;
 	}
 	
@@ -61,7 +58,6 @@ public class HttpStringPost extends Request<String> {
 			startTime = System.currentTimeMillis();
 			this.url = url;
 		}
-		this.application = (GatherApplication) context.getApplicationContext();
 		this.isLogin = true;
 	}
 
@@ -76,11 +72,12 @@ public class HttpStringPost extends Request<String> {
 		if (headers == null || headers.equals(Collections.emptyMap())) {
 			headers = new HashMap<String, String>();
 		}
-		cookies = application.getCookie();
+		cookies = AppPreference.getCookie(context);
 		if (cookies != null && cookies.length() > 1) {
             headers.put("Cookie", cookies);
 			return headers;
 		}
+
 		return super.getHeaders();
 	}
 
@@ -91,7 +88,6 @@ public class HttpStringPost extends Request<String> {
 			if (isLogin) {
 				String rawCookies = responseHeaders.get("Set-Cookie");
 				if (rawCookies != null && rawCookies.length() > 0) {
-					application.setCookie(rawCookies);
 					AppPreference.updateCookie(context, rawCookies);
 					// PHPSESSID=j73tr12pvuirgjben8dfq76kb2; path=/;
 					// cookies = rawCookies;

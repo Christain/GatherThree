@@ -32,10 +32,17 @@
                 android:layout_height="match_parent"/>
 
             <ImageView
+                android:id="@+id/ivStatusSmall"
                 android:layout_width="8dp"
                 android:layout_height="8dp"
                 android:layout_gravity="center"
                 android:src="@drawable/icon_act_process_point"/>
+            <ImageView
+                android:id="@+id/ivStatusBIg"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/icon_act_process_point_big"/>
         </FrameLayout>
 
         <TextView
@@ -53,23 +60,14 @@
             android:id="@+id/tvName"
             android:layout_marginLeft="10dp"
             android:layout_width="0.0dp"
-            android:layout_weight="5.0"
+            android:layout_weight="6.0"
+            android:paddingRight="7dp"
             android:layout_height="wrap_content"
             android:text="都江堰马拉松赛都江堰马拉松赛都江堰马拉松赛都江堰马拉松赛都江堰马拉松赛都江堰马拉松赛"
             android:textSize="15sp"
             android:textColor="#FF6F7376"
             android:layout_gravity="center_vertical"/>
 
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="25dp"
-            android:layout_marginRight="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="即将开始"
-            android:textColor="@color/font_gray"
-            android:textSize="15sp"/>
     </LinearLayout>
 
 </LinearLayout>

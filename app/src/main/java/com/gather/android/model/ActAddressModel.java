@@ -1,11 +1,12 @@
 package com.gather.android.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * Created by Christain on 2015/3/27.
  */
-public class ActAddressModel {
+public class ActAddressModel implements Serializable {
 
     private int id;//地点ID
     private double lon;

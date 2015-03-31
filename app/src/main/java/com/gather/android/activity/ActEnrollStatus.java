@@ -73,7 +73,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
     private ProgressBar footer_progress;
     private TextView footer_textview;
     private RelativeLayout footer_all;
-    private int totalNum, maxPage, page = 1, size = 1, isOver;
+    private int totalNum, maxPage, page = 1, size = 15, isOver;
 
     private boolean isMemberShow = true, isRefresh, isComment = false;
     private Animation alphaIn;
@@ -223,12 +223,8 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             case R.id.llActProcess:
                 if (!ClickUtil.isFastClick() && model != null) {
                     Intent intent = new Intent(ActEnrollStatus.this, ActProcess.class);
-                    if (modulesStatusModel != null) {
-                        intent.putExtra("MODEL", modulesStatusModel);
-                    }
-                    if (actMoreInfoModel != null) {
-                        intent.putExtra("MORE_INFO_MODEL", actMoreInfoModel);
-                    }
+                    intent.putExtra("MODULE", modulesStatusModel);
+                    intent.putExtra("MORE_INFO", actMoreInfoModel);
                     intent.putExtra("ID", model.getId());
                     startActivity(intent);
                 }
@@ -236,13 +232,9 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             case R.id.llActShowPic:
                 if (!ClickUtil.isFastClick()) {
                     Intent intent = new Intent(ActEnrollStatus.this, ActShowPic.class);
-                    if (modulesStatusModel != null) {
-                        intent.putExtra("MODEL", modulesStatusModel);
-                    }
-                    if (actMoreInfoModel != null) {
-                        intent.putExtra("MORE_INFO_MODEL", actMoreInfoModel);
-                    }
-                    intent.putExtra("ACT_MODEL", model);
+                    intent.putExtra("MODULE", modulesStatusModel);
+                    intent.putExtra("MORE_INFO", actMoreInfoModel);
+                    intent.putExtra("MODEL", model);
                     intent.putExtra("ID", model.getId());
                     startActivity(intent);
                 }
@@ -376,18 +368,6 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 Gson gson = new Gson();
                 ActEnrollStatusCommentListModel list = gson.fromJson(result, ActEnrollStatusCommentListModel.class);
                 if (list != null && list.getMessages() != null && list.getMessages().size() > 0) {
-                    ArrayList<ActEnrollStatusCommentModel> lists = new ArrayList<ActEnrollStatusCommentModel>();
-                    for (int i = 0; i < 15; i++) {
-                        ActEnrollStatusCommentModel commentModel = new ActEnrollStatusCommentModel();
-                        commentModel.setAuthor_id(1);
-                        commentModel.setContent("这个就是我的留言" + i);
-                        commentModel.setCreate_time("2015-03-07 14:36:00");
-                        UserInfoModel model = new UserInfoModel();
-                        model.setNick_name(i + "名字");
-                        model.setUid(i);
-                        commentModel.setUser(model);
-                        lists.add(commentModel);
-                    }
                     if (page != maxPage) {
                         page++;
                         loadMoreOver(code, "CLICK_MORE");
@@ -395,7 +375,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                         isOver = 1;
                         loadMoreOver(code, "ISOVER");
                     }
-                    commentAdapter.addItems(lists);
+                    commentAdapter.addItems(list.getMessages());
                 } else {
                     isOver = 1;
                     loadMoreOver(code, "NULL");

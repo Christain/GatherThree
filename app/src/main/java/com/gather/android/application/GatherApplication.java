@@ -58,7 +58,6 @@ public class GatherApplication extends FrontiaApplication {
 			StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyDialog().build());
 			StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectAll().penaltyDeath().build());
 		}
-
 		initVolley();
 		initImageLoader(getApplicationContext());
 

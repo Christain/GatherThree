@@ -140,8 +140,10 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
             case R.id.ivActProcess:
                 if (!ClickUtil.isFastClick()) {
                     if (listView.isShown()) {
+                        ivActProcess.setImageResource(R.drawable.icon_act_notify_arrow_right);
                         listView.setVisibility(View.GONE);
                     } else {
+                        ivActProcess.setImageResource(R.drawable.icon_act_notify_arrow_buttom);
                         listView.setVisibility(View.VISIBLE);
                     }
                 }

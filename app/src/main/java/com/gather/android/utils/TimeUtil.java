@@ -38,6 +38,24 @@ public class TimeUtil {
             return "";
         }
     }
+
+    /**
+     * 生日去后缀
+     * @param oldStyleTime
+     * @return
+     */
+    public static String getUserbirthString(String oldStyleTime) {
+        if (oldStyleTime.contains("-") && oldStyleTime.length() > 5) {
+            SimpleDateFormat oldFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            ParsePosition pos = new ParsePosition(0);
+            Date strtodate = oldFormat.parse(oldStyleTime, pos);
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            String dateString = format.format(strtodate);
+            return dateString;
+        } else {
+            return "";
+        }
+    }
 	
 	/**
 	 * 活动列表时间格式
@@ -120,7 +138,7 @@ public class TimeUtil {
 	/**
 	 * 获取私信时间格式
 	 * 
-	 * @param timeMills
+	 * @param
 	 * @return
 	 */
 	@SuppressWarnings("deprecation")

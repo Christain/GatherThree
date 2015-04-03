@@ -226,4 +226,6 @@
     <dimen name="act_menu_text_padding">6dp</dimen>
     <dimen name="act_location_and_car_place_item_padding">15dp</dimen>
 
+    <dimen name="act_album_detail_gridview_padding">8dp</dimen>
+
 </resources>

@@ -1,11 +1,11 @@
 package com.gather.android.model;
 
-import java.io.File;
-import java.io.Serializable;
-
 import android.graphics.Bitmap;
 
 import com.gather.android.utils.BitmapUtils;
+
+import java.io.File;
+import java.io.Serializable;
 
 public class UserPhotoModel implements Serializable {
 
@@ -14,6 +14,10 @@ public class UserPhotoModel implements Serializable {
 	private Bitmap bmp;
 	private File file;
 	private String path;
+
+    public UserPhotoModel() {
+
+    }
 
 	public UserPhotoModel(File file) {
 		this.file = file;

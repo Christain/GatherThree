@@ -1,27 +1,23 @@
 package com.gather.android.adapter;
 
-import android.app.Activity;
-import android.content.Intent;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.gather.android.R;
-import com.gather.android.activity.TrendsPicGallery;
 import com.gather.android.baseclass.SuperAdapter;
 import com.gather.android.http.HttpStringPost;
 import com.gather.android.http.RequestManager;
 import com.gather.android.http.ResponseListener;
-import com.gather.android.model.ActPlacePlanModel;
-import com.gather.android.model.ActPlacePlanModelList;
-import com.gather.android.model.UserPhotoModel;
-import com.gather.android.params.ActPlacePlanParam;
+import com.gather.android.model.ActAlbumDetailModel;
+import com.gather.android.model.ActAlbumDetailModelList;
+import com.gather.android.params.ActAlbumDetailListParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.utils.ThumbnailUtil;
 import com.google.gson.Gson;
@@ -33,22 +29,23 @@ import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-
 /**
- * Created by Christain on 2015/3/30.
+ * Created by Christain on 2015/4/1.
  */
-public class ActPlacePlanAdapter extends SuperAdapter{
-    private Activity context;
+public class ActAlbumDetailListAdapter extends SuperAdapter {
+
+    private Context context;
     private ResponseListener listener;
     private Response.ErrorListener errorListener;
-    private int page, limit = 50, totalNum, maxPage, isOver, actId;
+    private DisplayMetrics metrics;
+    private int albumId, page, limit = 20, totalNum, maxPage, isOver;
     private ImageLoader imageLoader = ImageLoader.getInstance();
     private DisplayImageOptions options;
 
-    public ActPlacePlanAdapter(Activity context) {
+    public ActAlbumDetailListAdapter(Context context) {
         super(context);
         this.context = context;
+        this.metrics = context.getResources().getDisplayMetrics();
         this.options = new DisplayImageOptions.Builder().showImageOnLoading(R.drawable.default_image).showImageForEmptyUri(R.drawable.default_image).showImageOnFail(R.drawable.default_image).cacheInMemory(true).cacheOnDisk(true).considerExifParams(true).imageScaleType(ImageScaleType.EXACTLY).resetViewBeforeLoading(false).displayer(new FadeInBitmapDisplayer(0)).bitmapConfig(Bitmap.Config.RGB_565).build();
         this.initListener();
     }
@@ -77,8 +74,8 @@ public class ActPlacePlanAdapter extends SuperAdapter{
                     }
                 }
                 Gson gson = new Gson();
-                ActPlacePlanModelList list = gson.fromJson(result, ActPlacePlanModelList.class);
-                if (list != null && list.getPlace_imgs() != null) {
+                ActAlbumDetailModelList list = gson.fromJson(result, ActAlbumDetailModelList.class);
+                if (list != null && list.getPhotoes() != null) {
                     switch (loadType) {
                         case REFRESH:
                             if (totalNum == 0) {
@@ -90,7 +87,7 @@ public class ActPlacePlanAdapter extends SuperAdapter{
                                 page++;
                                 refreshOver(code, CLICK_MORE);
                             }
-                            refreshItems(list.getPlace_imgs());
+                            refreshItems(list.getPhotoes());
                             break;
                         case LOADMORE:
                             if (page != maxPage) {
@@ -100,7 +97,7 @@ public class ActPlacePlanAdapter extends SuperAdapter{
                                 isOver = 1;
                                 loadMoreOver(code, ISOVER);
                             }
-                            addItems(list.getPlace_imgs());
+                            addItems(list.getPhotoes());
                             break;
                     }
                 } else {
@@ -159,69 +156,55 @@ public class ActPlacePlanAdapter extends SuperAdapter{
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
+    public View getView(int position, View convertView, ViewGroup viewGroup) {
+        ViewHolder holder = null;
         if (convertView == null) {
-            convertView = mInflater.inflate(R.layout.item_act_place_plan, parent, false);
+            convertView = mInflater.inflate(R.layout.item_act_album_detail_list, viewGroup, false);
             holder = new ViewHolder();
-            holder.llItem = (LinearLayout) convertView.findViewById(R.id.llItem);
-            holder.ivPic = (ImageView) convertView.findViewById(R.id.ivPic);
-            holder.tvName = (TextView) convertView.findViewById(R.id.tvName);
+            holder.ivImage = (ImageView) convertView.findViewById(R.id.ivImage);
 
-            DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.ivPic.getLayoutParams();
-            params.width = metrics.widthPixels;
-            params.height = params.width * 8 / 18;
-            holder.ivPic.setLayoutParams(params);
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.ivImage.getLayoutParams();
+            params.width = (int) (metrics.widthPixels - (context.getResources().getDimensionPixelOffset(R.dimen.act_album_detail_gridview_padding) * 5))/4;
+            params.height = params.width;
+            holder.ivImage.setLayoutParams(params);
 
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-        ActPlacePlanModel model = (ActPlacePlanModel) getItem(position);
-        holder.tvName.setText(model.getSubject());
 
-        imageLoader.displayImage(ThumbnailUtil.ThumbnailMethod(model.getImg_url(), 300, 300, 50), holder.ivPic, options);
-        holder.llItem.setOnClickListener(new OnItemAllClickListener(position));
+        ActAlbumDetailModel model = (ActAlbumDetailModel) getItem(position);
+        imageLoader.displayImage(ThumbnailUtil.ThumbnailMethod(model.getImg_url(), 150, 150, 50), holder.ivImage, options);
+        holder.ivImage.setOnClickListener(new OnImageClickListener(model, position));
+
         return convertView;
     }
 
     private static class ViewHolder {
-        public ImageView ivPic;
-        public TextView tvName;
-        public LinearLayout llItem;
+        public ImageView ivImage;
+    }
+
+    private class OnImageClickListener implements View.OnClickListener {
+
+        private ActAlbumDetailModel model;
+        private int position;
+
+        public OnImageClickListener(ActAlbumDetailModel model, int position) {
+            this.position = position;
+            this.model = model;
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (!ClickUtil.isFastClick()) {
+
+            }
+        }
     }
 
     @Override
     public void refresh() {
 
-    }
-
-    private class OnItemAllClickListener implements View.OnClickListener {
-
-        private int position;
-
-        public OnItemAllClickListener(int position) {
-            this.position = position;
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (!ClickUtil.isFastClick()) {
-                Intent intent = new Intent(context, TrendsPicGallery.class);
-                ArrayList<UserPhotoModel> list = new ArrayList<UserPhotoModel>();
-                for (int i = 0; i < getCount(); i++) {
-                    UserPhotoModel model = new UserPhotoModel();
-                    ActPlacePlanModel pic = (ActPlacePlanModel) getItem(i);
-                    model.setImg_url(pic.getImg_url());
-                    list.add(model);
-                }
-                intent.putExtra("USER_PHOTO_LIST", list);
-                intent.putExtra("POSITION", position);
-                context.startActivity(intent);
-                context.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }
-        }
     }
 
     @Override
@@ -232,25 +215,24 @@ public class ActPlacePlanAdapter extends SuperAdapter{
             if (!isRequest) {
                 this.isRequest = true;
                 this.loadType = LOADMORE;
-                ActPlacePlanParam param = new ActPlacePlanParam(context, actId);
+                ActAlbumDetailListParam param = new ActAlbumDetailListParam(context, albumId, page, limit);
                 HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
                 RequestManager.addRequest(task, context);
             }
         }
     }
 
-    public void getPlaceList(int actId) {
+    public void getALbumList(int albumId) {
         if (!isRequest) {
             this.isRequest = true;
             this.loadType = REFRESH;
             this.page = 1;
             this.isOver = 0;
-            this.actId = actId;
-            ActPlacePlanParam param = new ActPlacePlanParam(context, actId);
+            this.albumId = albumId;
+            ActAlbumDetailListParam param = new ActAlbumDetailListParam(context, albumId, page, limit);
             HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
             RequestManager.addRequest(task, context);
         }
     }
-
 
 }

@@ -26,7 +26,7 @@
             android:layout_marginTop="8dp"
             android:singleLine="true"
             android:text="名字"
-            android:textColor="@color/bg_black"
+            android:textColor="#FF6F7277"
             android:textSize="@dimen/vip_list_gridview_text_size" />
     </LinearLayout>
 

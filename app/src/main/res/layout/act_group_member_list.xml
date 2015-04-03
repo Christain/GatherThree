@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/bg_app"
+              android:orientation="vertical" >
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"
+        layout="@layout/actionbar_title" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0.0dp"
+        android:layout_weight="1.0"
+        android:fadingEdge="none" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <com.gather.android.widget.NoScrollGridView
+                android:id="@+id/gridView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fadingEdge="none"
+                android:horizontalSpacing="@dimen/vip_list_gridview_horizontalSpacing"
+                android:listSelector="@null"
+                android:numColumns="3"
+                android:paddingBottom="10dp"
+                android:paddingLeft="@dimen/vip_list_gridview_margin"
+                android:paddingRight="@dimen/vip_list_gridview_margin"
+                android:paddingTop="@dimen/vip_list_gridview_margin"
+                android:scrollbarStyle="outsideOverlay"
+                android:verticalSpacing="@dimen/vip_list_gridview_verticalSpacing" >
+            </com.gather.android.widget.NoScrollGridView>
+
+            <RelativeLayout
+                android:id="@+id/rlFooter"
+                android:layout_width="match_parent"
+                android:layout_height="40dp" >
+
+                <ProgressBar
+                    android:id="@+id/pbFooter"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerInParent="true"
+                    android:indeterminateDrawable="@drawable/progress_bg_big"
+                    android:padding="12dp"
+                    android:visibility="invisible" />
+
+                <TextView
+                    android:id="@+id/tvFooter"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center"
+                    android:textColor="@color/font_gray"
+                    android:textSize="@dimen/footer_tip_text_size" />
+            </RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

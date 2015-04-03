@@ -27,10 +27,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingBottom="8dp"
+            android:paddingBottom="12dp"
             android:paddingLeft="15dp"
             android:paddingRight="15dp"
-            android:paddingTop="8dp">
+            android:paddingTop="12dp">
 
             <EditText
                 android:id="@+id/etContent"
@@ -46,14 +46,15 @@
                 android:textColor="@color/bg_black"
                 android:textSize="15sp"/>
 
-            <Button
+            <ImageView
                 android:id="@+id/btResult"
-                android:layout_width="50dp"
+                android:layout_width="55dp"
                 android:layout_height="35dp"
+                android:padding="8dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginLeft="8dp"
                 android:background="@drawable/shape_chat_send_button_click_style"
-                android:text="确认"
+                android:src="@drawable/icon_act_notify_search"
                 android:textColor="@drawable/chat_send_text_color"
                 android:textSize="15sp"/>
         </LinearLayout>
@@ -64,6 +65,7 @@
             android:layout_height="wrap_content"
             android:cacheColorHint="#00000000"
             android:divider="@null"
+            android:groupIndicator="@null"
             android:drawSelectorOnTop="false"
             android:fadingEdge="none"
             android:headerDividersEnabled="false"

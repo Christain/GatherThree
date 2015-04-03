@@ -392,8 +392,32 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		case R.id.llEnroll:
 			if (!ClickUtil.isFastClick()) {
 				if (hasLogin) {
-					EnrollDialog dialog = new EnrollDialog(ActDetail.this, R.style.dialog_del_message);
-					dialog.show();
+                    if (actMoreInfoModel.getEnroll_limit() == 1 && actMoreInfoModel.getEnroll_num() < actMoreInfoModel.getEnroll_limit_num()
+                            && (actMoreInfoModel.getLimit_sex_num() == 0) || (actMoreInfoModel.getLimit_sex_num() == 1 && ((AppPreference.getUserPersistentInt(ActDetail.this, AppPreference.USER_SEX) == 1 &&actMoreInfoModel.getEnroll_male_num() < actMoreInfoModel.getLimit_male_num()) ||(AppPreference.getUserPersistentInt(ActDetail.this, AppPreference.USER_SEX) == 2 &&actMoreInfoModel.getEnroll_female_num() < actMoreInfoModel.getLimit_female_num())))) {
+                        Intent intent = new Intent(ActDetail.this, ActEnrollInfo.class);
+                        intent.putExtra("ID", actId);
+                        intent.putExtra("MORE_INFO", actMoreInfoModel);
+                        startActivityForResult(intent, 400);
+                    } else {
+                        if (actMoreInfoModel.getEnroll_num() >= actMoreInfoModel.getEnroll_limit_num()) {
+                            if (dialog != null && !dialog.isShowing()) {
+                                dialog.setMessage("报名人数已满").withEffect(Effectstype.Shake).show();
+                            }
+                            return;
+                        }
+                        if (AppPreference.getUserPersistentInt(ActDetail.this, AppPreference.USER_SEX) == 1) {
+                            if (dialog != null && !dialog.isShowing()) {
+                                dialog.setMessage("报名男性人员已满").withEffect(Effectstype.Shake).show();
+                            }
+                            return;
+                        }
+                        if (AppPreference.getUserPersistentInt(ActDetail.this, AppPreference.USER_SEX) == 2) {
+                            if (dialog != null && !dialog.isShowing()) {
+                                dialog.setMessage("报名女性人员已满").withEffect(Effectstype.Shake).show();
+                            }
+                            return;
+                        }
+                    }
 				} else {
 					DialogLogin();
 				}
@@ -437,10 +461,17 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		}
         if (hasLogin) {
             if (modulesStatusModel.getShow_enroll() == 1) {
-                llEnroll.setVisibility(View.VISIBLE);
-                menuLine.setVisibility(View.VISIBLE);
-                llEnrollStatus.setVisibility(View.VISIBLE);
-                enrollstatusLine.setVisibility(View.VISIBLE);
+                if (actMoreInfoModel.getEnroll_status() == -1) {
+                    llEnroll.setVisibility(View.VISIBLE);
+                    menuLine.setVisibility(View.VISIBLE);
+                    llEnrollStatus.setVisibility(View.VISIBLE);
+                    enrollstatusLine.setVisibility(View.VISIBLE);
+                } else {
+                    llEnroll.setVisibility(View.GONE);
+                    menuLine.setVisibility(View.GONE);
+                    llEnrollStatus.setVisibility(View.VISIBLE);
+                    enrollstatusLine.setVisibility(View.VISIBLE);
+                }
             } else {
                 llEnroll.setVisibility(View.GONE);
                 menuLine.setVisibility(View.GONE);
@@ -647,16 +678,6 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
                     Gson gson = new Gson();
                     modulesStatusModel = gson.fromJson(object.getString("act_modules"), ActModulesStatusModel.class);
                     if (modulesStatusModel != null) {
-                        modulesStatusModel = new ActModulesStatusModel();
-                        modulesStatusModel.setShow_process(1);
-                        modulesStatusModel.setShow_attention(1);
-                        modulesStatusModel.setShow_busi(1);
-                        modulesStatusModel.setShow_menu(1);
-                        modulesStatusModel.setShow_message(1);
-                        modulesStatusModel.setShow_enroll(1);
-                        modulesStatusModel.setShow_place_img(1);
-                        modulesStatusModel.setShow_navi(1);
-                        modulesStatusModel.setShow_location_share(1);
                         setActDetailMessage();
                         if (llError.isShown()) {
                             llError.setVisibility(View.GONE);
@@ -1316,6 +1337,15 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		if (mSsoHandler != null) {
 			mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
 		}
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 400) {
+                actMoreInfoModel.setEnroll_status(0);
+                llEnroll.setVisibility(View.GONE);
+                menuLine.setVisibility(View.GONE);
+                llEnrollStatus.setVisibility(View.VISIBLE);
+                enrollstatusLine.setVisibility(View.VISIBLE);
+            }
+        }
 	}
 
 	private class EnrollDialog extends Dialog {

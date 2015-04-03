@@ -68,6 +68,9 @@ public class GatherApplication extends FrontiaApplication {
 	}
 
     public static GatherApplication getInstance(){
+        if (instance == null) {
+            instance = new GatherApplication();
+        }
         return instance;
     }
 

@@ -2,8 +2,8 @@ package com.gather.android.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
@@ -17,11 +17,14 @@ import com.gather.android.adapter.ActNotifycationAdapter;
 import com.gather.android.dialog.LoadingDialog;
 import com.gather.android.http.HttpStringPost;
 import com.gather.android.http.ResponseListener;
+import com.gather.android.model.ActNotifyModel;
 import com.gather.android.model.ActNotifyModelList;
 import com.gather.android.params.ActNotifyParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import java.util.ArrayList;
 
 /**
  * 活动通知
@@ -34,12 +37,14 @@ public class ActNotifycation extends SwipeBackActivity implements View.OnClickLi
 
     private LinearLayout llEditText;
     private EditText etContent;
-    private Button btResult;
+    private ImageView btResult;
     private ExpandableListView listView;
     private ActNotifycationAdapter adapter;
     private int actId;
+    private  ActNotifyModelList list = null;
 
     private LoadingDialog mLoadingDialog;
+    private boolean isRequest = false;
 
     @Override
     protected int layoutResId() {
@@ -67,7 +72,8 @@ public class ActNotifycation extends SwipeBackActivity implements View.OnClickLi
 
             this.llEditText = (LinearLayout) findViewById(R.id.llEditText);
             this.etContent = (EditText) findViewById(R.id.etContent);
-            this.btResult = (Button) findViewById(R.id.btResult);
+            this.btResult = (ImageView) findViewById(R.id.btResult);
+            this.btResult.setOnClickListener(this);
             this.listView = (ExpandableListView) findViewById(R.id.listview);
             this.adapter = new ActNotifycationAdapter(ActNotifycation.this);
             this.listView.setAdapter(adapter);
@@ -92,9 +98,9 @@ public class ActNotifycation extends SwipeBackActivity implements View.OnClickLi
                     mLoadingDialog.dismiss();
                 }
                 Gson gson = new Gson();
-                ActNotifyModelList list = gson.fromJson(result, ActNotifyModelList.class);
+                list = gson.fromJson(result, ActNotifyModelList.class);
                 if (list != null && list.getAct_notices().size() > 0){
-
+                    adapter.setNotifyMessage(list.getAct_notices());
                 } else {
                     toast("还没有新通知");
                 }
@@ -137,6 +143,37 @@ public class ActNotifycation extends SwipeBackActivity implements View.OnClickLi
                     finish();
                 }
                 break;
+            case R.id.btResult:
+                if (!ClickUtil.isFastClick()) {
+                    if (list != null) {
+                        if (!TextUtils.isEmpty(etContent.getText().toString())) {
+                            if (!isRequest) {
+                                isRequest = true;
+                                StringCompare(etContent.getText().toString(), list.getAct_notices());
+                            }
+                        } else {
+                            toast("请输入搜索内容");
+                            return;
+                        }
+                     } else {
+                        toast("还没有通知消息");
+                        return;
+                    }
+                }
+                break;
         }
+    }
+
+    private void StringCompare(String compare, ArrayList<ActNotifyModel> list) {
+        ArrayList<ActNotifyModel> hasList = new ArrayList<ActNotifyModel>();
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).getSubject().contains(compare) || list.get(i).getDescri().contains(compare)) {
+                hasList.add(list.get(i));
+            }
+        }
+        if (hasList.size() > 0) {
+            adapter.setSearchNotifyMessage(compare, hasList);
+        }
+        isRequest = false;
     }
 }

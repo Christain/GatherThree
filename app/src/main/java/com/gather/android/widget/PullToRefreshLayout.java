@@ -219,7 +219,7 @@ public class PullToRefreshLayout extends RelativeLayout
         {
             case SUCCEED:
                 // 刷新成功
-                refreshStateImageView.setVisibility(View.VISIBLE);
+                refreshStateImageView.setVisibility(View.GONE);
                 refreshStateTextView.setText(R.string.refresh_succeed);
                 refreshStateImageView
                         .setBackgroundResource(R.drawable.refresh_succeed);
@@ -227,7 +227,7 @@ public class PullToRefreshLayout extends RelativeLayout
             case FAIL:
             default:
                 // 刷新失败
-                refreshStateImageView.setVisibility(View.VISIBLE);
+                refreshStateImageView.setVisibility(View.GONE);
                 refreshStateTextView.setText(R.string.refresh_fail);
                 refreshStateImageView
                         .setBackgroundResource(R.drawable.refresh_failed);
@@ -266,14 +266,14 @@ public class PullToRefreshLayout extends RelativeLayout
         {
             case SUCCEED:
                 // 加载成功
-                loadStateImageView.setVisibility(View.VISIBLE);
+                loadStateImageView.setVisibility(View.GONE);
                 loadStateTextView.setText(R.string.load_succeed);
                 loadStateImageView.setBackgroundResource(R.drawable.load_succeed);
                 break;
             case FAIL:
             default:
                 // 加载失败
-                loadStateImageView.setVisibility(View.VISIBLE);
+                loadStateImageView.setVisibility(View.GONE);
                 loadStateTextView.setText(R.string.load_fail);
                 loadStateImageView.setBackgroundResource(R.drawable.load_failed);
                 break;
@@ -289,7 +289,7 @@ public class PullToRefreshLayout extends RelativeLayout
                     changeState(DONE);
                     hide();
                 }
-            }.sendEmptyMessageDelayed(0, 1000);
+            }.sendEmptyMessageDelayed(0, 500);
         } else
         {
             changeState(DONE);

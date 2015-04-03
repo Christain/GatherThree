@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/font_white"
+    android:orientation="vertical">
+
+    <include
+        layout="@layout/actionbar_title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/actionbar_high"/>
+
+    <com.gather.android.widget.PullToRefreshLayout
+
+        android:id="@+id/refresh_view"
+        android:layout_width="match_parent"
+        android:layout_height="0.0dp"
+        android:layout_weight="1.0">
+
+        <include layout="@layout/refresh_head"/>
+
+        <com.gather.android.widget.PullableGridView
+            android:id="@+id/content_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:horizontalSpacing="@dimen/act_album_detail_gridview_padding"
+            android:numColumns="4"
+            android:paddingBottom="@dimen/act_album_detail_gridview_padding"
+            android:paddingLeft="@dimen/act_album_detail_gridview_padding"
+            android:paddingRight="@dimen/act_album_detail_gridview_padding"
+            android:paddingTop="@dimen/act_album_detail_gridview_padding"
+            android:verticalSpacing="@dimen/act_album_detail_gridview_padding"/>
+
+        <include layout="@layout/load_more"/>
+
+    </com.gather.android.widget.PullToRefreshLayout>
+
+</LinearLayout>

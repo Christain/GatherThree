@@ -3,27 +3,21 @@
     android:id="@+id/loadmore_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_white" >
+    android:background="@color/bg_app" >
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:paddingBottom="20dp"
-        android:paddingTop="20dp" >
+        android:paddingBottom="15dp"
+        android:paddingTop="15dp" >
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true" >
 
-            <ImageView
-                android:id="@+id/pullup_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="60dp"
-                android:background="@drawable/pullup_icon_big" />
+
 
             <ImageView
                 android:id="@+id/loading_icon"
@@ -42,6 +36,15 @@
                 android:text="@string/pullup_to_load"
                 android:textColor="@color/bg_black"
                 android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/pullup_icon"
+                android:layout_width="20dp"
+                android:layout_height="30dp"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="20dp"
+                android:layout_toLeftOf="@id/loadstate_tv"
+                android:background="@drawable/pullup_icon_big" />
 
             <ImageView
                 android:id="@+id/loadstate_iv"

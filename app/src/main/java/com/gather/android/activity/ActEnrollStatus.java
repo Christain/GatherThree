@@ -23,6 +23,7 @@ import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActEnrollStatusCommentAdapter;
 import com.gather.android.adapter.ActEnrollStatusGridViewAdapter;
+import com.gather.android.application.GatherApplication;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
@@ -34,9 +35,11 @@ import com.gather.android.model.ActModel;
 import com.gather.android.model.ActModulesStatusModel;
 import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.model.UserInfoModel;
+import com.gather.android.model.VipListModel;
 import com.gather.android.params.ActEnrollStatusCommentParam;
 import com.gather.android.params.ActEnrollStatusCommentSendParam;
-import com.gather.android.params.UpdateVersionParam;
+import com.gather.android.params.ActManagerListParam;
+import com.gather.android.params.ActMemeberListParam;
 import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.utils.TimeUtil;
@@ -48,7 +51,6 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -60,7 +62,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
     private ImageView ivLeft, ivRight;
     private TextView tvLeft, tvTitle, tvRight;
 
-    private LinearLayout llMember, llManager, llActProcess, llActShowPic, llActNotify, llActPhoto, llMain, llComment, llEditText, llNoMember, llNoComment, llPay;
+    private LinearLayout llMember, llManager, llActProcess, llActShowPic, llActNotify, llActPhoto, llMain, llComment, llEditText, llNoMember, llNoManager, llNoComment, llPay;
     private TextView tvActTitle, tvActTime;
     private NoScrollGridView memberGridView, managerGradView;
     private ActEnrollStatusGridViewAdapter memberAdapter, managerAdapter;
@@ -101,16 +103,14 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             this.tvTitle = (TextView) findViewById(R.id.tvTitle);
             this.tvRight = (TextView) findViewById(R.id.tvRight);
             this.tvLeft.setVisibility(View.GONE);
-            this.ivRight.setVisibility(View.VISIBLE);
-            this.tvRight.setVisibility(View.GONE);
+            this.ivRight.setVisibility(View.GONE);
+            this.tvRight.setVisibility(View.VISIBLE);
             this.ivLeft.setVisibility(View.VISIBLE);
             this.tvTitle.setText("报名情况");
+            this.tvRight.setText("签到");
             this.ivLeft.setImageResource(R.drawable.title_back_click_style);
-            this.ivRight.setImageResource(R.drawable.icon_act_enroll_status_group);
-            this.ivRight.setBackgroundDrawable(null);
-            this.ivRight.setPadding(10, 10, 10, 10);
             this.ivLeft.setOnClickListener(this);
-            this.ivRight.setOnClickListener(this);
+            this.tvRight.setOnClickListener(this);
 
             this.mLoadingDialog = LoadingDialog.createDialog(ActEnrollStatus.this, true);
             this.dialog = DialogTipsBuilder.getInstance(ActEnrollStatus.this);
@@ -125,6 +125,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             this.llComment = (LinearLayout) findViewById(R.id.llComment);
             this.llEditText = (LinearLayout) findViewById(R.id.llEditText);
             this.llNoMember = (LinearLayout) findViewById(R.id.llNoMember);
+            this.llNoManager = (LinearLayout) findViewById(R.id.llNoManager);
             this.llNoComment = (LinearLayout) findViewById(R.id.llNoComment);
             this.llPay = (LinearLayout) findViewById(R.id.llPay);
             this.memberGridView = (NoScrollGridView) findViewById(R.id.memberGridView);
@@ -178,6 +179,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             });
             this.llMain.setVisibility(View.INVISIBLE);
             this.initView();
+            this.getManagerList();
             this.getMemberList();
         } else {
             toast("查看失败，请重试");
@@ -212,10 +214,14 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 break;
             case R.id.tvMemberMore:
                 if (!ClickUtil.isFastClick()) {
-
+                    Intent intent = new Intent(ActEnrollStatus.this, ActMemberList.class);
+                    intent.putExtra("ID", model.getId());
+                    intent.putExtra("MODULE", modulesStatusModel);
+                    intent.putExtra("MORE_INFO", actMoreInfoModel);
+                    startActivity(intent);
                 }
                 break;
-            case R.id.ivRight:
+            case R.id.tvRight:
                 if (!ClickUtil.isFastClick()) {
 
                 }
@@ -241,14 +247,25 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 break;
             case R.id.llActNotify:
                 if (!ClickUtil.isFastClick()) {
-                    Intent intent = new Intent(ActEnrollStatus.this, ActNotifycation.class);
-                    intent.putExtra("ID", model.getId());
-                    startActivity(intent);
+                    if (modulesStatusModel.getShow_notice() == 1) {
+                        Intent intent = new Intent(ActEnrollStatus.this, ActNotifycation.class);
+                        intent.putExtra("ID", model.getId());
+                        startActivity(intent);
+                    } else {
+                        toast("活动还没有通知");
+                    }
                 }
                 break;
             case R.id.llActPhoto:
                 if (!ClickUtil.isFastClick()) {
-
+                    if (modulesStatusModel.getShow_album() == 1) {
+                        Intent intent = new Intent(ActEnrollStatus.this, ActAlbumList.class);
+                        intent.putExtra("ID", model.getId());
+                        intent.putExtra("MORE_INFO", actMoreInfoModel);
+                        startActivity(intent);
+                    } else {
+                        toast("活动还没有开放相册");
+                    }
                 }
                 break;
             case R.id.btComment:
@@ -286,25 +303,32 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
     private void getMemberList() {
         mLoadingDialog.setMessage("加载中...");
         mLoadingDialog.show();
-        UpdateVersionParam param = new UpdateVersionParam(ActEnrollStatus.this);
+        GatherApplication application = GatherApplication.getInstance();
+        ActMemeberListParam param = new ActMemeberListParam(ActEnrollStatus.this, application.getCityId(), model.getId(), 1, 5);
         HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new com.gather.android.http.ResponseListener() {
             @Override
             public void success(int code, String msg, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
-                ArrayList<UserInfoModel> list = new ArrayList<UserInfoModel>();
-                for (int i = 0; i < 4; i++) {
-                    UserInfoModel model = new UserInfoModel();
-                    model.setNick_name(i + "名字");
-                    model.setUid(i);
-                    list.add(model);
+                Gson gson = new Gson();
+                VipListModel list = gson.fromJson(result, VipListModel.class);
+                if (list != null && list.getUsers() != null && list.getUsers().size() > 0) {
+                    llNoMember.setVisibility(View.GONE);
+                    memberGridView.setVisibility(View.VISIBLE);
+                    if (list.getUsers().size() > 4) {
+                        tvMemberMore.setVisibility(View.VISIBLE);
+                    } else {
+                        tvMemberMore.setVisibility(View.VISIBLE);
+                    }
+                    memberAdapter = new ActEnrollStatusGridViewAdapter(ActEnrollStatus.this, list.getUsers());
+                    memberGridView.setAdapter(memberAdapter);
+                } else {
+                    llNoMember.setVisibility(View.VISIBLE);
+                    memberGridView.setVisibility(View.GONE);
+                    tvMemberMore.setVisibility(View.GONE);
                 }
-                memberAdapter = new ActEnrollStatusGridViewAdapter(ActEnrollStatus.this, list);
-                memberGridView.setAdapter(memberAdapter);
 
-                managerAdapter = new ActEnrollStatusGridViewAdapter(ActEnrollStatus.this, list);
-                managerGradView.setAdapter(managerAdapter);
                 if (!llMain.isShown()) {
                     llMain.setVisibility(View.VISIBLE);
                     llMain.startAnimation(alphaIn);
@@ -335,6 +359,50 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 }
                 toast("加载报名情况失败，请重试");
                 finish();
+            }
+        }, param.getParameters());
+        executeRequest(task);
+    }
+
+    /**
+     * 获取管理员列表
+     */
+    private void getManagerList() {
+        GatherApplication application = GatherApplication.getInstance();
+        ActManagerListParam param = new ActManagerListParam(ActEnrollStatus.this, application.getCityId(), model.getId(), 1, 4);
+        HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new ResponseListener() {
+            @Override
+            public void success(int code, String msg, String result) {
+                Gson gson = new Gson();
+                VipListModel list = gson.fromJson(result, VipListModel.class);
+                if (list != null && list.getUsers() != null && list.getUsers().size() > 0) {
+                    llNoManager.setVisibility(View.GONE);
+                    managerGradView.setVisibility(View.VISIBLE);
+                    managerAdapter = new ActEnrollStatusGridViewAdapter(ActEnrollStatus.this, list.getUsers());
+                    managerGradView.setAdapter(managerAdapter);
+                } else {
+                    llNoManager.setVisibility(View.VISIBLE);
+                    managerGradView.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void relogin(String msg) {
+                llNoManager.setVisibility(View.VISIBLE);
+                managerGradView.setVisibility(View.GONE);
+                needLogin(msg);
+            }
+
+            @Override
+            public void error(int code, String msg) {
+                llNoManager.setVisibility(View.VISIBLE);
+                managerGradView.setVisibility(View.GONE);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+                llNoManager.setVisibility(View.VISIBLE);
+                managerGradView.setVisibility(View.GONE);
             }
         }, param.getParameters());
         executeRequest(task);
@@ -438,6 +506,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                     ActEnrollStatusCommentModel model = new ActEnrollStatusCommentModel();
                     model.setAuthor_id(AppPreference.getUserPersistentInt(ActEnrollStatus.this, AppPreference.USER_ID));
                     model.setContent(content);
+                    model.setCreate_time(TimeUtil.getFormatedTime("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
                     model.setUser(AppPreference.getUserInfo(ActEnrollStatus.this));
                     commentAdapter.addItem(model, commentAdapter.getCount());
                     if (llNoComment.isShown()) {
@@ -461,44 +530,12 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             public void error(int code, String msg) {
                 isComment = false;
                 toast("留言失败，请重试");
-
-                if (page == 1) {
-                    ActEnrollStatusCommentModel model = new ActEnrollStatusCommentModel();
-                    model.setAuthor_id(AppPreference.getUserPersistentInt(ActEnrollStatus.this, AppPreference.USER_ID));
-                    model.setContent(content);
-                    model.setUser(AppPreference.getUserInfo(ActEnrollStatus.this));
-                    commentAdapter.addItem(model, commentAdapter.getCount());
-                    if (llNoComment.isShown()) {
-                        footer_textview.setText("已是全部");
-                        footer_textview.setVisibility(View.VISIBLE);
-                        footer_progress.setVisibility(View.GONE);
-                        llNoComment.setVisibility(View.GONE);
-                    }
-                    etContent.setText("");
-                    isComment = false;
-                }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
                 isComment = false;
                 toast("留言失败，请重试");
-
-                if (page == 1) {
-                    ActEnrollStatusCommentModel model = new ActEnrollStatusCommentModel();
-                    model.setAuthor_id(AppPreference.getUserPersistentInt(ActEnrollStatus.this, AppPreference.USER_ID));
-                    model.setContent(content);
-                    model.setUser(AppPreference.getUserInfo(ActEnrollStatus.this));
-                    commentAdapter.addItem(model, commentAdapter.getCount());
-                    if (llNoComment.isShown()) {
-                        footer_textview.setText("已是全部");
-                        footer_textview.setVisibility(View.VISIBLE);
-                        footer_progress.setVisibility(View.GONE);
-                        llNoComment.setVisibility(View.GONE);
-                    }
-                    etContent.setText("");
-                    isComment = false;
-                }
             }
         }, param.getParameters());
         executeRequest(task);

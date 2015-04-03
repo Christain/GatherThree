@@ -3,27 +3,21 @@
     android:id="@+id/head_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/font_orange" >
+    android:background="@color/bg_app" >
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:paddingBottom="20dp"
-        android:paddingTop="20dp" >
+        android:paddingBottom="15dp"
+        android:paddingTop="15dp" >
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true" >
 
-            <ImageView
-                android:id="@+id/pull_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="60dp"
-                android:background="@drawable/pull_icon_big" />
+
 
             <ImageView
                 android:id="@+id/refreshing_icon"
@@ -40,8 +34,17 @@
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:text="@string/pull_to_refresh"
-                android:textColor="@color/font_white"
+                android:textColor="@color/font_gray"
                 android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/pull_icon"
+                android:layout_width="20dp"
+                android:layout_height="30dp"
+                android:layout_toLeftOf="@id/state_tv"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="20dp"
+                android:background="@drawable/pull_icon_big" />
 
             <ImageView
                 android:id="@+id/state_iv"

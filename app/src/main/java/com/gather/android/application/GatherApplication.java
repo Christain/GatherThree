@@ -61,6 +61,7 @@ public class GatherApplication extends FrontiaApplication {
 		initVolley();
 		initImageLoader(getApplicationContext());
 
+
 		/**
 		 * 初始化统计
 		 */

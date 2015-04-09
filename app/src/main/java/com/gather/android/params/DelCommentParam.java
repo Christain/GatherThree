@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 删除单条评论
  */
-public class DelCommentParam extends StringParams {
+public class DelCommentParam extends BaseParams {
 
-	public DelCommentParam(Context context, int commentId) {
-		super(context, "act/dynamic/delComment");
-		setParameter("commentId", commentId);
+	public DelCommentParam(int commentId) {
+		super("act/dynamic/delComment");
+        put("commentId", commentId);
 	}
 
 }

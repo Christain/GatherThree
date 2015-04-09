@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 首页轮播图
  */
-public class HomePicParam extends StringParams {
+public class HomePicParam extends BaseParams {
 
-	public HomePicParam(Context context, int cityId, int page, int size) {
-		super(context, "act/news/homeAdverts");
-		setParameter("cityId", cityId);
-		setParameter("page", page);
-		setParameter("size", size);
+	public HomePicParam(int cityId, int page, int size) {
+		super("act/news/homeAdverts");
+        put("cityId", cityId);
+        put("page", page);
+        put("size", size);
 	}
 
 }

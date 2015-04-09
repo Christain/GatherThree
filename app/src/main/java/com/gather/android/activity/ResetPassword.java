@@ -7,17 +7,17 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.params.ResetPasswordParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
+
+import org.apache.http.Header;
 
 public class ResetPassword extends SwipeBackActivity implements OnClickListener {
 	
@@ -79,50 +79,35 @@ public class ResetPassword extends SwipeBackActivity implements OnClickListener 
 	private void UpdatePassword(String password) {
 		mLoadingDialog.setMessage("正在修改...");
 		mLoadingDialog.show();
-		ResetPasswordParam param = new ResetPasswordParam(ResetPassword.this, password);
-		HttpStringPost task = new HttpStringPost(ResetPassword.this, param.getUrl(), new ResponseListener() {
-			
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("修改成功");
-				finishActivity();
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new Response.ErrorListener() {
+		ResetPasswordParam param = new ResetPasswordParam(password);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("修改成功");
+                finishActivity();
+            }
 
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 }

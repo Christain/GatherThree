@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 删除动态（自己发布的）
  */
-public class DelTrendsParam extends StringParams {
+public class DelTrendsParam extends BaseParams {
 
-	public DelTrendsParam(Context context, int dynamicId) {
-		super(context, "act/dynamic/delete");
-		setParameter("dynamicId", dynamicId);
+	public DelTrendsParam(int dynamicId) {
+		super("act/dynamic/delete");
+        put("dynamicId", dynamicId);
 	}
 
 }

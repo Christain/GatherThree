@@ -10,19 +10,19 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActNotifycationAdapter;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActNotifyModel;
 import com.gather.android.model.ActNotifyModelList;
 import com.gather.android.params.ActNotifyParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
 
 import java.util.ArrayList;
 
@@ -90,10 +90,10 @@ public class ActNotifycation extends SwipeBackActivity implements View.OnClickLi
             mLoadingDialog.setMessage("加载中...");
             mLoadingDialog.show();
         }
-        ActNotifyParam param = new ActNotifyParam(ActNotifycation.this, actId);
-        HttpStringPost task = new HttpStringPost(ActNotifycation.this, param.getUrl(), new ResponseListener() {
+        ActNotifyParam param = new ActNotifyParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -107,7 +107,7 @@ public class ActNotifycation extends SwipeBackActivity implements View.OnClickLi
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -115,24 +115,14 @@ public class ActNotifycation extends SwipeBackActivity implements View.OnClickLi
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 toast("加载失败，请重试");
                 finish();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                toast("加载失败，请重试");
-                finish();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     @Override

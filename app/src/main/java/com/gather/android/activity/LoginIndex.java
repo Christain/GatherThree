@@ -14,11 +14,6 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.android.volley.Request.Method;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.Response.Listener;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.baidu.android.pushservice.PushConstants;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
@@ -27,12 +22,14 @@ import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.params.LoginThirdParam;
 import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.wxapi.WXEntryActivity;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
 import com.sina.weibo.sdk.auth.WeiboAuth;
 import com.sina.weibo.sdk.auth.WeiboAuthListener;
@@ -45,6 +42,7 @@ import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -215,62 +213,50 @@ public class LoginIndex extends BaseActivity implements OnClickListener {
 	private void SinaLogin() {
 		mLoadingDialog.setMessage("正在登录...");
 		mLoadingDialog.show();
-		LoginThirdParam params = new LoginThirdParam(LoginIndex.this, 3, mAccessToken.getUid(), mAccessToken.getToken(), mAccessToken.getExpiresTime());
-		HttpStringPost post = new HttpStringPost(LoginIndex.this, params.getUrl(), new ResponseListener() {
+		LoginThirdParam params = new LoginThirdParam(3, mAccessToken.getUid(), mAccessToken.getToken(), mAccessToken.getExpiresTime());
+        AsyncHttpTask.post(params.getUrl(), params, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    if (object.has("is_regist") && object.getInt("is_regist") == 0) {
+                        Intent intent = new Intent(LoginIndex.this, RegisterData.class);
+                        intent.putExtra("TYPE", AppPreference.TYPE_SINA);
+                        startActivity(intent);
+                    } else {
+                        AppPreference.save(LoginIndex.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_SINA);
+                        Intent intent = new Intent(LoginIndex.this, IndexHome.class);
+                        startActivity(intent);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finishActivity();
+                    }
+                    PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(LoginIndex.this, "api_key"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					if (object.has("is_regist") && object.getInt("is_regist") == 0) {
-						Intent intent = new Intent(LoginIndex.this, RegisterData.class);
-						intent.putExtra("TYPE", AppPreference.TYPE_SINA);
-						startActivity(intent);
-					} else {
-						AppPreference.save(LoginIndex.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_SINA);
-						Intent intent = new Intent(LoginIndex.this, IndexHome.class);
-						startActivity(intent);
-						overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-						finishActivity();
-					}
-					PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(LoginIndex.this, "api_key"));
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, params.getParameters(), true);
-		executeRequest(post);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -279,63 +265,50 @@ public class LoginIndex extends BaseActivity implements OnClickListener {
 	private void TencentLogin() {
 		mLoadingDialog.setMessage("正在登录...");
 		mLoadingDialog.show();
-		LoginThirdParam params = new LoginThirdParam(LoginIndex.this, 4, mTencent.getOpenId(), mTencent.getAccessToken(), mTencent.getExpiresIn());
-		HttpStringPost post = new HttpStringPost(LoginIndex.this, params.getUrl(), new ResponseListener() {
+		LoginThirdParam params = new LoginThirdParam(4, mTencent.getOpenId(), mTencent.getAccessToken(), mTencent.getExpiresIn());
+        AsyncHttpTask.post(params.getUrl(), params, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    if (object.has("is_regist") && object.getInt("is_regist") == 0) {
+                        Intent intent = new Intent(LoginIndex.this, RegisterData.class);
+                        intent.putExtra("TYPE", AppPreference.TYPE_QQ);
+                        startActivity(intent);
+                    } else {
+                        AppPreference.save(LoginIndex.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_QQ);
+                        Intent intent = new Intent(LoginIndex.this, IndexHome.class);
+                        startActivity(intent);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finishActivity();
+                    }
+                    PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(LoginIndex.this, "api_key"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					if (object.has("is_regist") && object.getInt("is_regist") == 0) {
-						Intent intent = new Intent(LoginIndex.this, RegisterData.class);
-						intent.putExtra("TYPE", AppPreference.TYPE_QQ);
-						startActivity(intent);
-					} else {
-						AppPreference.save(LoginIndex.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_QQ);
-						Intent intent = new Intent(LoginIndex.this, IndexHome.class);
-						startActivity(intent);
-						overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-						finishActivity();
-					}
-					PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(LoginIndex.this, "api_key"));
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, params.getParameters());
-		executeRequest(post);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -344,61 +317,50 @@ public class LoginIndex extends BaseActivity implements OnClickListener {
 	private void WechatLogin(String openId, String access_token, long expires_in) {
 		mLoadingDialog.setMessage("正在微信登录...");
 		mLoadingDialog.show();
-		LoginThirdParam params = new LoginThirdParam(LoginIndex.this, 5, openId, access_token, expires_in);
-		HttpStringPost post = new HttpStringPost(LoginIndex.this, params.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					if (object.has("is_regist") && object.getInt("is_regist") == 0) {
-						Intent intent = new Intent(LoginIndex.this, RegisterData.class);
-						intent.putExtra("TYPE", AppPreference.TYPE_WECHAT);
-						startActivity(intent);
-					} else {
-						AppPreference.save(LoginIndex.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_WECHAT);
-						Intent intent = new Intent(LoginIndex.this, IndexHome.class);
-						startActivity(intent);
-						overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-						finishActivity();
-					}
-					PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(LoginIndex.this, "api_key"));
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+		LoginThirdParam params = new LoginThirdParam(5, openId, access_token, expires_in);
+        AsyncHttpTask.post(params.getUrl(), params, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    if (object.has("is_regist") && object.getInt("is_regist") == 0) {
+                        Intent intent = new Intent(LoginIndex.this, RegisterData.class);
+                        intent.putExtra("TYPE", AppPreference.TYPE_WECHAT);
+                        startActivity(intent);
+                    } else {
+                        AppPreference.save(LoginIndex.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_WECHAT);
+                        Intent intent = new Intent(LoginIndex.this, IndexHome.class);
+                        startActivity(intent);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finishActivity();
+                    }
+                    PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(LoginIndex.this, "api_key"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, params.getParameters());
-		executeRequest(post);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	// 获取ApiKey
@@ -464,33 +426,34 @@ public class LoginIndex extends BaseActivity implements OnClickListener {
 	 * 获取微信access_token
 	 */
 	private void getWeChatAccessToken(String code) {
-		StringRequest task = new StringRequest(Method.GET, getAccessToken_Url(code), new Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				Log.e("wechat", response);
-				try {
-					JSONObject object = new JSONObject(response);
-					if (object.has("access_token")) {
-						WechatLogin(object.getString("openid"), object.getString("access_token"), object.getLong("expires_in"));
-					} else {
-						if (object.has("errcode")) {
-							toast(object.getString("errmsg"));
-						}
-					}
-				} catch (JSONException e) {
-					toast("微信数据解析失败");
-					e.printStackTrace();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("微信登录失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		});
-		executeRequest(task);
+        AsyncHttpTask.post(getAccessToken_Url(code), new RequestParams(), new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject result) {
+                super.onSuccess(statusCode, headers, result);
+                Log.e("wechat", result.toString());
+                try {
+                    JSONObject object = new JSONObject(result.toString());
+                    if (object.has("access_token")) {
+                        WechatLogin(object.getString("openid"), object.getString("access_token"), object.getLong("expires_in"));
+                    } else {
+                        if (object.has("errcode")) {
+                            toast(object.getString("errmsg"));
+                        }
+                    }
+                } catch (JSONException e) {
+                    toast("微信数据解析失败");
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("微信登录失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	private String getAccessToken_Url(String code) {

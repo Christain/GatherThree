@@ -1,26 +1,24 @@
 package com.gather.android.params;
 
-import java.util.ArrayList;
-
-import android.content.Context;
-
 import com.gather.android.application.GatherApplication;
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 import com.gather.android.model.CityListModel;
 import com.gather.android.model.UserInterestModel;
+
+import java.util.ArrayList;
 
 /**
  * 申请成为达人
  */
-public class ApplyVipParam extends StringParams {
+public class ApplyVipParam extends BaseParams {
 
-	public ApplyVipParam(Context context) {
-		super(context, "act/vip/apply");
-		GatherApplication application = (GatherApplication) context.getApplicationContext();
+	public ApplyVipParam() {
+		super("act/vip/apply");
+		GatherApplication application = GatherApplication.getInstance();
 		if (application.mLocation != null) {
-			setParameter("address", application.mLocation.getAddrStr());
-			setParameter("lon", application.mLocation.getLongitude());
-			setParameter("lat", application.mLocation.getLatitude());
+            put("address", application.mLocation.getAddrStr());
+            put("lon", application.mLocation.getLongitude());
+            put("lat", application.mLocation.getLatitude());
 		}
 	}
 	
@@ -29,7 +27,7 @@ public class ApplyVipParam extends StringParams {
 	 * @param name
 	 */
 	public void setRealName(String name) {
-		setParameter("realName", name);
+        put("realName", name);
 	}
 
 	/**
@@ -37,7 +35,7 @@ public class ApplyVipParam extends StringParams {
 	 * @param phone
 	 */
 	public void setContactPhone(String phone) {
-		setParameter("contactPhone", phone);
+        put("contactPhone", phone);
 	}
 	
 	/**
@@ -45,7 +43,7 @@ public class ApplyVipParam extends StringParams {
 	 * @param email
 	 */
 	public void setEmail(String email) {
-		setParameter("email", email);
+        put("email", email);
 	}
 	
 	/**
@@ -53,7 +51,7 @@ public class ApplyVipParam extends StringParams {
 	 * @param intro
 	 */
 	public void setIntro(String intro) {
-		setParameter("intro", intro);
+        put("intro", intro);
 	}
 	
 	/**
@@ -62,7 +60,7 @@ public class ApplyVipParam extends StringParams {
 	 */
 	public void setCity(ArrayList<CityListModel> city) {
 		for (int i = 0; i < city.size(); i++) {
-			setParameter("cityIds[" + i + "]", city.get(i).getId());
+            put("cityIds[" + i + "]", city.get(i).getId());
 		}
 	}
 	
@@ -72,7 +70,7 @@ public class ApplyVipParam extends StringParams {
 	 */
 	public void setActTags(ArrayList<UserInterestModel> actTags) {
 		for (int i = 0; i < actTags.size(); i++) {
-			setParameter("actTagIds[" + i + "]", actTags.get(i).getId());
+            put("actTagIds[" + i + "]", actTags.get(i).getId());
 		}
 	}
 	
@@ -82,17 +80,16 @@ public class ApplyVipParam extends StringParams {
 	 */
 	public void setUserTags(ArrayList<UserInterestModel> userTags) {
 		for (int i = 0; i < userTags.size(); i++) {
-			setParameter("userTagIds[" + i + "]", userTags.get(i).getId());
+            put("userTagIds[" + i + "]", userTags.get(i).getId());
 		}
 	}
 	
 	/**
 	 * 头像
-	 * @param city
 	 */
 	public void setImgList(ArrayList<Integer> imgs) {
 		for (int i = 0; i < imgs.size(); i++) {
-			setParameter("imgIds[" + i + "]", imgs.get(i));
+            put("imgIds[" + i + "]", imgs.get(i));
 		}
 	}
 	

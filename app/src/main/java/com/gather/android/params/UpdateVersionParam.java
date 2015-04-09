@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 检测版本更新
  */
-public class UpdateVersionParam extends StringParams {
+public class UpdateVersionParam extends BaseParams {
 
-	public UpdateVersionParam(Context context) {
-		super(context, "act/appInfo/lastVersion");
-		setParameter("type", 1);
+	public UpdateVersionParam() {
+		super("act/appInfo/lastVersion");
+        put("type", 1);
 	}
 
 }

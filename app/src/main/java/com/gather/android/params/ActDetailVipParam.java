@@ -1,20 +1,18 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /*
  * 活动相关达人
  */
-public class ActDetailVipParam extends StringParams {
+public class ActDetailVipParam extends BaseParams {
 
-	public ActDetailVipParam(Context context, int cityId, int actId, int page, int size) {
-		super(context, "act/activity/listVips");
-		setParameter("cityId", cityId);
-		setParameter("actId", actId);
-		setParameter("page", page);
-		setParameter("size", size);
+	public ActDetailVipParam(int cityId, int actId, int page, int size) {
+		super("act/activity/listVips");
+        put("cityId", cityId);
+        put("actId", actId);
+        put("page", page);
+        put("size", size);
 	}
 
 }

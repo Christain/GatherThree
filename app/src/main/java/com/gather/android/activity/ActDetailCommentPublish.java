@@ -12,18 +12,18 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.params.ActDetailCommentPublishParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
+
+import org.apache.http.Header;
 
 /**
  * 活动评论发布
@@ -117,50 +117,38 @@ public class ActDetailCommentPublish extends SwipeBackActivity implements OnClic
 			mLoadingDialog.setMessage("发表中...");
 			mLoadingDialog.show();
 		}
-		ActDetailCommentPublishParam param = new ActDetailCommentPublishParam(ActDetailCommentPublish.this, actId, content);
-		HttpStringPost task = new HttpStringPost(ActDetailCommentPublish.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				setResult(RESULT_OK);
-				finish();
-			}
+		ActDetailCommentPublishParam param = new ActDetailCommentPublishParam(actId, content);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                setResult(RESULT_OK);
+                finish();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("发表评论失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("发表评论失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("发表评论失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	@Override

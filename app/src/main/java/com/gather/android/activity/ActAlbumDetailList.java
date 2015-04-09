@@ -10,16 +10,14 @@ import com.gather.android.R;
 import com.gather.android.adapter.ActAlbumDetailListAdapter;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
+import com.gather.android.dialog.LoadingDialog;
 import com.gather.android.listener.OnAdapterLoadMoreOverListener;
 import com.gather.android.listener.OnAdapterRefreshOverListener;
 import com.gather.android.model.ActAlbumContentModel;
-import com.gather.android.model.ActAlbumDetailModel;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.PullToRefreshLayout;
 import com.gather.android.widget.PullableGridView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
-
-import java.util.ArrayList;
 
 /**
  * 活动某一相册全部图片列表
@@ -34,6 +32,7 @@ public class ActAlbumDetailList extends SwipeBackActivity implements View.OnClic
     private PullableGridView gridView;
     private ActAlbumDetailListAdapter adapter;
     private DialogTipsBuilder dialog;
+    private LoadingDialog mLoadingDialog;
 
     private ActAlbumContentModel model;
     private int albumId, actId;
@@ -52,6 +51,7 @@ public class ActAlbumDetailList extends SwipeBackActivity implements View.OnClic
             this.actId = intent.getExtras().getInt("ACT_ID");
             this.albumId = model.getId();
             this.dialog = DialogTipsBuilder.getInstance(ActAlbumDetailList.this);
+            this.mLoadingDialog = LoadingDialog.createDialog(ActAlbumDetailList.this, true);
             this.ivLeft = (ImageView) findViewById(R.id.ivLeft);
             this.ivRight = (ImageView) findViewById(R.id.ivRight);
             this.tvLeft = (TextView) findViewById(R.id.tvLeft);
@@ -78,6 +78,7 @@ public class ActAlbumDetailList extends SwipeBackActivity implements View.OnClic
                 this.ivRight.setVisibility(View.VISIBLE);
                 this.tvTitle.setText("我的相册");
                 this.ivRight.setImageResource(R.drawable.icon_act_album_add_photo);
+                this.ivRight.setPadding(2, 2, 2, 2);
                 this.ivRight.setOnClickListener(this);
             } else {
                 this.ivRight.setVisibility(View.GONE);
@@ -103,6 +104,9 @@ public class ActAlbumDetailList extends SwipeBackActivity implements View.OnClic
             this.adapter.setRefreshOverListener(new OnAdapterRefreshOverListener() {
                 @Override
                 public void refreshOver(int code, String msg) {
+                    if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                        mLoadingDialog.dismiss();
+                    }
                     refreshLayout.refreshFinish(PullToRefreshLayout.SUCCEED);
                     switch (code) {
                         case 0:
@@ -138,6 +142,10 @@ public class ActAlbumDetailList extends SwipeBackActivity implements View.OnClic
                     }
                 }
             });
+            if (mLoadingDialog != null && !mLoadingDialog.isShowing()) {
+                mLoadingDialog.setMessage("加载中...");
+                mLoadingDialog.show();
+            }
             this.adapter.getALbumList(albumId);
         } else {
             toast("加载失败");
@@ -156,13 +164,25 @@ public class ActAlbumDetailList extends SwipeBackActivity implements View.OnClic
             case R.id.ivRight:
                 if (!ClickUtil.isFastClick()) {
                     Intent intent = new Intent(ActAlbumDetailList.this, ActAlbumAddPhoto.class);
-                    intent.putExtra("LIST", (ArrayList<ActAlbumDetailModel>) adapter.getMsgList());
                     intent.putExtra("ID", albumId);
                     intent.putExtra("ACT_ID", actId);
-                    startActivity(intent);
+                    startActivityForResult(intent, 100);
                 }
                 break;
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 100) {
+                if (mLoadingDialog != null && !mLoadingDialog.isShowing()) {
+                    mLoadingDialog.setMessage("更新相册中...");
+                    mLoadingDialog.show();
+                }
+                adapter.getALbumList(albumId);
+            }
+        }
+    }
 }

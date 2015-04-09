@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动评论列表
  */
-public class ActCommentListParam extends StringParams {
+public class ActCommentListParam extends BaseParams {
 
-	public ActCommentListParam(Context context, int actId, int page, int size) {
-		super(context, "act/activity/comments");
-		setParameter("actId", actId);
-		setParameter("page", page);
-		setParameter("size", size);
+	public ActCommentListParam(int actId, int page, int size) {
+		super("act/activity/comments");
+        put("actId", actId);
+        put("page", page);
+        put("size", size);
 	}
 
 }

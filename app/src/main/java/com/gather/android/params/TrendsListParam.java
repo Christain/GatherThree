@@ -1,27 +1,24 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 动态列表TrendsFragment
  */
-public class TrendsListParam extends StringParams {
+public class TrendsListParam extends BaseParams {
 
 	/**
-	 * @param context
 	 * @param userId
 	 * @param cityId
 	 * @param page
 	 * @param size
 	 */
-	public TrendsListParam(Context context, int userId, int cityId, int page, int size) {
-		super(context, "act/dynamic/friends");
-		setParameter("uid", userId);
-		setParameter("cityId", cityId);
-		setParameter("page", page);
-		setParameter("size", size);
+	public TrendsListParam(int userId, int cityId, int page, int size) {
+		super("act/dynamic/friends");
+        put("uid", userId);
+        put("cityId", cityId);
+        put("page", page);
+        put("size", size);
 	}
 
 }

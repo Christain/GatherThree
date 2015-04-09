@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 已报名活动
  */
-public class ActHasEnrollListParam extends StringParams {
+public class ActHasEnrollListParam extends BaseParams {
 
-	public ActHasEnrollListParam(Context context, int uid ,int page, int size) {
-		super(context, "act/activity/enrollActs");
-		setParameter("uid", uid);
-		setParameter("page", page);
-		setParameter("size", size);
+	public ActHasEnrollListParam(int uid ,int page, int size) {
+		super("act/activity/enrollActs");
+        put("uid", uid);
+        put("page", page);
+        put("size", size);
 	}
 }

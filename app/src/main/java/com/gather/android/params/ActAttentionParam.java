@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动注意事项
  * Created by Christain on 2015/3/18.
  */
-public class ActAttentionParam extends StringParams{
-    public ActAttentionParam(Context context, int actId) {
-        super(context, "act/actMore/attentions");
-        setParameter("actId", actId);
-        setParameter("page", 1);
-        setParameter("size", 30);
+public class ActAttentionParam extends BaseParams {
+    public ActAttentionParam(int actId) {
+        super("act/actMore/attentions");
+        put("actId", actId);
+        put("page", 1);
+        put("size", 30);
     }
 }

@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 取消收藏的某个活动 
  */
-public class CancelCollectActParam extends StringParams {
+public class CancelCollectActParam extends BaseParams {
 
-	public CancelCollectActParam(Context context, int actId) {
-		super(context, "act/activity/delLov");
-		setParameter("actId", actId);
+	public CancelCollectActParam(int actId) {
+		super("act/activity/delLov");
+        put("actId", actId);
 	}
 
 }

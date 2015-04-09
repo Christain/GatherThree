@@ -1,6 +1,7 @@
 package com.gather.android.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -8,13 +9,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
+import com.gather.android.activity.ActAlbumGallery;
 import com.gather.android.baseclass.SuperAdapter;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActAlbumDetailModel;
 import com.gather.android.model.ActAlbumDetailModelList;
 import com.gather.android.params.ActAlbumDetailListParam;
@@ -26,8 +25,11 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by Christain on 2015/4/1.
@@ -35,8 +37,7 @@ import org.json.JSONObject;
 public class ActAlbumDetailListAdapter extends SuperAdapter {
 
     private Context context;
-    private ResponseListener listener;
-    private Response.ErrorListener errorListener;
+    private ResponseHandler responseHandler;
     private DisplayMetrics metrics;
     private int albumId, page, limit = 20, totalNum, maxPage, isOver;
     private ImageLoader imageLoader = ImageLoader.getInstance();
@@ -51,9 +52,9 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
     }
 
     private void initListener() {
-        listener = new ResponseListener() {
+        responseHandler = new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (page == 1) {
                     JSONObject object = null;
                     try {
@@ -79,23 +80,23 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
                     switch (loadType) {
                         case REFRESH:
                             if (totalNum == 0) {
-                                refreshOver(code, ISNULL);
+                                refreshOver(returnCode, ISNULL);
                             } else if (page == maxPage) {
                                 isOver = 1;
-                                refreshOver(code, ISOVER);
+                                refreshOver(returnCode, ISOVER);
                             } else {
                                 page++;
-                                refreshOver(code, CLICK_MORE);
+                                refreshOver(returnCode, CLICK_MORE);
                             }
                             refreshItems(list.getPhotoes());
                             break;
                         case LOADMORE:
                             if (page != maxPage) {
                                 page++;
-                                loadMoreOver(code, CLICK_MORE);
+                                loadMoreOver(returnCode, CLICK_MORE);
                             } else {
                                 isOver = 1;
-                                loadMoreOver(code, ISOVER);
+                                loadMoreOver(returnCode, ISOVER);
                             }
                             addItems(list.getPhotoes());
                             break;
@@ -103,10 +104,10 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
                 } else {
                     switch (loadType) {
                         case REFRESH:
-                            refreshOver(code, ISNULL);
+                            refreshOver(returnCode, ISNULL);
                             break;
                         case LOADMORE:
-                            loadMoreOver(code, ISOVER);
+                            loadMoreOver(returnCode, ISOVER);
                             break;
                     }
                 }
@@ -114,7 +115,7 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 switch (loadType) {
                     case REFRESH:
                         refreshOver(5, msg);
@@ -127,27 +128,13 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 switch (loadType) {
                     case REFRESH:
-                        refreshOver(code, msg);
+                        refreshOver(returnCode, errorMsg);
                         break;
                     case LOADMORE:
-                        loadMoreOver(code, msg);
-                        break;
-                }
-                isRequest = false;
-            }
-        };
-        errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                switch (loadType) {
-                    case REFRESH:
-                        refreshOver(-1, error.getMsg());
-                        break;
-                    case LOADMORE:
-                        loadMoreOver(-1, error.getMsg());
+                        loadMoreOver(returnCode, errorMsg);
                         break;
                 }
                 isRequest = false;
@@ -197,7 +184,14 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
         @Override
         public void onClick(View view) {
             if (!ClickUtil.isFastClick()) {
-
+                Intent intent = new Intent(context, ActAlbumGallery.class);
+                ArrayList<String> resource = new ArrayList<String>();
+                for (int i = 0; i < getCount(); i++) {
+                    resource.add(((ActAlbumDetailModel) getList().get(i)).getImg_url());
+                }
+                intent.putExtra("LIST", resource);
+                intent.putExtra("POSITION", position);
+                context.startActivity(intent);
             }
         }
     }
@@ -215,9 +209,8 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
             if (!isRequest) {
                 this.isRequest = true;
                 this.loadType = LOADMORE;
-                ActAlbumDetailListParam param = new ActAlbumDetailListParam(context, albumId, page, limit);
-                HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-                RequestManager.addRequest(task, context);
+                ActAlbumDetailListParam param = new ActAlbumDetailListParam(albumId, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
             }
         }
     }
@@ -229,9 +222,8 @@ public class ActAlbumDetailListAdapter extends SuperAdapter {
             this.page = 1;
             this.isOver = 0;
             this.albumId = albumId;
-            ActAlbumDetailListParam param = new ActAlbumDetailListParam(context, albumId, page, limit);
-            HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-            RequestManager.addRequest(task, context);
+            ActAlbumDetailListParam param = new ActAlbumDetailListParam(albumId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
         }
     }
 

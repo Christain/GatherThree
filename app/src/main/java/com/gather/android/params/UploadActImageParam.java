@@ -1,20 +1,22 @@
 package com.gather.android.params;
 
+import com.gather.android.baseclass.BaseParams;
+
 import java.io.File;
-
-import android.content.Context;
-
-import com.gather.android.baseclass.MultipartParams;
 
 /**
  * 活动相关图片上传（成功后返回图片ID）
  *
  */
-public class UploadActImageParam extends MultipartParams {
+public class UploadActImageParam extends BaseParams {
 
-	public UploadActImageParam(Context context, File actImage) {
-		super(context, "act/actInfo/actImgUp");
-		setParameter("actImg", actImage);
+	public UploadActImageParam(File actImage) {
+		super("act/actInfo/actImgUp");
+        try {
+            put("actImg", actImage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 }

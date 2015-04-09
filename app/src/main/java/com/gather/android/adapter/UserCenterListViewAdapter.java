@@ -1,10 +1,5 @@
 package com.gather.android.adapter;
 
-import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -21,17 +16,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.ActRelationList;
 import com.gather.android.activity.UserCenterGallery;
 import com.gather.android.activity.UserTrends;
 import com.gather.android.activity.WebStrategy;
 import com.gather.android.application.GatherApplication;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.NewsModelList;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.model.UserPhotoList;
@@ -42,6 +34,12 @@ import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.HorizontalListView;
 import com.gather.android.widget.HorizontalListView.OnScrollingListener;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class UserCenterListViewAdapter extends BaseAdapter {
 	
@@ -231,33 +229,28 @@ public class UserCenterListViewAdapter extends BaseAdapter {
 	private void getUserPhoto() {
 		page = 1;
 		isOver = 0;
-		GetUserPhotoParam param = new GetUserPhotoParam(mContext, userId, 1, 10);
-		HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), new ResponseListener() {
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				UserPhotoList list = gson.fromJson(result, UserPhotoList.class);
-				if (list != null && list.getPhotos() != null) {
-					picList = list.getPhotos();
-					getUserTrendsPic();
-				}
-			}
+		GetUserPhotoParam param = new GetUserPhotoParam(userId, 1, 10);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                UserPhotoList list = gson.fromJson(result, UserPhotoList.class);
+                if (list != null && list.getPhotos() != null) {
+                    picList = list.getPhotos();
+                    getUserTrendsPic();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				
-			}
+            @Override
+            public void onNeedLogin(String msg) {
 
-			@Override
-			public void error(int code, String msg) {
-				Toast.makeText(mContext, "获取用户图片出错，请重试", Toast.LENGTH_SHORT).show();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				Toast.makeText(mContext, "获取用户图片出错，请重试", Toast.LENGTH_SHORT).show();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, mContext);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                Toast.makeText(mContext, "获取用户图片出错，请重试", Toast.LENGTH_SHORT).show();
+            }
+        });
 	}
 
 	/**
@@ -265,83 +258,74 @@ public class UserCenterListViewAdapter extends BaseAdapter {
 	 */
 	private void getUserTrendsPic() {
 		loadmore = true;
-		GetUserTrendsPicParam param = new GetUserTrendsPicParam(mContext, userId, page, size);
-		HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % size == 0) {
-							maxPage = totalNum / size;
-						} else {
-							maxPage = (totalNum / size) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				UserPhotoList list = gson.fromJson(result, UserPhotoList.class);
-				if (list != null && list.getPhotos() != null) {
-					picList.addAll(list.getPhotos());
-					if (list.getPhotos().size() == 0) {
-						isOver = 1;
-					}
-				}
-				if (picList.size() == 0) {
-					if (holder.horizontalListView.isShown()) {
-						holder.horizontalListView.setVisibility(View.GONE);
-					}
-				} else {
-					if (!holder.horizontalListView.isShown()) {
-						holder.horizontalListView.setVisibility(View.VISIBLE);
-					}
-					if (page == maxPage) {
-						isOver = 1;
-					}
-					adapter.setNotifyChanged(picList);
-				}
-				loadmore = false;
-			}
+		GetUserTrendsPicParam param = new GetUserTrendsPicParam(userId, page, size);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (page == 1) {
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % size == 0) {
+                            maxPage = totalNum / size;
+                        } else {
+                            maxPage = (totalNum / size) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                UserPhotoList list = gson.fromJson(result, UserPhotoList.class);
+                if (list != null && list.getPhotos() != null) {
+                    picList.addAll(list.getPhotos());
+                    if (list.getPhotos().size() == 0) {
+                        isOver = 1;
+                    }
+                }
+                if (picList.size() == 0) {
+                    if (holder.horizontalListView.isShown()) {
+                        holder.horizontalListView.setVisibility(View.GONE);
+                    }
+                } else {
+                    if (!holder.horizontalListView.isShown()) {
+                        holder.horizontalListView.setVisibility(View.VISIBLE);
+                    }
+                    if (page == maxPage) {
+                        isOver = 1;
+                    }
+                    adapter.setNotifyChanged(picList);
+                }
+                loadmore = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				page--;
-				loadmore = false;
-				
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                page--;
+                loadmore = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				page--;
-				loadmore = false;
-				Toast.makeText(mContext, "获取用户图片出错，请重试", Toast.LENGTH_SHORT).show();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (picList.size() == 0) {
-					if (holder.horizontalListView.isShown()) {
-						holder.horizontalListView.setVisibility(View.GONE);
-					}
-				} else {
-					if (!holder.horizontalListView.isShown()) {
-						holder.horizontalListView.setVisibility(View.VISIBLE);
-					}
-					adapter.setNotifyChanged(picList);
-				}
-				page--;
-				loadmore = false;
-				Toast.makeText(mContext, "获取用户图片出错，请重试", Toast.LENGTH_SHORT).show();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, mContext);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (picList.size() == 0) {
+                    if (holder.horizontalListView.isShown()) {
+                        holder.horizontalListView.setVisibility(View.GONE);
+                    }
+                } else {
+                    if (!holder.horizontalListView.isShown()) {
+                        holder.horizontalListView.setVisibility(View.VISIBLE);
+                    }
+                    adapter.setNotifyChanged(picList);
+                }
+                page--;
+                loadmore = false;
+                Toast.makeText(mContext, "获取用户图片出错，请重试", Toast.LENGTH_SHORT).show();
+            }
+        });
 	}
 
 }

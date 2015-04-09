@@ -50,9 +50,6 @@ public class AppPreference {
 	public static final int TYPE_QQ = 102; // QQ登录
 	public static final int TYPE_WECHAT = 103; // 微信登录
 
-	/********************** Cookie **********************************/
-	public static final String COOKIE = "COOKIE";
-
 	private static void getInstance(Context context) {
 		if (preferences == null) {
 			preferences = context.getSharedPreferences(NAME, Context.MODE_PRIVATE);
@@ -205,24 +202,6 @@ public class AppPreference {
 		model.setContact_qq(preferences.getString(CONTACT_QQ, ""));
 		model.setLast_login_time(preferences.getString(LAST_LOGIN_TIME, ""));
 		return model;
-	}
-
-	/**
-	 * 更新Cookie
-	 */
-	public static void updateCookie(Context context, String cookie) {
-		getInstance(context);
-		SharedPreferences.Editor mEditor = preferences.edit();
-		mEditor.putString(COOKIE, cookie);
-		mEditor.commit();
-	}
-
-	/**
-	 * 获取Cookie
-	 */
-	public static String getCookie(Context context) {
-		getInstance(context);
-		return preferences.getString(COOKIE, "");
 	}
 
 	/**

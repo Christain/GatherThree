@@ -1,7 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.ArrayList;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -25,21 +23,22 @@ import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 
-import com.android.volley.VolleyError;
-import com.android.volley.Response.ErrorListener;
 import com.gather.android.R;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.dialog.LoadingDialog;
 import com.gather.android.fragment.ActListFragment;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.UserInterestList;
 import com.gather.android.model.UserInterestModel;
 import com.gather.android.params.GetActTagsParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+
+import java.util.ArrayList;
 
 /**
  * 本周活动列表
@@ -427,48 +426,38 @@ public class ActWeek extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("加载中...");
 			mLoadingDialog.show();
 		}
-		GetActTagsParam param = new GetActTagsParam(ActWeek.this, application.getCityId());
-		HttpStringPost task = new HttpStringPost(ActWeek.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				SharedPreferences cityPreferences = ActWeek.this.getSharedPreferences("ACT_MARK_LIST_" + application.getCityId(), Context.MODE_PRIVATE);
-				SharedPreferences.Editor editor = cityPreferences.edit();
-				editor.putString("MARK", result);
-				editor.commit();
-				initView();
-			}
+		GetActTagsParam param = new GetActTagsParam(application.getCityId());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                SharedPreferences cityPreferences = ActWeek.this.getSharedPreferences("ACT_MARK_LIST_" + application.getCityId(), Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = cityPreferences.edit();
+                editor.putString("MARK", result);
+                editor.commit();
+                initView();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取活动标签出错");
-				finish();
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("获取活动标签出错");
+                finish();
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取活动标签出错");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取活动标签出错");
-				finish();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, ActWeek.this);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("获取活动标签出错");
+                finish();
+            }
+        });
 	}
 
 }

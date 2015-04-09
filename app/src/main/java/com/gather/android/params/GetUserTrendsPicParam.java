@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取用户动态图片
  */
-public class GetUserTrendsPicParam extends StringParams {
+public class GetUserTrendsPicParam extends BaseParams {
 
-	public GetUserTrendsPicParam(Context context, int uid, int page, int size) {
-		super(context, "act/dynamic/photos");
-		setParameter("uid", uid);
-		setParameter("page", page);
-		setParameter("size", size);
+	public GetUserTrendsPicParam(int uid, int page, int size) {
+		super("act/dynamic/photos");
+        put("uid", uid);
+        put("page", page);
+        put("size", size);
 	}
 
 }

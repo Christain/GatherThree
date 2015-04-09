@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 评论活动
  */
-public class ActDetailCommentPublishParam extends StringParams {
+public class ActDetailCommentPublishParam extends BaseParams {
 
-	public ActDetailCommentPublishParam(Context context, int actId, String content) {
-		super(context, "act/activity/comment");
-		setParameter("actId", actId);
-		setParameter("content", content);
+	public ActDetailCommentPublishParam(int actId, String content) {
+		super("act/activity/comment");
+        put("actId", actId);
+        put("content", content);
 	}
 
 }

@@ -1,13 +1,5 @@
 package com.gather.android.activity;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -21,9 +13,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.PickedImagesAdapter;
 import com.gather.android.adapter.PickedImagesAdapter.OnPickedItemClickListener;
@@ -33,9 +22,8 @@ import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.IntentManage;
 import com.gather.android.model.PickedImageModel;
 import com.gather.android.params.TipOffDataParam;
@@ -47,6 +35,15 @@ import com.gather.android.widget.ChoosePicAlert;
 import com.gather.android.widget.MMAlert;
 import com.gather.android.widget.NoScrollGridView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 爆料
@@ -203,54 +200,41 @@ public class TipOff extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("正在提交...");
 			mLoadingDialog.show();
 		}
-		UploadPicParam param = new UploadPicParam(TipOff.this, file);
-		MultipartRequest task = new MultipartRequest(TipOff.this, param.getUrl(), new ResponseListener() {
+		UploadPicParam param = new UploadPicParam(file);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    imgIdsList.add(object.getInt("img_id"));
+                    if (index < picAdapter.getList().size() - 1) {
+                        UploadPic(picAdapter.getList().get(index + 1).getImageFile(), index + 1);
+                    } else {
+                        UploadActData();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					imgIdsList.add(object.getInt("img_id"));
-					if (index < picAdapter.getList().size() - 1) {
-						UploadPic(picAdapter.getList().get(index + 1).getImageFile(), index + 1);
-					} else {
-						UploadActData();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("提交失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("提交失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("提交失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -262,46 +246,35 @@ public class TipOff extends SwipeBackActivity implements OnClickListener {
 			other = etOther.getText().toString().trim();
 		}
 		GatherApplication application = (GatherApplication) getApplication();
-		TipOffDataParam param = new TipOffDataParam(TipOff.this, application.getCityId(), imgIdsList, etPhone.getText().toString().trim(), etAddress.getText().toString().trim(), other);
-		HttpStringPost task = new HttpStringPost(TipOff.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				setResult(RESULT_OK);
-				finish();
-			}
+		TipOffDataParam param = new TipOffDataParam(application.getCityId(), imgIdsList, etPhone.getText().toString().trim(), etAddress.getText().toString().trim(), other);
+		AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                setResult(RESULT_OK);
+                finish();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("提交失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("提交失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("提交失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	private OnPickedItemClickListener mPickedItemClickListener = new OnPickedItemClickListener() {

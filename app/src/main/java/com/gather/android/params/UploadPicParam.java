@@ -1,18 +1,20 @@
 package com.gather.android.params;
 
+import com.gather.android.baseclass.BaseParams;
+
 import java.io.File;
-
-import android.content.Context;
-
-import com.gather.android.baseclass.MultipartParams;
 
 /**
  * 上传图片（除头像）
  */
-public class UploadPicParam extends MultipartParams {
+public class UploadPicParam extends BaseParams {
 
-	public UploadPicParam(Context context, File imgFile) {
-		super(context, "act/user/imgUp");
-		setParameter("img", imgFile);
+	public UploadPicParam(File imgFile) {
+		super("act/user/imgUp");
+        try {
+            put("img", imgFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 }

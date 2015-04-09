@@ -1,7 +1,6 @@
 package com.gather.android.activity;
 
 import android.annotation.SuppressLint;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -10,35 +9,25 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request.Method;
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
 import com.gather.android.adapter.ActDetailVipAdapter;
@@ -48,8 +37,8 @@ import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActAddressAndCarLocationListModel;
 import com.gather.android.model.ActAddressModel;
 import com.gather.android.model.ActCommentModelList;
@@ -62,7 +51,6 @@ import com.gather.android.model.NewsModelList;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.model.UserList;
 import com.gather.android.params.ActCommentListParam;
-import com.gather.android.params.ActDetailEnrollParam;
 import com.gather.android.params.ActDetailParam;
 import com.gather.android.params.ActDetailRelationParam;
 import com.gather.android.params.ActDetailVipParam;
@@ -73,7 +61,6 @@ import com.gather.android.params.CancelCollectActParam;
 import com.gather.android.params.CollectActParam;
 import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
-import com.gather.android.utils.MobileUtil;
 import com.gather.android.utils.ThumbnailUtil;
 import com.gather.android.utils.TimeUtil;
 import com.gather.android.widget.InfiniteLoopViewPager;
@@ -83,6 +70,8 @@ import com.gather.android.widget.NoScrollGridView;
 import com.gather.android.widget.UserCenterScrollView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
@@ -107,13 +96,12 @@ import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
 import com.tendcloud.tenddata.TCAgent;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 活动详情
@@ -461,7 +449,7 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 		}
         if (hasLogin) {
             if (modulesStatusModel.getShow_enroll() == 1) {
-                if (actMoreInfoModel.getEnroll_status() == -1) {
+                if (actMoreInfoModel.getEnroll_status() == -1 || actMoreInfoModel.getEnroll_status() == 0) {
                     llEnroll.setVisibility(View.VISIBLE);
                     menuLine.setVisibility(View.VISIBLE);
                     llEnrollStatus.setVisibility(View.VISIBLE);
@@ -569,56 +557,47 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("正在加载中...");
 			mLoadingDialog.show();
 		}
-		ActDetailParam param = new ActDetailParam(ActDetail.this, actId);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				ActDetailModel model = gson.fromJson(result, ActDetailModel.class);
-				if (model.getAct() != null) {
+		ActDetailParam param = new ActDetailParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                ActDetailModel model = gson.fromJson(result, ActDetailModel.class);
+                if (model.getAct() != null) {
                     actModel = model.getAct();
                     getActMoreInfo();
-				} else {
-					toast("活动信息有误");
-					finish();
-				}
-			}
+                } else {
+                    toast("活动信息有误");
+                    finish();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				errorView();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				errorView();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                errorView();
+            }
+        });
 	}
 
     /**
      * 获取更多活动信息
      */
     private void getActMoreInfo() {
-        ActMoreInfoParam param = new ActMoreInfoParam(ActDetail.this, actId);
-        HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+        ActMoreInfoParam param = new ActMoreInfoParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 try {
                     JSONObject object = new JSONObject(result);
                     Gson gson = new Gson();
@@ -636,7 +615,7 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -644,32 +623,23 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 errorView();
             }
-        }, new ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                errorView();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     /**
      * 获取活动模块信息
      */
     private void getActModulesStatus() {
-        ActModulesStatusParam param = new ActModulesStatusParam(ActDetail.this, actId);
-        HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+        ActModulesStatusParam param = new ActModulesStatusParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -693,13 +663,13 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
                         toast("活动信息有误");
                         finish();
                     }
-                }catch (JSONException e){
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -707,141 +677,114 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 errorView();
             }
-        },new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                errorView();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
 	/**
 	 * 活动相关攻略
 	 */
 	private void getActDetailStrategy() {
-		ActDetailRelationParam param = new ActDetailRelationParam(ActDetail.this, actId, 1, 1, 1);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				NewsModelList newsModel = gson.fromJson(result, NewsModelList.class);
-				if (newsModel != null && newsModel.getNews().size() > 0) {
-					tvActStrategy.getPaint().setFlags(Paint.UNDERLINE_TEXT_FLAG);
-					tvActStrategy.setTextColor(0xFFFF9933);
-					tvActStrategy.setText(newsModel.getNews().get(0).getTitle());
-					llActStrategy.setVisibility(View.VISIBLE);
-					tvActStrategy.setOnClickListener(new OnStretegyAndMemoryClickListener(newsModel.getNews().get(0), "攻略详情"));
-				}
-			}
+		ActDetailRelationParam param = new ActDetailRelationParam(actId, 1, 1, 1);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                NewsModelList newsModel = gson.fromJson(result, NewsModelList.class);
+                if (newsModel != null && newsModel.getNews().size() > 0) {
+                    tvActStrategy.getPaint().setFlags(Paint.UNDERLINE_TEXT_FLAG);
+                    tvActStrategy.setTextColor(0xFFFF9933);
+                    tvActStrategy.setText(newsModel.getNews().get(0).getTitle());
+                    llActStrategy.setVisibility(View.VISIBLE);
+                    tvActStrategy.setOnClickListener(new OnStretegyAndMemoryClickListener(newsModel.getNews().get(0), "攻略详情"));
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("获取攻略失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("获取攻略失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("获取攻略失败");
+            }
+        });
 	}
 
 	/**
 	 * 活动相关回顾
 	 */
 	private void getActDetailMemory() {
-		ActDetailRelationParam param = new ActDetailRelationParam(ActDetail.this, actId, 2, 1, 1);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				NewsModelList newsModel = gson.fromJson(result, NewsModelList.class);
-				if (newsModel != null && newsModel.getNews().size() > 0) {
-					tvActMemory.getPaint().setFlags(Paint.UNDERLINE_TEXT_FLAG);
-					tvActMemory.setTextColor(0xFFFF9933);
-					tvActMemory.setText(newsModel.getNews().get(0).getTitle());
-					llActMemory.setVisibility(View.VISIBLE);
-					tvActMemory.setOnClickListener(new OnStretegyAndMemoryClickListener(newsModel.getNews().get(0), "记忆详情"));
-				}
-			}
+		ActDetailRelationParam param = new ActDetailRelationParam(actId, 2, 1, 1);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                NewsModelList newsModel = gson.fromJson(result, NewsModelList.class);
+                if (newsModel != null && newsModel.getNews().size() > 0) {
+                    tvActMemory.getPaint().setFlags(Paint.UNDERLINE_TEXT_FLAG);
+                    tvActMemory.setTextColor(0xFFFF9933);
+                    tvActMemory.setText(newsModel.getNews().get(0).getTitle());
+                    llActMemory.setVisibility(View.VISIBLE);
+                    tvActMemory.setOnClickListener(new OnStretegyAndMemoryClickListener(newsModel.getNews().get(0), "记忆详情"));
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("获取回顾失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("获取回顾失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("获取回顾失败");
+            }
+        });
 	}
 
 	/**
 	 * 活动相关达人
 	 */
 	private void getActDetailVip() {
-		ActDetailVipParam param = new ActDetailVipParam(ActDetail.this, application.getCityId(), actId, 1, 4);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				UserList list = gson.fromJson(result, UserList.class);
-				if (list != null && list.getUsers().size() > 0) {
-					vipAdapter = new ActDetailVipAdapter(ActDetail.this, list.getUsers());
-					vipGridView.setAdapter(vipAdapter);
-					llActVip.setVisibility(View.VISIBLE);
-				}
-			}
+		ActDetailVipParam param = new ActDetailVipParam(application.getCityId(), actId, 1, 4);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                UserList list = gson.fromJson(result, UserList.class);
+                if (list != null && list.getUsers().size() > 0) {
+                    vipAdapter = new ActDetailVipAdapter(ActDetail.this, list.getUsers());
+                    vipGridView.setAdapter(vipAdapter);
+                    llActVip.setVisibility(View.VISIBLE);
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("获取达人失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("获取达人失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("获取达人失败");
+            }
+        });
 	}
 
     /**
      * 获取更多地址信息
      */
     private void getActMoreAddress() {
-        ActMoreAddressParam param = new ActMoreAddressParam(ActDetail.this, actId);
-        HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+        ActMoreAddressParam param = new ActMoreAddressParam(actId);
+        AsyncHttpTask.post(param.getUrl(),param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 Gson gson = new Gson();
                 ActAddressAndCarLocationListModel list = gson.fromJson(result, ActAddressAndCarLocationListModel.class);
                 if (list != null && list.getAct_addrs().size() > 0) {
@@ -854,21 +797,15 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 needLogin(msg);
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 toast("获取地址失败");
             }
-        }, new ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                toast("获取地址失败");
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
 	/**
@@ -899,37 +836,31 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 	 * 活动评论
 	 */
 	private void getActDetailComment() {
-		ActCommentListParam param = new ActCommentListParam(ActDetail.this, actId, 1, 1);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				ActCommentModelList list = gson.fromJson(result, ActCommentModelList.class);
-				if (list != null && list.getComments().size() > 0) {
-					tvActCommentNum.setText(list.getTotal_num() + "条");
-					tvUserName.setText(list.getComments().get(0).getUser().getNick_name());
-					tvUserComment.setText(list.getComments().get(0).getContent());
-					imageLoader.displayImage(ThumbnailUtil.ThumbnailMethod(list.getComments().get(0).getUser().getHead_img_url(), 150, 150, 50), ivUserIcon, userOptions);
-					llActComment.setVisibility(View.VISIBLE);
-				}
-			}
+		ActCommentListParam param = new ActCommentListParam(actId, 1, 1);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                ActCommentModelList list = gson.fromJson(result, ActCommentModelList.class);
+                if (list != null && list.getComments().size() > 0) {
+                    tvActCommentNum.setText(list.getTotal_num() + "条");
+                    tvUserName.setText(list.getComments().get(0).getUser().getNick_name());
+                    tvUserComment.setText(list.getComments().get(0).getContent());
+                    imageLoader.displayImage(ThumbnailUtil.ThumbnailMethod(list.getComments().get(0).getUser().getHead_img_url(), 150, 150, 50), ivUserIcon, userOptions);
+                    llActComment.setVisibility(View.VISIBLE);
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("获取评论失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("获取评论失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("获取评论失败");
+            }
+        });
 	}
 
 	/**
@@ -938,47 +869,35 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 	private void AddCollectAct() {
 		mLoadingDialog.setMessage("关注中...");
 		mLoadingDialog.show();
-		CollectActParam param = new CollectActParam(ActDetail.this, actId);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+		CollectActParam param = new CollectActParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                actModel.setIs_loved(1);
+                ivActLove.setImageResource(R.drawable.icon_act_title_love_press);
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				actModel.setIs_loved(1);
-				ivActLove.setImageResource(R.drawable.icon_act_title_love_press);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -987,47 +906,35 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 	private void CancelCollectAct() {
 		mLoadingDialog.setMessage("正在取消...");
 		mLoadingDialog.show();
-		CancelCollectActParam param = new CancelCollectActParam(ActDetail.this, actId);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
+		CancelCollectActParam param = new CancelCollectActParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                actModel.setIs_loved(-1);
+                ivActLove.setImageResource(R.drawable.icon_act_title_love_normal);
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				actModel.setIs_loved(-1);
-				ivActLove.setImageResource(R.drawable.icon_act_title_love_normal);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -1295,40 +1202,30 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
 	private void ShareToSina() {
 		mLoadingDialog.setMessage("分享到新浪微博...");
 		mLoadingDialog.show();
-		StringRequest task = new StringRequest(Method.POST, "https://api.weibo.com/2/statuses/upload_url_text.json", new Response.Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				TCAgent.onEvent(ActDetail.this, "分享到新浪微博");
-				toast("分享成功");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast(error.getMessage());
-			}
-		}) {
-			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<String, String>();
-				params.put("access_token", AppPreference.getUserPersistent(ActDetail.this, AppPreference.SINA_TOKEN));
-				params.put("status", "#" + actModel.getTitle() + "#" + Share_Message + "下载链接：" + Constant.OFFICIAL_WEB);
-				params.put("url", actModel.getHead_img_url());
-				return params;
-			}
+        RequestParams params = new RequestParams();
+        params.put("access_token", AppPreference.getUserPersistent(ActDetail.this, AppPreference.SINA_TOKEN));
+        params.put("status", "#" + actModel.getTitle() + "#" + Share_Message + "下载链接：" + Constant.OFFICIAL_WEB);
+        params.put("url", actModel.getHead_img_url());
+        AsyncHttpTask.post("https://api.weibo.com/2/statuses/upload_url_text.json", params, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                TCAgent.onEvent(ActDetail.this, "分享到新浪微博");
+                toast("分享成功");
+            }
 
-			@Override
-			public Map<String, String> getHeaders() throws AuthFailureError {
-				Map<String, String> params = new HashMap<String, String>();
-				return params;
-			}
-		};
-		executeRequest(task);
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("分享失败，请重试");
+            }
+        });
 	}
 
 	@Override
@@ -1346,156 +1243,6 @@ public class ActDetail extends SwipeBackActivity implements OnClickListener {
                 enrollstatusLine.setVisibility(View.VISIBLE);
             }
         }
-	}
-
-	private class EnrollDialog extends Dialog {
-
-		private Context context;
-		int userNum = 1;
-
-		public EnrollDialog(Context context) {
-			super(context);
-			this.context = context;
-		}
-
-		public EnrollDialog(Context context, int theme) {
-			super(context, theme);
-			this.context = context;
-		}
-
-		@Override
-		protected void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			setContentView(R.layout.dialog_act_detail_enroll);
-			WindowManager.LayoutParams params = getWindow().getAttributes();
-			params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-			params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-			getWindow().setAttributes((WindowManager.LayoutParams) params);
-			setCanceledOnTouchOutside(true);
-			ImageView ivDismiss = (ImageView) findViewById(R.id.ivDismiss);
-			final EditText etUserName = (EditText) findViewById(R.id.etUserName);
-			etUserName.setText(AppPreference.getUserPersistent(ActDetail.this, AppPreference.REAL_NAME));
-			final EditText etPhone = (EditText) findViewById(R.id.etPhone);
-			etPhone.setText(AppPreference.getUserPersistent(ActDetail.this, AppPreference.CONTACT_PHONE));
-			final EditText etUserNum = (EditText) findViewById(R.id.etUserNum);
-			etUserNum.setText(userNum + "");
-			TextView tvEnroll = (TextView) findViewById(R.id.tvEnroll);
-			
-			ImageView ivDel = (ImageView) findViewById(R.id.ivDel);
-			ImageView ivAdd = (ImageView) findViewById(R.id.ivAdd);
-			
-			ivDel.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					userNum = Integer.parseInt(etUserNum.getText().toString());
-					if (userNum >= 2) {
-						userNum--;
-						etUserNum.setText(userNum + "");
-					}
-				}
-			});
-			
-			ivAdd.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					userNum = Integer.parseInt(etUserNum.getText().toString());
-					userNum++;
-					etUserNum.setText(userNum + "");
-				}
-			});
-
-			ivDismiss.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					if (!ClickUtil.isFastClick()) {
-						dismiss();
-					}
-				}
-			});
-			tvEnroll.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					if (!ClickUtil.isFastClick()) {
-						if (TextUtils.isEmpty(etUserName.getText().toString().trim())) {
-							toast("请输入您的姓名");
-							return;
-						}
-						if (TextUtils.isEmpty(etPhone.getText().toString().trim())) {
-							toast("请输入您的联系电话");
-							return;
-						}
-						if (TextUtils.isEmpty(etUserNum.getText().toString().trim())) {
-							toast("请输入您的报名人数");
-							return;
-						}
-						if (!checkNameChese(etUserName.getText().toString().trim())) {
-							toast("姓名只能输入中文");
-							return;
-						}
-						if (MobileUtil.execute(etPhone.getText().toString().trim().replace(" ", "")).equals("未知")) {
-							toast("请输入正确的电话号码");
-							return;
-						}
-						dismiss();
-						ActEnroll(etUserName.getText().toString().trim(), etPhone.getText().toString().trim(), etUserNum.getText().toString().trim());
-					}
-				}
-			});
-		}
-	}
-
-	/**
-	 * 活动报名
-	 */
-	private void ActEnroll(String name, String phone, String num) {
-		if (mLoadingDialog != null && !mLoadingDialog.isShowing()) {
-			mLoadingDialog.setMessage("正在报名...");
-			mLoadingDialog.show();
-		}
-		ActDetailEnrollParam param = new ActDetailEnrollParam(ActDetail.this, actId, name, phone, num);
-		HttpStringPost task = new HttpStringPost(ActDetail.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				TCAgent.onEvent(ActDetail.this, "活动报名");
-				final DialogChoiceBuilder dialog = DialogChoiceBuilder.getInstance(ActDetail.this);
-				dialog.setTips("温馨提示").setMessage("报名信息已转交主办方\n如有疑问 请拨打主办方电话资讯").setSure("拨打电话").withDuration(300).withEffect(Effectstype.Fadein).setOnClick(new OnClickListener() {
-					@Override
-					public void onClick(View arg0) {
-						dialog.dismiss();
-						Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + actModel.getContact_way()));
-						startActivity(intent);
-					}
-				}).show();
-			}
-
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("报名失败，请重新报名");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("报名失败，请重新报名");
-			}
-		}, param.getParameters());
-		executeRequest(task);
 	}
 
 	/**

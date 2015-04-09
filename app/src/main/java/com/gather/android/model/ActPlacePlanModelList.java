@@ -7,13 +7,13 @@ import java.util.ArrayList;
  */
 public class ActPlacePlanModelList {
 
-    private ArrayList<ActPlacePlanModel> place_img;
+    private ArrayList<ActPlacePlanModel> place_imgs;
 
     public ArrayList<ActPlacePlanModel> getPlace_imgs() {
-        return place_img;
+        return place_imgs;
     }
 
     public void setPlace_imgs(ArrayList<ActPlacePlanModel> place_imgs) {
-        this.place_img = place_imgs;
+        this.place_imgs = place_imgs;
     }
 }

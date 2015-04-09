@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取活动标签
  */
-public class GetActTagsParam extends StringParams {
+public class GetActTagsParam extends BaseParams {
 
-	public GetActTagsParam(Context context, int cityId) {
-		super(context, "act/tag/actTags");
-		setParameter("cityId", cityId);
-		setParameter("page", 1);
-		setParameter("size", 50);
+	public GetActTagsParam(int cityId) {
+		super("act/tag/actTags");
+        put("cityId", cityId);
+        put("page", 1);
+        put("size", 50);
 	}
 
 }

@@ -1,13 +1,11 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 绑定第三方帐号
  */
-public class BindThirdParam extends StringParams {
+public class BindThirdParam extends BaseParams {
 
 	/**
 	 * @param openidType 第三方类型：3sina，4qq
@@ -15,11 +13,11 @@ public class BindThirdParam extends StringParams {
 	 * @param token
 	 * @param expiresIn 第三方过期时间
 	 */
-	public BindThirdParam(Context context, int openidType, String openid, String token, long expiresIn) {
-		super(context, "user/userInfo/setOpenid");
-		setParameter("openidType", openidType);
-		setParameter("openid", openid);
-		setParameter("token", token);
-		setParameter("expiresIn", expiresIn);
+	public BindThirdParam(int openidType, String openid, String token, long expiresIn) {
+		super("user/userInfo/setOpenid");
+        put("openidType", openidType);
+        put("openid", openid);
+        put("token", token);
+        put("expiresIn", expiresIn);
 	}
 }

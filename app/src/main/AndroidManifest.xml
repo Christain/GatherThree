@@ -376,9 +376,33 @@
             android:screenOrientation="portrait"
             android:theme="@style/ActionBarStyle" >
         </activity>
+        <activity
+            android:name=".activity.ActPassPort"
+            android:screenOrientation="portrait"
+            android:theme="@style/ActionBarStyle" >
+        </activity>
+        <activity
+            android:name=".activity.ActAlbumGallery"
+            android:screenOrientation="portrait"
+            android:theme="@style/ActionBarStyle" >
+        </activity>
+
+
+        <activity
+            android:name=".activity.WXPayTest"
+            android:screenOrientation="portrait"
+            android:theme="@style/ActionBarStyle" >
+        </activity>
 
         <activity
             android:name=".wxapi.WXEntryActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+        </activity>
+        <activity
+            android:name=".wxapi.WXPayEntryActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:launchMode="singleTask"
@@ -523,7 +547,7 @@
         <!-- TalkingData KEY -->
         <meta-data
             android:name="TD_APP_ID"
-            android:value="E12ED7B98EBE7F8CAAD9D8AF7993511D" />
+            android:value="61A1033D9647DE448813172265273B79" />
         <meta-data
             android:name="TD_CHANNEL_ID"
             android:value="集合啦开发组" />

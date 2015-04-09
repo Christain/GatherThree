@@ -1,10 +1,5 @@
 package com.gather.android.adapter;
 
-import java.util.Collections;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,13 +9,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.baseclass.SuperAdapter;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ChatMessageList;
 import com.gather.android.model.ChatMessageModel;
 import com.gather.android.params.GetMessageContentParam;
@@ -33,13 +25,18 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Collections;
+
 @SuppressLint("InflateParams")
 public class ChatAdapter extends SuperAdapter {
 
 	private Context context;
 	private int page, maxPage, limit = 20, userId, isOver, totalNum;
-	private ResponseListener listener;
-	private Response.ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions options;
 	private String myUserIcon, otherUserIcon;
@@ -54,109 +51,95 @@ public class ChatAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(0, "错误");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				ChatMessageList list = gson.fromJson(result, ChatMessageList.class);
-				if (list != null && list.getMessages() != null) {
-					Collections.reverse(list.getMessages());
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(list.getMessages().size(), ISNULL);
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(list.getMessages().size(), ISOVER);
-						} else {
-							page++;
-							refreshOver(list.getMessages().size(), CLICK_MORE);
-						}
-						refreshItems(list.getMessages());
-						break;
-					case LOADMORE:
-						addItemsInFront(list.getMessages());
-						if (page != maxPage) {
-							page++;
-							refreshOver(list.getMessages().size(), CLICK_MORE);
-						} else {
-							isOver = 1;
-							refreshOver(list.getMessages().size(), ISOVER);
-						}
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(list.getMessages().size(), ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(list.getMessages().size(), ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (page == 1) {
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(0, "错误");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                ChatMessageList list = gson.fromJson(result, ChatMessageList.class);
+                if (list != null && list.getMessages() != null) {
+                    Collections.reverse(list.getMessages());
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(list.getMessages().size(), ISNULL);
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(list.getMessages().size(), ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(list.getMessages().size(), CLICK_MORE);
+                            }
+                            refreshItems(list.getMessages());
+                            break;
+                        case LOADMORE:
+                            addItemsInFront(list.getMessages());
+                            if (page != maxPage) {
+                                page++;
+                                refreshOver(list.getMessages().size(), CLICK_MORE);
+                            } else {
+                                isOver = 1;
+                                refreshOver(list.getMessages().size(), ISOVER);
+                            }
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(list.getMessages().size(), ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(list.getMessages().size(), ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, "登录");
-					break;
-				case LOADMORE:
-					refreshOver(5, "登录");
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, "登录");
+                        break;
+                    case LOADMORE:
+                        refreshOver(5, "登录");
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, "错误");
-					break;
-				case LOADMORE:
-					refreshOver(code, "错误");
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, "错误");
-					break;
-				case LOADMORE:
-					refreshOver(-1, "错误");
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, "错误");
+                        break;
+                    case LOADMORE:
+                        refreshOver(code, "错误");
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@Override
@@ -251,9 +234,8 @@ public class ChatAdapter extends SuperAdapter {
 			if (!isRequest) {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
-				GetMessageContentParam param = new GetMessageContentParam(context, userId, page, limit);
-				HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-				RequestManager.addRequest(task, context);
+				GetMessageContentParam param = new GetMessageContentParam(userId, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 			}
 		}
 	}
@@ -268,9 +250,8 @@ public class ChatAdapter extends SuperAdapter {
 			this.page = 1;
 			this.isOver = 0;
 			this.userId = userId;
-			GetMessageContentParam param = new GetMessageContentParam(context, userId, page, limit);
-			HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+            GetMessageContentParam param = new GetMessageContentParam(userId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 	

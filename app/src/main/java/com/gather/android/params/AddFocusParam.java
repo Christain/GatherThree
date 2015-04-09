@@ -1,16 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 加关注
  */
-public class AddFocusParam extends StringParams {
+public class AddFocusParam extends BaseParams {
 
-	public AddFocusParam(Context context, int focusId) {
-		super(context, "act/friend/add");
-		setParameter("focusId", focusId);
+	public AddFocusParam(int focusId) {
+		super("act/friend/add");
+        put("focusId", focusId);
 	}
 }

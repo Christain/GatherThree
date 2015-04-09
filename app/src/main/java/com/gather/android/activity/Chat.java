@@ -1,11 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -32,8 +26,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.yun.channel.auth.ChannelKeyPair;
 import com.baidu.yun.channel.client.BaiduChannelClient;
 import com.baidu.yun.channel.exception.ChannelClientException;
@@ -45,9 +37,8 @@ import com.gather.android.adapter.ChatAdapter;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.listener.OnAdapterRefreshOverListener;
 import com.gather.android.model.ChatMessageModel;
 import com.gather.android.model.UserInfoModel;
@@ -63,6 +54,13 @@ import com.gather.android.widget.ChatListView;
 import com.gather.android.widget.ChatListView.IXListViewListener;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * 私信
@@ -219,73 +217,63 @@ public class Chat extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("获取信息中...");
 			mLoadingDialog.show();
 		}
-		GetUserCenterParam param = new GetUserCenterParam(Chat.this, cityId);
+		GetUserCenterParam param = new GetUserCenterParam(cityId);
 		param.addUserId(userId);
-		HttpStringPost task = new HttpStringPost(Chat.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					Gson gson = new Gson();
-					userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
-					if (userInfoModel != null) {
-						otherUserName = userInfoModel.getNick_name();
-						otherUserIcon = userInfoModel.getHead_img_url();
-						status = userInfoModel.getIs_shield();
-						tvTitle.setText(otherUserName);
-						if (!tvRight.isShown()) {
-							tvRight.setVisibility(View.VISIBLE);
-						}
-						if (status == 0) {
-							tvRight.setText("屏蔽");
-						} else {
-							tvRight.setText("取消屏蔽");
-						}
-						adapter.setUserIcon(otherUserIcon);
-						listView.onClickRefush();
-						adapter.getMessageList(userId);
-					} else {
-						Toast.makeText(Chat.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-						finish();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					Toast.makeText(Chat.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
-					finish();
-				}
-			}
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    Gson gson = new Gson();
+                    userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
+                    if (userInfoModel != null) {
+                        otherUserName = userInfoModel.getNick_name();
+                        otherUserIcon = userInfoModel.getHead_img_url();
+                        status = userInfoModel.getIs_shield();
+                        tvTitle.setText(otherUserName);
+                        if (!tvRight.isShown()) {
+                            tvRight.setVisibility(View.VISIBLE);
+                        }
+                        if (status == 0) {
+                            tvRight.setText("屏蔽");
+                        } else {
+                            tvRight.setText("取消屏蔽");
+                        }
+                        adapter.setUserIcon(otherUserIcon);
+                        listView.onClickRefush();
+                        adapter.getMessageList(userId);
+                    } else {
+                        Toast.makeText(Chat.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(Chat.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-				finish();
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+                finish();
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Toast.makeText(Chat.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Toast.makeText(Chat.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-				finish();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, Chat.this);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Toast.makeText(Chat.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
 	}
 
 	@Override
@@ -355,51 +343,43 @@ public class Chat extends SwipeBackActivity implements OnClickListener {
 	 * 发送私信
 	 */
 	private void sendMessage(final String content) {
-		SendChatMessageParam param = new SendChatMessageParam(Chat.this, userId, content);
-		HttpStringPost task = new HttpStringPost(Chat.this, param.getUrl(), new ResponseListener() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void success(int code, String msg, String result) {
-				isCallBack = true;
-				etContent.setText("");
-				if (userInfoModel != null && !userInfoModel.getBaidu_user_id().equals("")) {
-					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							PushMessage(content, userInfoModel.getLast_login_platform());
-						}
-					}).start();
-				}
-				ChatMessageModel model = new ChatMessageModel();
-				model.setContent(content);
-				model.setRole(1);
-				model.setContact_id(userId);
-				model.setCreate_time(TimeUtil.getFormatedTime("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
-				adapter.getMsgList().add(model);
-				adapter.notifyDataSetChanged();
-				listView.setSelection(adapter.getCount() - 1);
-				isRequest = false;
-			}
+		SendChatMessageParam param = new SendChatMessageParam(userId, content);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                isCallBack = true;
+                etContent.setText("");
+                if (userInfoModel != null && !userInfoModel.getBaidu_user_id().equals("")) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            PushMessage(content, userInfoModel.getLast_login_platform());
+                        }
+                    }).start();
+                }
+                ChatMessageModel model = new ChatMessageModel();
+                model.setContent(content);
+                model.setRole(1);
+                model.setContact_id(userId);
+                model.setCreate_time(TimeUtil.getFormatedTime("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
+                adapter.getMsgList().add(model);
+                adapter.notifyDataSetChanged();
+                listView.setSelection(adapter.getCount() - 1);
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				isRequest = false;
-				toast("发送失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				isRequest = false;
-				toast("发送失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                isRequest = false;
+                toast("发送失败");
+            }
+        });
 	}
 
 	/**
@@ -478,47 +458,37 @@ public class Chat extends SwipeBackActivity implements OnClickListener {
 	private void ShieldContactUser(int userId) {
 		mLoadingDialog.setMessage("正在屏蔽...");
 		mLoadingDialog.show();
-		ShieldContactUserParam param = new ShieldContactUserParam(Chat.this, userId);
-		HttpStringPost task = new HttpStringPost(Chat.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				status = 1;
-				isStatus = true;
-				tvRight.setText("取消屏蔽");
-				isRequest = false;
-			}
+		ShieldContactUserParam param = new ShieldContactUserParam(userId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                status = 1;
+                isStatus = true;
+                tvRight.setText("取消屏蔽");
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("屏蔽失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("屏蔽失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                toast("屏蔽失败，请重试");
+            }
+        });
 	}
 
 	/**
@@ -527,47 +497,37 @@ public class Chat extends SwipeBackActivity implements OnClickListener {
 	private void CancelShieldContactUser(int userId) {
 		mLoadingDialog.setMessage("取消屏蔽中...");
 		mLoadingDialog.show();
-		CancelShieldContactUserParam param = new CancelShieldContactUserParam(Chat.this, userId);
-		HttpStringPost task = new HttpStringPost(Chat.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				status = 0;
-				isStatus = true;
-				tvRight.setText("屏蔽");
-			}
+		CancelShieldContactUserParam param = new CancelShieldContactUserParam(userId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                status = 0;
+                isStatus = true;
+                tvRight.setText("屏蔽");
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("取消屏蔽失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("取消屏蔽失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                toast("取消屏蔽失败，请重试");
+            }
+        });
 	}
 
 	private class DelMessageDialog extends Dialog {
@@ -643,30 +603,24 @@ public class Chat extends SwipeBackActivity implements OnClickListener {
 	 * 删除单条私信
 	 */
 	private void DelMessage(int id, final int position) {
-		DelMessageParam param = new DelMessageParam(Chat.this, id);
-		HttpStringPost task = new HttpStringPost(Chat.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				adapter.remove(position);
-				adapter.notifyDataSetChanged();
-			}
+		DelMessageParam param = new DelMessageParam(id);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                adapter.remove(position);
+                adapter.notifyDataSetChanged();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("删除失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("删除失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("删除失败，请重试");
+            }
+        });
 	}
 
 	/**

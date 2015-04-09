@@ -7,38 +7,35 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActAlbumAddPhotoAdapter;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.IntentManage;
 import com.gather.android.model.ActAlbumDetailModel;
 import com.gather.android.params.ActAlbumCreateParam;
-import com.gather.android.params.UpdateUserPhotoParam;
+import com.gather.android.params.ActAlbumUploadParam;
 import com.gather.android.params.UploadPicParam;
 import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.BitmapUtils;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.ChoosePicAlert;
-import com.gather.android.widget.DragGridView;
 import com.gather.android.widget.MMAlert;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -50,9 +47,9 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
     private TextView tvLeft, tvTitle, tvRight;
     private ImageView ivLeft, ivRight;
 
-    private DragGridView gridView;
+    private GridView gridView;
     private ActAlbumAddPhotoAdapter adapter;
-    private ArrayList<ActAlbumDetailModel> picList;
+    private ArrayList<ActAlbumDetailModel> picList = new ArrayList<ActAlbumDetailModel>();
     private LoadingDialog mLoadingDialog;
     private ArrayList<Integer> imgIdList;
     private int startIndex = 0;
@@ -75,8 +72,7 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
     @Override
     protected void onCreateActivity(Bundle savedInstanceState) {
         Intent intent = getIntent();
-        if (intent.hasExtra("LIST") && intent.hasExtra("ACT_ID")) {
-            picList = (ArrayList<ActAlbumDetailModel>) intent.getSerializableExtra("LIST");
+        if (intent.hasExtra("ACT_ID")) {
             this.actId = intent.getExtras().getInt("ACT_ID");
             if (intent.hasExtra("ID")) {
                 this.albumId = intent.getExtras().getInt("ID");
@@ -92,12 +88,12 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
             this.ivLeft.setVisibility(View.VISIBLE);
             this.ivLeft.setImageResource(R.drawable.title_back_click_style);
             this.tvTitle.setText("我的相册");
-            this.tvRight.setText("完成");
+            this.tvRight.setText("上传");
             this.ivRight.setVisibility(View.GONE);
             this.ivLeft.setOnClickListener(this);
             this.tvRight.setOnClickListener(this);
 
-            this.gridView = (DragGridView) findViewById(R.id.gridView);
+            this.gridView = (GridView) findViewById(R.id.gridView);
             this.adapter = new ActAlbumAddPhotoAdapter(ActAlbumAddPhoto.this);
             this.gridView.setAdapter(adapter);
 
@@ -115,25 +111,6 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
                             showMenuDialog(0, position);
                         }
                     }
-                }
-            });
-            this.gridView.setOnChangeListener(new DragGridView.OnChanageListener() {
-                @Override
-                public void onChange(int from, int to) {
-                    ActAlbumDetailModel temp = picList.get(from);
-                    // 直接交互item
-                    if (from < to) {
-                        for (int i = from; i < to; i++) {
-                            Collections.swap(picList, i, i + 1);
-                        }
-                    } else if (from > to) {
-                        for (int i = from; i > to; i--) {
-                            Collections.swap(picList, i, i - 1);
-                        }
-                    }
-                    picList.set(to, temp);
-                    isPicChanged = true;
-                    adapter.notifyDataSetChanged();
                 }
             });
 
@@ -175,35 +152,11 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
                     if (albumId == -1) {
                         createAlbum();
                     }
-                    if (startIndex == 0) {
-                        if (picList.size() != 0) {
-                            for (int i = 0; i < picList.size(); i++) {
-                                if (picList.get(i).getId() == 0) {
-                                    uploadNewPic(i);
-                                    break;
-                                } else {
-                                    imgIdList.add(picList.get(i).getId());
-                                    if (i == picList.size() - 1) {
-                                        UpdateUserPhoto();
-                                    }
-                                }
-                            }
+                    if (picList.size() != 0) {
+                        if (startIndex != 100) {
+                            uploadNewPic(startIndex);
                         } else {
-                            UpdateUserPhoto();
-                        }
-                    } else if (startIndex == 100) {
-                        UpdateUserPhoto();
-                    } else {
-                        for (int i = startIndex; i < picList.size(); i++) {
-                            if (picList.get(i).getId() == 0) {
-                                uploadNewPic(i);
-                                break;
-                            } else {
-                                imgIdList.add(picList.get(i).getId());
-                                if (i == picList.size() - 1) {
-                                    UpdateUserPhoto();
-                                }
-                            }
+                            UpdateActPhoto();
                         }
                     }
                 }
@@ -219,10 +172,10 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
             mLoadingDialog.setMessage("上传中...");
             mLoadingDialog.show();
         }
-        UploadPicParam param = new UploadPicParam(ActAlbumAddPhoto.this, new File(picList.get(index).getPath()));
-        MultipartRequest task = new MultipartRequest(ActAlbumAddPhoto.this, param.getUrl(), new ResponseListener() {
+        UploadPicParam param = new UploadPicParam(new File(picList.get(index).getPath()));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 try {
                     JSONObject object = new JSONObject(result);
                     if (imgIdList == null) {
@@ -230,19 +183,9 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
                     }
                     imgIdList.add(object.getInt("img_id"));
                     if (index + 1 < picList.size()) {
-                        for (int i = index + 1; i < picList.size(); i++) {
-                            if (picList.get(i).getId() == 0) {
-                                uploadNewPic(i);
-                                break;
-                            }  else {
-                                imgIdList.add(picList.get(i).getId());
-                                if (i == picList.size() - 1) {
-                                    UpdateUserPhoto();
-                                }
-                            }
-                        }
+                        uploadNewPic(index + 1);
                     } else {
-                        UpdateUserPhoto();
+                        UpdateActPhoto();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -250,7 +193,7 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -258,45 +201,35 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 startIndex = index;
                 toast("上传图片失败，请重试");
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                startIndex = index;
-                toast("上传图片失败，请重试");
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     /**
      * 更新相册图片Id
      */
-    private void UpdateUserPhoto() {
+    private void UpdateActPhoto() {
         if (mLoadingDialog != null && !mLoadingDialog.isShowing()) {
             mLoadingDialog.setMessage("更新中...");
             mLoadingDialog.show();
         }
-        UpdateUserPhotoParam param = new UpdateUserPhotoParam(ActAlbumAddPhoto.this, imgIdList);
-        HttpStringPost task = new HttpStringPost(ActAlbumAddPhoto.this, param.getUrl(), new ResponseListener() {
+        ActAlbumUploadParam param = new ActAlbumUploadParam(albumId, imgIdList);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 setResult(RESULT_OK);
-                toast("更新相册成功");
+                toast("上传相册成功");
                 finish();
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -304,24 +237,14 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 startIndex = 100;
                 toast("更新相册失败，请重试");
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                startIndex = 100;
-                toast("更新相册失败，请重试");
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     /**
@@ -332,20 +255,27 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
             mLoadingDialog.setMessage("上传中...");
             mLoadingDialog.show();
         }
-        ActAlbumCreateParam param = new ActAlbumCreateParam(ActAlbumAddPhoto.this, actId, AppPreference.getUserPersistent(ActAlbumAddPhoto.this, AppPreference.NICK_NAME));
-        HttpStringPost task = new HttpStringPost(ActAlbumAddPhoto.this, param.getUrl(), new ResponseListener() {
+        ActAlbumCreateParam param = new ActAlbumCreateParam(actId, AppPreference.getUserPersistent(ActAlbumAddPhoto.this, AppPreference.NICK_NAME));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 try {
                     JSONObject object = new JSONObject(result);
                     albumId = object.getInt("id");
+                    if (picList.size() != 0) {
+                        if (startIndex != 100) {
+                            uploadNewPic(startIndex);
+                        } else {
+                            UpdateActPhoto();
+                        }
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -353,24 +283,14 @@ public class ActAlbumAddPhoto extends SwipeBackActivity implements View.OnClickL
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 startIndex = 100;
                 toast("上传相册失败，请重试");
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                startIndex = 100;
-                toast("上传相册失败，请重试");
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     private void showMenuDialog(int type, final int actionPosition) {

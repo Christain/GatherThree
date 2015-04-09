@@ -11,12 +11,10 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActMenuModelList;
 import com.gather.android.params.ActMenuParam;
 import com.gather.android.utils.ClickUtil;
@@ -24,6 +22,7 @@ import com.gather.android.utils.TimeUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -82,6 +81,7 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
         this.scrollView.setVisibility(View.INVISIBLE);
 
         getLunchMenu();
+        getDinner();
     }
 
     /**
@@ -92,10 +92,10 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
             mLoadingDialog.setMessage("加载中");
             mLoadingDialog.show();
         }
-        ActMenuParam param = new ActMenuParam(ActMenu.this, actId, 1);
-        HttpStringPost task = new HttpStringPost(ActMenu.this, param.getUrl(), new ResponseListener() {
+        ActMenuParam param = new ActMenuParam(actId, 1);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 try {
                     JSONObject object = new JSONObject(result);
                     String time = TimeUtil.getActDetailTime(object.getString("time"));
@@ -111,13 +111,12 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
                             textView.setText(list.getAct_menus().get(i).getSubject());
                             textView.setTextColor(0xFF6C7379);
                             textView.setTextSize(17);
-                            textView.setPadding(padding,padding,padding,padding);
-                            llLunch.addView(textView);
+                            textView.setPadding(padding, padding, padding, padding);
+                            llLunchMenu.addView(textView);
                         }
-                        getDinner();
+                        llLunch.setVisibility(View.VISIBLE);
                     } else {
-                        toast("没有菜单...");
-                        finish();
+                        llLunch.setVisibility(View.GONE);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -125,7 +124,7 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -133,34 +132,24 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 toast("加载失败...");
                 finish();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                toast("加载失败...");
-                finish();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     /**
      * 晚餐列表
      */
     private void getDinner() {
-        ActMenuParam param = new ActMenuParam(ActMenu.this, actId, 2);
-        HttpStringPost task = new HttpStringPost(ActMenu.this, param.getUrl(), new ResponseListener() {
+        ActMenuParam param = new ActMenuParam(actId, 2);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -180,15 +169,15 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
                             textView.setGravity(Gravity.CENTER);
                             textView.setTextSize(17);
                             textView.setPadding(padding,padding,padding,padding);
-                            llDinner.addView(textView);
+                            llDinnerMenu.addView(textView);
                         }
-                        if (scrollView != null && !scrollView.isShown()) {
-                            scrollView.startAnimation(alphaIn);
-                            scrollView.setVisibility(View.VISIBLE);
-                        }
+                        llDinner.setVisibility(View.VISIBLE);
                     } else {
-                        toast("没有菜单...");
-                        finish();
+                        llDinner.setVisibility(View.GONE);
+                    }
+                    if (scrollView != null && !scrollView.isShown()) {
+                        scrollView.startAnimation(alphaIn);
+                        scrollView.setVisibility(View.VISIBLE);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -196,7 +185,7 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -204,20 +193,12 @@ public class ActMenu extends SwipeBackActivity implements View.OnClickListener{
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     @Override

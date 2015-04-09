@@ -1,5 +1,6 @@
 package com.gather.android.activity;
 
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
@@ -17,8 +18,6 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
@@ -27,10 +26,13 @@ import com.gather.android.application.GatherApplication;
 import com.gather.android.baseclass.BaseActivity;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
+import com.gather.android.model.ActCheckInListModel;
+import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.params.SignInParam;
 import com.gather.android.utils.ClickUtil;
+import com.google.gson.Gson;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
 import com.mining.app.zxing.camera.CameraManager;
@@ -38,6 +40,7 @@ import com.mining.app.zxing.decoding.CaptureActivityHandler;
 import com.mining.app.zxing.decoding.InactivityTimer;
 import com.mining.app.zxing.view.ViewfinderView;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,6 +65,8 @@ public class QRCodeScan extends BaseActivity implements Callback, OnClickListene
 	private LocationClient mLocationClient;
 	private LoadingDialog mLoadingDialog;
 
+    private ActMoreInfoModel actMoreInfoModel;
+
 	@Override
 	protected int layoutResId() {
 		return R.layout.qr_code_scan;
@@ -69,18 +74,24 @@ public class QRCodeScan extends BaseActivity implements Callback, OnClickListene
 
 	@Override
 	protected void onCreateActivity(Bundle savedInstanceState) {
-		this.ivBack = (ImageView) findViewById(R.id.ivBack);
+        Intent intent = getIntent();
+        if (intent.hasExtra("MORE_INFO")) {
+            this.actMoreInfoModel = (ActMoreInfoModel) intent.getSerializableExtra("MORE_INFO");
+            this.ivBack = (ImageView) findViewById(R.id.ivBack);
 
-		CameraManager.init(getApplication());
-		viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
-		hasSurface = false;
-		inactivityTimer = new InactivityTimer(this);
-		
-		this.mLocationClient = ((GatherApplication)getApplication()).mLocationClient;
-		this.mLoadingDialog = LoadingDialog.createDialog(QRCodeScan.this, true);
-		this.ivBack.setOnClickListener(this);
-		
-		this.initLocation();
+            CameraManager.init(getApplication());
+            viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
+            hasSurface = false;
+            inactivityTimer = new InactivityTimer(this);
+
+            this.mLocationClient = ((GatherApplication)getApplication()).mLocationClient;
+            this.mLoadingDialog = LoadingDialog.createDialog(QRCodeScan.this, true);
+            this.ivBack.setOnClickListener(this);
+
+            this.initLocation();
+        } else {
+            finish();
+        }
 	}
 
 	@Override
@@ -142,35 +153,36 @@ public class QRCodeScan extends BaseActivity implements Callback, OnClickListene
 			Toast.makeText(QRCodeScan.this, "Scan failed!", Toast.LENGTH_SHORT).show();
 			finish();
 		} else {
-//			Intent resultIntent = new Intent();
-//			Bundle bundle = new Bundle();
-//			bundle.putString("result", resultString);
-//			bundle.putParcelable("bitmap", barcode);
-//			resultIntent.putExtras(bundle);
-//			this.setResult(RESULT_OK, resultIntent);
-//			QRCodeScan.this.finish();
-			
-			if (Constant.SHOW_LOG) {
-				Log.e("QR_CODE", resultString);
-			}
-			try {
-				JSONObject object = new JSONObject(resultString);
-				if (object.has("filter") && object.has("value")) {
-					if (object.getString("filter").equals("act_id")) {
-						signInAct(object.getInt("value"));
-					} else {
-						Toast.makeText(QRCodeScan.this, "不是集合啦指定活动", Toast.LENGTH_SHORT).show();
-						finish();
-					}
-				} else {
-					Toast.makeText(QRCodeScan.this, "不是集合啦指定活动", Toast.LENGTH_SHORT).show();
-					finish();
-				}
-			} catch (JSONException e) {
-				e.printStackTrace();
-				Toast.makeText(QRCodeScan.this, "不是集合啦指定活动", Toast.LENGTH_SHORT).show();
-				finish();
-			}
+            try {
+//                resultString = "647db2e9999c992f81b2c0bd6a3d80e6a9fc00d7a6cc74339a83013cf3c7ff858ad9ab48d5680cd92292be5c796b57ef003df7710ca6f6de";
+//                DES des = new DES();
+//                String json = des.decrypt(resultString);
+                String json = "{\"filter\":\"checkin_id\",\"value\":1}";
+                if (Constant.SHOW_LOG) {
+                    Log.e("QR_CODE", json);
+                }
+                try {
+                    JSONObject object = new JSONObject(json);
+                    if (object.has("filter") && object.has("value")) {
+                        if (object.getString("filter").equals("checkin_id")) {
+                            signInAct(object.getInt("value"));
+                        } else {
+                            Toast.makeText(QRCodeScan.this, "不是集合啦指定活动", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+                    } else {
+                        Toast.makeText(QRCodeScan.this, "不是集合啦指定活动", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(QRCodeScan.this, "不是集合啦指定活动", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
 		}
 	}
 
@@ -211,48 +223,54 @@ public class QRCodeScan extends BaseActivity implements Callback, OnClickListene
 	/**
 	 * 签到
 	 */
-	private void signInAct(int actId){
+	private void signInAct(int checkinId){
 		mLoadingDialog.setMessage("签到中...");
 		mLoadingDialog.show();
-		SignInParam param = new SignInParam(QRCodeScan.this, actId);
-		HttpStringPost task = new HttpStringPost(QRCodeScan.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("签到成功");
-				setResult(RESULT_OK);
-				finish();
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast(msg);
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast(error.getMsg());
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+		SignInParam param = new SignInParam(checkinId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Gson gson = new Gson();
+                ActCheckInListModel list = gson.fromJson(result, ActCheckInListModel.class);
+                if (list != null) {
+                    if (list.getCheckins().size() > 0) {
+                        Intent intent = new Intent(QRCodeScan.this, ActPassPort.class);
+                        intent.putExtra("MODEL", list.getCheckins().get(list.getCheckins().size() - 1));
+                        if (actMoreInfoModel != null) {
+                            intent.putExtra("MORE_INFO", actMoreInfoModel);
+                        }
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        toast("签到失败");
+                        finish();
+                    }
+                } else {
+                    toast("签到失败");
+                    finish();
+                }
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast(errorMsg);
+                finish();
+            }
+        });
 	}
 
 	@Override

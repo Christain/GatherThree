@@ -1,8 +1,5 @@
 package com.gather.android.fragment;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -15,8 +12,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.ActRelationList;
 import com.gather.android.activity.ApplyVip;
@@ -29,9 +24,8 @@ import com.gather.android.activity.UserOrder;
 import com.gather.android.activity.UserPhoto;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.baseclass.BaseFragment;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.params.GetUserInfoParam;
 import com.gather.android.preference.AppPreference;
@@ -43,6 +37,10 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * 切换卡动态个人中心
@@ -237,49 +235,42 @@ public class UserFragment extends BaseFragment implements OnClickListener, OverS
 	 */
 	private void getUserInfo(int cityId) {
 		isRequest = true;
-		GetUserInfoParam param = new GetUserInfoParam(getActivity(), cityId);
-		HttpStringPost task = new HttpStringPost(getActivity(), param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					Gson gson = new Gson();
-					userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
-					if (userInfoModel != null) {
-						if (application != null) {
-							application.setUserInfoModel(userInfoModel);
-						}
-						AppPreference.saveUserInfo(getActivity(), userInfoModel);
-						initView();
-					} else {
-						Toast.makeText(getActivity(), "获取个人信息失败", Toast.LENGTH_SHORT).show();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					Toast.makeText(getActivity(), "个人信息解析失败", Toast.LENGTH_SHORT).show();
-				}
-				isRequest = false;
-			}
+		GetUserInfoParam param = new GetUserInfoParam(cityId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    Gson gson = new Gson();
+                    userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
+                    if (userInfoModel != null) {
+                        if (application != null) {
+                            application.setUserInfoModel(userInfoModel);
+                        }
+                        AppPreference.saveUserInfo(getActivity(), userInfoModel);
+                        initView();
+                    } else {
+                        Toast.makeText(getActivity(), "获取个人信息失败", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getActivity(), "个人信息解析失败", Toast.LENGTH_SHORT).show();
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				isRequest = false;
-				Toast.makeText(getActivity(), "获取个人信息失败", Toast.LENGTH_SHORT).show();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				isRequest = false;
-				Toast.makeText(getActivity(), "获取个人信息失败", Toast.LENGTH_SHORT).show();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, getActivity());
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                isRequest = false;
+                Toast.makeText(getActivity(), "获取个人信息失败", Toast.LENGTH_SHORT).show();
+            }
+        });
 	}
 
 	@Override

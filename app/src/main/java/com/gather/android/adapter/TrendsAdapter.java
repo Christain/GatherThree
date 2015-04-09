@@ -1,11 +1,5 @@
 package com.gather.android.adapter;
 
-import java.io.File;
-import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -20,9 +14,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.PublishTrendsPicGallery;
 import com.gather.android.activity.TrendsPicGallery;
@@ -32,9 +23,8 @@ import com.gather.android.application.GatherApplication;
 import com.gather.android.baseclass.SuperAdapter;
 import com.gather.android.database.PublishTrendsInfo;
 import com.gather.android.database.PublishTrendsService;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.TrendsListModel;
 import com.gather.android.model.TrendsModel;
 import com.gather.android.model.TrendsPicModel;
@@ -54,12 +44,18 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.ArrayList;
+
 @SuppressLint("InflateParams")
 public class TrendsAdapter extends SuperAdapter {
 
 	private int page, limit = 20, cityId, isOver = 0, totalNum, maxPage, myUserId;
-	private ResponseListener listener;
-	private ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private Context mContext;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions options, picOptions;
@@ -85,114 +81,100 @@ public class TrendsAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					if (AppPreference.hasLogin(mContext)) {
-						helper.saveData(result);
-					}
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(-1, "数据解析出错");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				TrendsListModel list = gson.fromJson(result, TrendsListModel.class);
-				if (list != null && list.getDynamics() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(code, ISNULL);
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(code, ISOVER);
-						} else {
-							page++;
-							refreshOver(code, CLICK_MORE);
-						}
-						getList().clear();
-						addItemsNoChanged(getDataBaseTrends());
-						addItems(list.getDynamics());
-						// refreshItems(list.getDynamics());
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, CLICK_MORE);
-						} else {
-							isOver = 1;
-							loadMoreOver(code, ISOVER);
-						}
-						addItems(list.getDynamics());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(code, ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int code, Header[] headers, String result) {
+                if (page == 1) {
+                    if (AppPreference.hasLogin(mContext)) {
+                        helper.saveData(result);
+                    }
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(-1, "数据解析出错");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                TrendsListModel list = gson.fromJson(result, TrendsListModel.class);
+                if (list != null && list.getDynamics() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(code, ISNULL);
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(code, ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(code, CLICK_MORE);
+                            }
+                            getList().clear();
+                            addItemsNoChanged(getDataBaseTrends());
+                            addItems(list.getDynamics());
+                            // refreshItems(list.getDynamics());
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(code, CLICK_MORE);
+                            } else {
+                                isOver = 1;
+                                loadMoreOver(code, ISOVER);
+                            }
+                            addItems(list.getDynamics());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(code, ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(code, ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(5, msg);
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(5, msg);
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(code, msg);
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, error.getMsg());
-					break;
-				case LOADMORE:
-					loadMoreOver(-1, error.getMsg());
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(code, msg);
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@Override
@@ -332,33 +314,26 @@ public class TrendsAdapter extends SuperAdapter {
 	 * 删除动态
 	 */
 	private void DelTrends(int dynamicId, final int position) {
-		DelTrendsParam param = new DelTrendsParam(mContext, dynamicId);
-		HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				isRequest = false;
-				removeItem(position);
-			}
+		DelTrendsParam param = new DelTrendsParam(dynamicId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                isRequest = false;
+                removeItem(position);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				isRequest = false;
-				toast("删除失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				isRequest = false;
-				toast("删除失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                isRequest = false;
+                toast("删除失败，请重试");
+            }
+        });
 	}
 
 	/**
@@ -503,9 +478,8 @@ public class TrendsAdapter extends SuperAdapter {
 			if (!isRequest) {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
-				TrendsListParam param = new TrendsListParam(mContext, myUserId, cityId, page, limit);
-				HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-				RequestManager.addRequest(task, context);
+				TrendsListParam param = new TrendsListParam(myUserId, cityId, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 			}
 		}
 	}
@@ -517,9 +491,8 @@ public class TrendsAdapter extends SuperAdapter {
 			this.page = 1;
 			this.cityId = cityId;
 			isOver = 0;
-			TrendsListParam param = new TrendsListParam(mContext, myUserId, cityId, page, limit);
-			HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+            TrendsListParam param = new TrendsListParam(myUserId, cityId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 

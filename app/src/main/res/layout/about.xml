@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/bg_app"
-    android:orientation="vertical" >
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/bg_app"
+              android:orientation="vertical">
 
     <include
+        layout="@layout/actionbar_title"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/actionbar_high"
-        layout="@layout/actionbar_title" />
+        android:layout_height="@dimen/actionbar_high"/>
 
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fadingEdge="none"
-        android:scrollbars="vertical" >
+        android:scrollbars="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -23,7 +23,7 @@
             android:layout_marginTop="@dimen/about_padding_left_right"
             android:orientation="vertical"
             android:paddingLeft="@dimen/about_padding_left_right"
-            android:paddingRight="@dimen/about_padding_left_right" >
+            android:paddingRight="@dimen/about_padding_left_right">
 
             <ImageView
                 android:id="@+id/ivLogo"
@@ -33,22 +33,23 @@
                 android:layout_marginLeft="60dp"
                 android:layout_marginRight="60dp"
                 android:scaleType="fitXY"
-                android:src="@drawable/aboutus_logo_pic" />
+                android:src="@drawable/aboutus_logo_pic"
+                android:visibility="gone"/>
 
-            <!--
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/shape_about_bg"
                 android:orientation="horizontal"
-                android:padding="@dimen/about_item_padding" >
+                android:padding="@dimen/about_item_padding">
 
                 <ImageView
                     android:layout_width="@dimen/about_logo_icon_size"
                     android:layout_height="@dimen/about_logo_icon_size"
                     android:layout_gravity="center_vertical"
                     android:scaleType="fitXY"
-                    android:src="@drawable/ic_launcher" />
+                    android:src="@drawable/ic_launcher"/>
 
                 <LinearLayout
                     android:layout_width="0.0dp"
@@ -56,14 +57,14 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginLeft="@dimen/about_item_padding"
                     android:layout_weight="1.0"
-                    android:orientation="vertical" >
+                    android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="集合啦"
                         android:textColor="@color/bg_black"
-                        android:textSize="20sp" />
+                        android:textSize="20sp"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -71,7 +72,7 @@
                         android:layout_marginTop="3dp"
                         android:text="场景社交领跑者"
                         android:textColor="@color/bg_black"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -79,22 +80,22 @@
                         android:layout_marginTop="3dp"
                         android:text="和我们在一起...现在开始突破自我"
                         android:textColor="#FF8E949B"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"/>
                 </LinearLayout>
-            </LinearLayout>
-            -->
+            </LinearLayout>
+
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="7dp"
                 android:background="@drawable/shape_about_bg"
-                android:orientation="vertical" >
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal" >
+                    android:orientation="horizontal">
 
                     <LinearLayout
                         android:id="@+id/llOne"
@@ -104,13 +105,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_three" />
+                            android:src="@drawable/icon_about_three"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -118,13 +119,13 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="商户登录"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
 
                     <View
                         android:layout_width="1.0px"
                         android:layout_height="match_parent"
-                        android:background="@color/user_fragment_item_line" />
+                        android:background="@color/user_fragment_item_line"/>
 
                     <LinearLayout
                         android:id="@+id/llTwo"
@@ -134,13 +135,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_one" />
+                            android:src="@drawable/icon_about_one"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -148,13 +149,13 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="关于我们"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
 
                     <View
                         android:layout_width="1.0px"
                         android:layout_height="match_parent"
-                        android:background="@color/user_fragment_item_line" />
+                        android:background="@color/user_fragment_item_line"/>
 
                     <LinearLayout
                         android:id="@+id/llThree"
@@ -164,13 +165,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_two" />
+                            android:src="@drawable/icon_about_two"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -178,19 +179,19 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="版权声明"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1.0px"
-                    android:background="@color/user_fragment_item_line" />
+                    android:background="@color/user_fragment_item_line"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal" >
+                    android:orientation="horizontal">
 
                     <LinearLayout
                         android:id="@+id/llFour"
@@ -200,13 +201,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_five" />
+                            android:src="@drawable/icon_about_five"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -214,13 +215,13 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="功能介绍"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
 
                     <View
                         android:layout_width="1.0px"
                         android:layout_height="match_parent"
-                        android:background="@color/user_fragment_item_line" />
+                        android:background="@color/user_fragment_item_line"/>
 
                     <LinearLayout
                         android:id="@+id/llFive"
@@ -230,13 +231,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_six" />
+                            android:src="@drawable/icon_about_six"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -244,13 +245,13 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="招募达人"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
 
                     <View
                         android:layout_width="1.0px"
                         android:layout_height="match_parent"
-                        android:background="@color/user_fragment_item_line" />
+                        android:background="@color/user_fragment_item_line"/>
 
                     <LinearLayout
                         android:id="@+id/llSix"
@@ -260,13 +261,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_four" />
+                            android:src="@drawable/icon_about_four"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -274,19 +275,19 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="业务合作"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1.0px"
-                    android:background="@color/user_fragment_item_line" />
+                    android:background="@color/user_fragment_item_line"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal" >
+                    android:orientation="horizontal">
 
                     <LinearLayout
                         android:id="@+id/llSeven"
@@ -296,13 +297,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_eight" />
+                            android:src="@drawable/icon_about_eight"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -310,13 +311,13 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="问题反馈"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
 
                     <View
                         android:layout_width="1.0px"
                         android:layout_height="match_parent"
-                        android:background="@color/user_fragment_item_line" />
+                        android:background="@color/user_fragment_item_line"/>
 
                     <LinearLayout
                         android:id="@+id/llEight"
@@ -326,13 +327,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_seven" />
+                            android:src="@drawable/icon_about_seven"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -340,13 +341,13 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="软件更新"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
 
                     <View
                         android:layout_width="1.0px"
                         android:layout_height="match_parent"
-                        android:background="@color/user_fragment_item_line" />
+                        android:background="@color/user_fragment_item_line"/>
 
                     <LinearLayout
                         android:id="@+id/llNine"
@@ -356,13 +357,13 @@
                         android:background="@drawable/shape_user_fragment_item_click_style"
                         android:gravity="bottom|center_horizontal"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/about_item_padding_bottom" >
+                        android:paddingBottom="@dimen/about_item_padding_bottom">
 
                         <ImageView
                             android:layout_width="@dimen/about_item_icon_size"
                             android:layout_height="@dimen/about_item_icon_size"
                             android:scaleType="fitXY"
-                            android:src="@drawable/icon_about_nine" />
+                            android:src="@drawable/icon_about_nine"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -370,7 +371,7 @@
                             android:layout_marginTop="@dimen/about_item_text_icon_between"
                             android:text="官方网站"
                             android:textColor="@color/edit_data_text_hint"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -382,7 +383,7 @@
                 android:gravity="center_horizontal"
                 android:text="集合啦  版权所有"
                 android:textColor="@color/bg_black"
-                android:textSize="14sp" />
+                android:textSize="14sp"/>
 
             <TextView
                 android:layout_width="match_parent"
@@ -392,11 +393,11 @@
                 android:text="Copyright © 2014-2015All right reserver"
                 android:textColor="@color/bg_black"
                 android:textSize="12sp"
-                android:typeface="serif" />
+                android:typeface="serif"/>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="30dp" />
+                android:layout_height="30dp"/>
         </LinearLayout>
     </ScrollView>
 

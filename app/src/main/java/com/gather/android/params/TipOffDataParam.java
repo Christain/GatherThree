@@ -1,26 +1,24 @@
 package com.gather.android.params;
 
+import com.gather.android.baseclass.BaseParams;
+
 import java.util.ArrayList;
-
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
 
 /**
  * 上传爆料线索
  */
-public class TipOffDataParam extends StringParams {
+public class TipOffDataParam extends BaseParams {
 
-	public TipOffDataParam(Context context, int cityId, ArrayList<Integer> imgIdsList, String phone, String address, String other) {
-		super(context, "act/activity/brokeNews");
-		setParameter("cityId", cityId);
+	public TipOffDataParam(int cityId, ArrayList<Integer> imgIdsList, String phone, String address, String other) {
+		super("act/activity/brokeNews");
+        put("cityId", cityId);
 		for (int i = 0; i < imgIdsList.size(); i++) {
-			setParameter("imgIds[" + i + "]", imgIdsList.get(i));
+            put("imgIds[" + i + "]", imgIdsList.get(i));
 		}
-		setParameter("contactPhone", phone);
-		setParameter("address", address);
+        put("contactPhone", phone);
+        put("address", address);
 		if (other != null && !other.equals("")) {
-			setParameter("intro", other);
+            put("intro", other);
 		}
 	}
 

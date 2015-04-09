@@ -10,16 +10,14 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.VipListAdapter;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActModulesStatusModel;
 import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.model.VipListModel;
@@ -28,6 +26,7 @@ import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -169,10 +168,10 @@ public class ActMemberList extends SwipeBackActivity implements View.OnClickList
             mLoadingDialog.setMessage("加载中...");
             mLoadingDialog.show();
         }
-        ActMemeberListParam param = new ActMemeberListParam(ActMemberList.this, cityId, actId, page, size);
-        HttpStringPost task = new HttpStringPost(ActMemberList.this, param.getUrl(), new ResponseListener() {
+        ActMemeberListParam param = new ActMemeberListParam(cityId, actId, page, size);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -204,23 +203,23 @@ public class ActMemberList extends SwipeBackActivity implements View.OnClickList
                         case REFRESH:
                             if (totalNum == 0) {
                                 isOver = 1;
-                                refreshOver(code, "ISNULL");
+                                refreshOver(returnCode, "ISNULL");
                             } else if (page == maxPage) {
                                 isOver = 1;
-                                refreshOver(code, "ISOVER");
+                                refreshOver(returnCode, "ISOVER");
                             } else {
                                 page++;
-                                refreshOver(code, "CLICK_MORE");
+                                refreshOver(returnCode, "CLICK_MORE");
                             }
                             adapter.refreshItems(list.getUsers());
                             break;
                         case LOADMORE:
                             if (page != maxPage) {
                                 page++;
-                                loadMoreOver(code, "CLICK_MORE");
+                                loadMoreOver(returnCode, "CLICK_MORE");
                             } else {
                                 isOver = 1;
-                                loadMoreOver(code, "ISOVER");
+                                loadMoreOver(returnCode, "ISOVER");
                             }
                             adapter.addItems(list.getUsers());
                             break;
@@ -228,11 +227,11 @@ public class ActMemberList extends SwipeBackActivity implements View.OnClickList
                 } else {
                     switch (loadType) {
                         case REFRESH:
-                            refreshOver(code, "ISNULL");
+                            refreshOver(returnCode, "ISNULL");
                             break;
                         case LOADMORE:
                             isOver = 1;
-                            loadMoreOver(code, "ISOVER");
+                            loadMoreOver(returnCode, "ISOVER");
                             break;
                     }
                 }
@@ -240,7 +239,7 @@ public class ActMemberList extends SwipeBackActivity implements View.OnClickList
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -249,7 +248,7 @@ public class ActMemberList extends SwipeBackActivity implements View.OnClickList
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -259,20 +258,7 @@ public class ActMemberList extends SwipeBackActivity implements View.OnClickList
                 isRefresh = false;
                 errorMessage();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                if (dialog != null && !dialog.isShowing()) {
-                    dialog.setMessage("获取成员失败，请重试").withEffect(Effectstype.Shake).show();
-                }
-                isRefresh = false;
-                errorMessage();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     private void refreshOver(int code, String msg) {

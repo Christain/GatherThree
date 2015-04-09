@@ -1,26 +1,22 @@
 package com.gather.android.service;
 
-import java.io.File;
-import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.TrendsModel;
 import com.gather.android.model.TrendsPicModel;
 import com.gather.android.params.PublishTrendsParam;
 import com.gather.android.params.UploadPicParam;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.ArrayList;
 
 public class PublishTrendsService extends Service {
 	
@@ -67,39 +63,33 @@ public class PublishTrendsService extends Service {
 	 * @param imgIds
 	 */
 	private void UploadImage(final int id, final String content, final ArrayList<TrendsPicModel> list, final int index, final ArrayList<Integer> imgIds) {
-		UploadPicParam param = new UploadPicParam(PublishTrendsService.this, new File(list.get(index).getImg_url()));
-		MultipartRequest task = new MultipartRequest(PublishTrendsService.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					imgIds.add(object.getInt("img_id"));
-					if (index < list.size() - 1) {
-						UploadImage(id, content, list, index + 1, imgIds);
-					} else {
-						UploadText(id, content, imgIds);
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+		UploadPicParam param = new UploadPicParam(new File(list.get(index).getImg_url()));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    imgIds.add(object.getInt("img_id"));
+                    if (index < list.size() - 1) {
+                        UploadImage(id, content, list, index + 1, imgIds);
+                    } else {
+                        UploadText(id, content, imgIds);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				
-			}
+            @Override
+            public void onNeedLogin(String msg) {
 
-			@Override
-			public void error(int code, String msg) {
-				
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, PublishTrendsService.this);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+
+            }
+        });
 	}
 	
 	/**
@@ -108,35 +98,29 @@ public class PublishTrendsService extends Service {
 	 * @param list
 	 */
 	private void UploadText(final int id, String content, ArrayList<Integer> list) {
-		PublishTrendsParam param = new PublishTrendsParam(PublishTrendsService.this, content, list);
-		HttpStringPost task = new HttpStringPost(PublishTrendsService.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (service == null) {
-					service = new com.gather.android.database.PublishTrendsService(PublishTrendsService.this);
-				}
-				service.delete(id);
-				Intent intent = new Intent();
-				intent.setAction(PUBLISH_OVER);
-				sendBroadcast(intent);
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, PublishTrendsService.this);
+		PublishTrendsParam param = new PublishTrendsParam(content, list);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (service == null) {
+                    service = new com.gather.android.database.PublishTrendsService(PublishTrendsService.this);
+                }
+                service.delete(id);
+                Intent intent = new Intent();
+                intent.setAction(PUBLISH_OVER);
+                sendBroadcast(intent);
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+
+            }
+        });
 	}
 
 }

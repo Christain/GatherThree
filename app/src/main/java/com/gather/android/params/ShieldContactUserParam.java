@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 屏蔽联系人
  */
-public class ShieldContactUserParam extends StringParams {
+public class ShieldContactUserParam extends BaseParams {
 
-	public ShieldContactUserParam(Context context, int contactId) {
-		super(context, "act/message/shieldContact");
-		setParameter("contactId", contactId);
+	public ShieldContactUserParam(int contactId) {
+		super("act/message/shieldContact");
+        put("contactId", contactId);
 	}
 
 }

@@ -1,8 +1,5 @@
 package com.gather.android.adapter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -15,9 +12,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.UserCenter;
 import com.gather.android.application.GatherApplication;
@@ -25,9 +19,8 @@ import com.gather.android.baseclass.SuperAdapter;
 import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.MessageUserList;
 import com.gather.android.model.MessageUserListModel;
 import com.gather.android.model.UserInfoModel;
@@ -44,11 +37,14 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class ChatUserListAdapter extends SuperAdapter {
 
 	private int page, limit = 20, cityId, isOver, totalNum, maxPage;
-	private ResponseListener listener;
-	private ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private Activity mContext;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions options;
@@ -69,111 +65,97 @@ public class ChatUserListAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					if (helper != null) {
-						helper.saveData(result);
-					}
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(-1, "数据解析出错");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				MessageUserList list = gson.fromJson(result, MessageUserList.class);
-				if (list != null && list.getUsers() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(code, ISNULL);
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(code, ISOVER);
-						} else {
-							page++;
-							refreshOver(code, CLICK_MORE);
-						}
-						refreshItems(list.getUsers());
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, CLICK_MORE);
-						} else {
-							isOver = 1;
-							loadMoreOver(code, ISOVER);
-						}
-						addItems(list.getUsers());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(code, ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int code, Header[] headers, String result) {
+                if (page == 1) {
+                    if (helper != null) {
+                        helper.saveData(result);
+                    }
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(-1, "数据解析出错");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                MessageUserList list = gson.fromJson(result, MessageUserList.class);
+                if (list != null && list.getUsers() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(code, ISNULL);
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(code, ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(code, CLICK_MORE);
+                            }
+                            refreshItems(list.getUsers());
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(code, CLICK_MORE);
+                            } else {
+                                isOver = 1;
+                                loadMoreOver(code, ISOVER);
+                            }
+                            addItems(list.getUsers());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(code, ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(code, ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(5, msg);
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(5, msg);
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(code, msg);
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, error.getMsg());
-					break;
-				case LOADMORE:
-					loadMoreOver(-1, error.getMsg());
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(code, msg);
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@SuppressLint("InflateParams")
@@ -314,9 +296,8 @@ public class ChatUserListAdapter extends SuperAdapter {
 			if (!isRequest) {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
-				GetMessageUserListParam param = new GetMessageUserListParam(mContext, cityId, page, limit);
-				HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-				RequestManager.addRequest(task, context);
+				GetMessageUserListParam param = new GetMessageUserListParam(cityId, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 			}
 		}
 	}
@@ -328,9 +309,8 @@ public class ChatUserListAdapter extends SuperAdapter {
 			this.page = 1;
 			isOver = 0;
 			this.cityId = cityId;
-			GetMessageUserListParam param = new GetMessageUserListParam(mContext, cityId, page, limit);
-			HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+            GetMessageUserListParam param = new GetMessageUserListParam(cityId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 
@@ -389,46 +369,36 @@ public class ChatUserListAdapter extends SuperAdapter {
 			public void onClick(View arg0) {
 				mLoadingDialog.setMessage("正在删除...");
 				mLoadingDialog.show();
-				CancelMessageUserParam param = new CancelMessageUserParam(mContext, model.getId());
-				HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), new ResponseListener() {
-					@Override
-					public void success(int code, String context, String result) {
-						if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-							mLoadingDialog.dismiss();
-						}
-						getMsgList().remove(model);
-						notifyDataSetChanged();
-						dialog.dismiss();
-					}
+				CancelMessageUserParam param = new CancelMessageUserParam(model.getId());
+                AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                    @Override
+                    public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                        if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                            mLoadingDialog.dismiss();
+                        }
+                        getMsgList().remove(model);
+                        notifyDataSetChanged();
+                        dialog.dismiss();
+                    }
 
-					@Override
-					public void relogin(String msg) {
-						if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-							mLoadingDialog.dismiss();
-						}
-						dialog.dismiss();
-						needLogin(msg);
-					}
+                    @Override
+                    public void onNeedLogin(String msg) {
+                        if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                            mLoadingDialog.dismiss();
+                        }
+                        dialog.dismiss();
+                        needLogin(msg);
+                    }
 
-					@Override
-					public void error(int code, String msg) {
-						if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-							mLoadingDialog.dismiss();
-						}
-						dialog.dismiss();
-						toast(msg);
-					}
-				}, new ErrorListener() {
-					@Override
-					public void onErrorResponse(VolleyError error) {
-						if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-							mLoadingDialog.dismiss();
-						}
-						dialog.dismiss();
-						toast(error.getMsg());
-					}
-				}, param.getParameters());
-				RequestManager.addRequest(task, mContext);
+                    @Override
+                    public void onResponseFailed(int returnCode, String errorMsg) {
+                        if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                            mLoadingDialog.dismiss();
+                        }
+                        dialog.dismiss();
+                        toast(errorMsg);
+                    }
+                });
 			}
 		}).show();
 	}

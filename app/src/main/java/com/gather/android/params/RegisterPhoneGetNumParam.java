@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 注册手机账号时获取验证码
  *
  */
-public class RegisterPhoneGetNumParam extends StringParams {
+public class RegisterPhoneGetNumParam extends BaseParams {
 
-	public RegisterPhoneGetNumParam(Context context, String phoneNum) {
-		super(context, "user/userInfo/newPhone");
-		setParameter("phoneNum", phoneNum);
+	public RegisterPhoneGetNumParam(String phoneNum) {
+		super("user/userInfo/newPhone");
+        put("phoneNum", phoneNum);
 	}
 
 }

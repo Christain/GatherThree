@@ -1,8 +1,5 @@
 package com.gather.android.adapter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -15,18 +12,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.ActDetail;
 import com.gather.android.baseclass.SuperAdapter;
 import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActModel;
 import com.gather.android.model.ActModelList;
 import com.gather.android.params.CancelCollectActParam;
@@ -41,12 +34,15 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 @SuppressLint({ "InflateParams", "HandlerLeak" })
 public class CollectionActListAdapter extends SuperAdapter {
 
 	private Activity context;
-	private ResponseListener listener;
-	private ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private int myUserId, page, limit = 20, totalNum, maxPage, isOver, userId;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions options;
@@ -62,108 +58,94 @@ public class CollectionActListAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(-1, "数据解析出错");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				ActModelList list = gson.fromJson(result, ActModelList.class);
-				if (list != null && list.getActs() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(code, ISNULL);
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(code, ISOVER);
-						} else {
-							page++;
-							refreshOver(code, CLICK_MORE);
-						}
-						refreshItems(list.getActs());
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, CLICK_MORE);
-						} else {
-							isOver = 1;
-							loadMoreOver(code, ISOVER);
-						}
-						addItems(list.getActs());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(code, ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int code, Header[] headers, String result) {
+                if (page == 1) {
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(-1, "数据解析出错");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                ActModelList list = gson.fromJson(result, ActModelList.class);
+                if (list != null && list.getActs() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(code, ISNULL);
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(code, ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(code, CLICK_MORE);
+                            }
+                            refreshItems(list.getActs());
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(code, CLICK_MORE);
+                            } else {
+                                isOver = 1;
+                                loadMoreOver(code, ISOVER);
+                            }
+                            addItems(list.getActs());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(code, ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(code, ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(5, msg);
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(5, msg);
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(code, msg);
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, error.getMsg());
-					break;
-				case LOADMORE:
-					loadMoreOver(-1, error.getMsg());
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(code, msg);
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@Override
@@ -256,9 +238,8 @@ public class CollectionActListAdapter extends SuperAdapter {
 			if (!isRequest) {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
-				CollectionActListParam param = new CollectionActListParam(context, userId, page, limit);
-				HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-				RequestManager.addRequest(task, context);
+				CollectionActListParam param = new CollectionActListParam(userId, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 			}
 		}
 	}
@@ -270,9 +251,8 @@ public class CollectionActListAdapter extends SuperAdapter {
 			this.page = 1;
 			this.isOver = 0;
 			this.userId = userId;
-			CollectionActListParam param = new CollectionActListParam(context, userId, page, limit);
-			HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+            CollectionActListParam param = new CollectionActListParam(userId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 
@@ -282,43 +262,33 @@ public class CollectionActListAdapter extends SuperAdapter {
 	private void CancelCollectAct(ActModel model, final int position) {
 		mLoadingDialog.setMessage("正在取消...");
 		mLoadingDialog.show();
-		CancelCollectActParam param = new CancelCollectActParam(context, model.getId());
-		HttpStringPost task = new HttpStringPost(context, param.getUrl(), new ResponseListener() {
+		CancelCollectActParam param = new CancelCollectActParam(model.getId());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                removeItem(position);
+                toast("取消关注成功");
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				removeItem(position);
-				toast("取消关注成功");
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("取消失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("取消失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("取消失败，请重试");
+            }
+        });
 	}
 
 }

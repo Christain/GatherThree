@@ -93,14 +93,15 @@
     <orderEntry type="library" exported="" name="alipaysecsdk" level="project" />
     <orderEntry type="library" exported="" name="multidex-1.0.0" level="project" />
     <orderEntry type="library" exported="" name="qq_login" level="project" />
+    <orderEntry type="library" exported="" name="android-async-http-1.4.5" level="project" />
     <orderEntry type="library" exported="" name="gson-2.3.1" level="project" />
     <orderEntry type="library" exported="" name="pushservice-4.3.0.4" level="project" />
     <orderEntry type="library" exported="" name="libammsdk" level="project" />
     <orderEntry type="library" exported="" name="bccs-api-lib-1.1.2" level="project" />
     <orderEntry type="library" exported="" name="FileVolley" level="project" />
     <orderEntry type="library" exported="" name="baidumapapi_v3_3_0" level="project" />
-    <orderEntry type="library" exported="" name="support-annotations-22.0.0" level="project" />
     <orderEntry type="library" exported="" name="locSDK_5.01" level="project" />
+    <orderEntry type="library" exported="" name="support-annotations-22.0.0" level="project" />
     <orderEntry type="library" exported="" name="zxing" level="project" />
     <orderEntry type="library" exported="" name="TalkingDataAnalytics_V1.2.61" level="project" />
     <orderEntry type="library" exported="" name="httpmime-4.2.5" level="project" />

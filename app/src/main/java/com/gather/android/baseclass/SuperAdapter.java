@@ -1,8 +1,5 @@
 package com.gather.android.baseclass;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnKeyListener;
@@ -14,16 +11,17 @@ import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.activity.LoginIndex;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
-import com.gather.android.http.RequestManager;
 import com.gather.android.listener.OnAdapterLoadMoreOverListener;
 import com.gather.android.listener.OnAdapterRefreshOverListener;
 import com.gather.android.preference.AppPreference;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class SuperAdapter extends BaseAdapter {
@@ -172,15 +170,7 @@ public abstract class SuperAdapter extends BaseAdapter {
 		Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
 	}
 	
-	/**
-	 * 网络请求
-	 * 
-	 * @param request
-	 */
-	protected void executeRequest(Request<?> request) {
-		RequestManager.addRequest(request, this);
-	}
-	
+
 	/**
 	 * 重新登录
 	 */

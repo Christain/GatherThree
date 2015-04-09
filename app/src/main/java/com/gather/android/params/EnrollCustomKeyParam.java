@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动报名自定义字段
  * Created by Christain on 2015/3/31.
  */
-public class EnrollCustomKeyParam extends StringParams {
+public class EnrollCustomKeyParam extends BaseParams {
 
-    public EnrollCustomKeyParam(Context context, int actId) {
-        super(context, "act/actMore/enrollCusKeys");
-        setParameter("actId", actId);
-        setParameter("page", 1);
-        setParameter("size", 30);
+    public EnrollCustomKeyParam(int actId) {
+        super("act/actMore/enrollCusKeys");
+        put("actId", actId);
+        put("page", 1);
+        put("size", 30);
     }
 }

@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 已签到活动列表
  */
-public class ActHasSignListParam extends StringParams {
+public class ActHasSignListParam extends BaseParams {
 
-	public ActHasSignListParam(Context context, int uid, int page, int size) {
-		super(context, "act/activity/checkinActs");
-		setParameter("uid", uid);
-		setParameter("page", page);
-		setParameter("size", size);
+	public ActHasSignListParam(int uid, int page, int size) {
+		super("act/activity/checkinActs");
+        put("uid", uid);
+        put("page", page);
+        put("size", size);
 	}
 }

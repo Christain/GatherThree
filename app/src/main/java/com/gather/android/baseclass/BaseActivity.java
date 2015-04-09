@@ -11,13 +11,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.activity.LoginIndex;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
-import com.gather.android.http.RequestManager;
+import com.gather.android.http.AsyncHttpTask;
 import com.gather.android.manage.AppManage;
 import com.gather.android.preference.AppPreference;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -41,15 +40,6 @@ public abstract class BaseActivity extends FragmentActivity {
 		onCreateActivity(savedInstanceState);
 	}
 
-	/**
-	 * 网络请求
-	 * 
-	 * @param request
-	 */
-	protected void executeRequest(Request<?> request) {
-		RequestManager.addRequest(request, this);
-	}
-	
 	/**
 	 * 重新登录
 	 */
@@ -132,7 +122,7 @@ public abstract class BaseActivity extends FragmentActivity {
 	@Override
 	public void onStop() {
 		super.onStop();
-		RequestManager.cancelAll(this);
+        AsyncHttpTask.getClient().cancelRequests(context, true);
 	}
 
 	/**

@@ -1,11 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -31,8 +25,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.TrendsCommentAdapter;
 import com.gather.android.adapter.TrendsCommentAdapter.OnCommentClickListener;
@@ -43,8 +35,8 @@ import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.TrendsCommentListModel;
 import com.gather.android.model.TrendsCommentModel;
 import com.gather.android.model.TrendsModel;
@@ -68,6 +60,13 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * 动态评论
@@ -269,53 +268,43 @@ public class TrendsComment extends SwipeBackActivity implements OnClickListener 
 			mLoadingDialog.setMessage("加载中...");
 			mLoadingDialog.show();
 		}
-		TrendDetailParam param = new TrendDetailParam(TrendsComment.this, trendsId);
-		HttpStringPost task = new HttpStringPost(TrendsComment.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Gson gson = new Gson();
-				try {
-					JSONObject object = new JSONObject(result);
-					model = gson.fromJson(object.getString("dynamic"), TrendsModel.class);
-					if (model != null) {
-						setTrendsContent();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-				finish();
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取动态失败");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取动态失败");
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+		TrendDetailParam param = new TrendDetailParam(trendsId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Gson gson = new Gson();
+                try {
+                    JSONObject object = new JSONObject(result);
+                    model = gson.fromJson(object.getString("dynamic"), TrendsModel.class);
+                    if (model != null) {
+                        setTrendsContent();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+                finish();
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("获取动态失败");
+                finish();
+            }
+        });
 	}
 
 	@Override
@@ -437,148 +426,126 @@ public class TrendsComment extends SwipeBackActivity implements OnClickListener 
 	private void DelTrends(int dynamicId) {
 		mLoadingDialog.setMessage("正在删除...");
 		mLoadingDialog.show();
-		DelTrendsParam param = new DelTrendsParam(TrendsComment.this, dynamicId);
-		HttpStringPost task = new HttpStringPost(TrendsComment.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("已成功删除");
-				Intent intent = new Intent();
-				intent.putExtra("POSITION", position);
-				intent.putExtra("DEL", "");
-				setResult(RESULT_OK, intent);
-				finish();
-			}
+		DelTrendsParam param = new DelTrendsParam(dynamicId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                toast("已成功删除");
+                Intent intent = new Intent();
+                intent.putExtra("POSITION", position);
+                intent.putExtra("DEL", "");
+                setResult(RESULT_OK, intent);
+                finish();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("删除失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("删除失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("删除失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
 	 * 获取评论
 	 */
 	private void getCommentList() {
-		TrendsCommentListParam param = new TrendsCommentListParam(TrendsComment.this, model.getId(), page, size);
-		HttpStringPost task = new HttpStringPost(TrendsComment.this, param.getUrl(), new ResponseListener() {
-			@SuppressLint("InflateParams")
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % size == 0) {
-							maxPage = totalNum / size;
-						} else {
-							maxPage = (totalNum / size) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						isCommentRefresh = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				TrendsCommentListModel list = gson.fromJson(result, TrendsCommentListModel.class);
-				if (list != null && list.getComments() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							isOver = 1;
-							refreshOver(code, "ISNULL");
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(code, "ISOVER");
-						} else {
-							page++;
-							refreshOver(code, "CLICK_MORE");
-						}
-						commentAdapter.refreshItems(list.getComments());
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, "CLICK_MORE");
-						} else {
-							isOver = 1;
-							loadMoreOver(code, "ISOVER");
-						}
-						commentAdapter.addItems(list.getComments());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, "ISNULL");
-						break;
-					case LOADMORE:
-						isOver = 1;
-						loadMoreOver(code, "ISOVER");
-						break;
-					}
-				}
-				isCommentRefresh = false;
-			}
+		TrendsCommentListParam param = new TrendsCommentListParam(model.getId(), page, size);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (page == 1) {
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % size == 0) {
+                            maxPage = totalNum / size;
+                        } else {
+                            maxPage = (totalNum / size) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        isCommentRefresh = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                TrendsCommentListModel list = gson.fromJson(result, TrendsCommentListModel.class);
+                if (list != null && list.getComments() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                isOver = 1;
+                                refreshOver(returnCode, "ISNULL");
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(returnCode, "ISOVER");
+                            } else {
+                                page++;
+                                refreshOver(returnCode, "CLICK_MORE");
+                            }
+                            commentAdapter.refreshItems(list.getComments());
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(returnCode, "CLICK_MORE");
+                            } else {
+                                isOver = 1;
+                                loadMoreOver(returnCode, "ISOVER");
+                            }
+                            commentAdapter.addItems(list.getComments());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(returnCode, "ISNULL");
+                            break;
+                        case LOADMORE:
+                            isOver = 1;
+                            loadMoreOver(returnCode, "ISOVER");
+                            break;
+                    }
+                }
+                isCommentRefresh = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				isCommentRefresh = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                isCommentRefresh = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("获取评论失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-				isCommentRefresh = false;
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("获取评论失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-				isCommentRefresh = false;
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("获取评论失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+                isCommentRefresh = false;
+            }
+        });
 	}
 
 	private void refreshOver(int code, String msg) {
@@ -619,47 +586,41 @@ public class TrendsComment extends SwipeBackActivity implements OnClickListener 
 	private void SendComment(int trendsId, final UserInfoModel atModel, final String content) {
 		SendCommentParam param;
 		if (atModel != null) {
-			param = new SendCommentParam(TrendsComment.this, trendsId, atModel.getUid(), content);
+			param = new SendCommentParam(trendsId, atModel.getUid(), content);
 		} else {
-			param = new SendCommentParam(TrendsComment.this, trendsId, content);
+			param = new SendCommentParam(trendsId, content);
 		}
-		HttpStringPost task = new HttpStringPost(TrendsComment.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (isOver == 1) {
-					TrendsCommentModel model = new TrendsCommentModel();
-					if (atModel != null) {
-						model.setAt_user(atModel);
-						model.setAt_id(atModel.getUid());
-					}
-					model.setAuthor_user(application.getUserInfoModel());
-					model.setAuthor_id(application.getUserInfoModel().getUid());
-					model.setContent(content);
-					commentAdapter.addItem(model, 0);
-					if (rlFooter.isShown() && tvFooter.getText().toString().contains("没有评论")) {
-						rlFooter.setVisibility(View.GONE);
-					}
-				}
-				numChanged = true;
-				TrendsComment.this.model.setComment_num(TrendsComment.this.model.getComment_num() + 1);
-			}
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (isOver == 1) {
+                    TrendsCommentModel model = new TrendsCommentModel();
+                    if (atModel != null) {
+                        model.setAt_user(atModel);
+                        model.setAt_id(atModel.getUid());
+                    }
+                    model.setAuthor_user(application.getUserInfoModel());
+                    model.setAuthor_id(application.getUserInfoModel().getUid());
+                    model.setContent(content);
+                    commentAdapter.addItem(model, 0);
+                    if (rlFooter.isShown() && tvFooter.getText().toString().contains("没有评论")) {
+                        rlFooter.setVisibility(View.GONE);
+                    }
+                }
+                numChanged = true;
+                TrendsComment.this.model.setComment_num(TrendsComment.this.model.getComment_num() + 1);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("回复失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("回复失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("回复失败");
+            }
+        });
 	}
 	
 	private class DelCommentDialog extends Dialog {
@@ -741,32 +702,26 @@ public class TrendsComment extends SwipeBackActivity implements OnClickListener 
 	 * 删除自己的单条评论
 	 */
 	private void DelComment(int commentId, final int position) {
-		DelCommentParam param = new DelCommentParam(TrendsComment.this, commentId);
-		HttpStringPost task = new HttpStringPost(TrendsComment.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				numChanged = true;
-				TrendsComment.this.model.setComment_num(TrendsComment.this.model.getComment_num() - 1);
-				commentAdapter.getList().remove(position);
-				commentAdapter.notifyDataSetChanged();
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				toast("删除失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("删除失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+		DelCommentParam param = new DelCommentParam(commentId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                numChanged = true;
+                TrendsComment.this.model.setComment_num(TrendsComment.this.model.getComment_num() - 1);
+                commentAdapter.getList().remove(position);
+                commentAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("删除失败，请重试");
+            }
+        });
 	}
 
 	/**

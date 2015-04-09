@@ -1,10 +1,5 @@
 package com.gather.android.activity;
 
-import java.io.File;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -23,8 +18,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.baidu.android.pushservice.PushConstants;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
@@ -32,9 +25,8 @@ import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.IntentManage;
 import com.gather.android.model.RegisterDataModel;
 import com.gather.android.params.RegisterUploadPhotoParam;
@@ -44,6 +36,12 @@ import com.gather.android.utils.BitmapUtils;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.ChoosePicAlert;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
 
 @SuppressLint("InflateParams")
 public class RegisterIcon extends SwipeBackActivity implements OnClickListener {
@@ -138,49 +136,36 @@ public class RegisterIcon extends SwipeBackActivity implements OnClickListener {
 	private void UploadPhoto() {
 		mLoadingDialog.setMessage("正在提交...");
 		mLoadingDialog.show();
-		RegisterUploadPhotoParam param = new RegisterUploadPhotoParam(RegisterIcon.this, mIconFile);
-		MultipartRequest task = new MultipartRequest(RegisterIcon.this, param.getUrl(), new ResponseListener() {
+		RegisterUploadPhotoParam param = new RegisterUploadPhotoParam(mIconFile);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    UploadUserInfo(object.getInt("img_id"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					UploadUserInfo(object.getInt("img_id"));
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new Response.ErrorListener() {
-
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -189,50 +174,37 @@ public class RegisterIcon extends SwipeBackActivity implements OnClickListener {
 	 * @param id
 	 */
 	private void UploadUserInfo(int id) {
-		RegisterUploadUserInfoParam param = new RegisterUploadUserInfoParam(RegisterIcon.this, model.getPassword(), model.getNickname(), model.getSex(), model.getBirthday(), model.getAddress(), model.getEmail(), id);
-		HttpStringPost task = new HttpStringPost(RegisterIcon.this, param.getUrl(), new ResponseListener() {
+		RegisterUploadUserInfoParam param = new RegisterUploadUserInfoParam(model.getPassword(), model.getNickname(), model.getSex(), model.getBirthday(), model.getAddress(), model.getEmail(), id);
+		AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(RegisterIcon.this, "api_key"));
+                AppPreference.save(RegisterIcon.this, AppPreference.LOGIN_TYPE, type);
+                AppPreference.save(RegisterIcon.this, AppPreference.IS_REGISTER, 1);
+                Intent intent = new Intent(RegisterIcon.this, IndexHome.class);
+                startActivity(intent);
+                finish();
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				PushManager.startWork(getApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, getMetaValue(RegisterIcon.this, "api_key"));
-				AppPreference.save(RegisterIcon.this, AppPreference.LOGIN_TYPE, type);
-				AppPreference.save(RegisterIcon.this, AppPreference.IS_REGISTER, 1);
-				Intent intent = new Intent(RegisterIcon.this, IndexHome.class);
-				startActivity(intent);
-				finish();
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				AppPreference.save(RegisterIcon.this, AppPreference.IS_REGISTER, 0);
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				AppPreference.save(RegisterIcon.this, AppPreference.IS_REGISTER, 0);
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                AppPreference.save(RegisterIcon.this, AppPreference.IS_REGISTER, 0);
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	// 获取ApiKey

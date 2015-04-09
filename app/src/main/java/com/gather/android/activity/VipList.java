@@ -1,10 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,25 +11,24 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.VipListAdapter;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
-import com.gather.android.model.ActModelList;
-import com.gather.android.model.UserInfoModel;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.VipListModel;
 import com.gather.android.params.VipListParam;
-import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.utils.DataHelper;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * 达人列表
@@ -212,117 +206,103 @@ public class VipList extends SwipeBackActivity implements OnClickListener {
 	private void getVipList(boolean keywords) {
 		VipListParam param;
 		if (keywords) {
-			param = new VipListParam(VipList.this, cityId, keyWords, page, size);
+			param = new VipListParam(cityId, keyWords, page, size);
 		} else {
-			param = new VipListParam(VipList.this, cityId, tagId, sex, userTagId, page, size);
+			param = new VipListParam(cityId, tagId, sex, userTagId, page, size);
 		}
-		HttpStringPost task = new HttpStringPost(VipList.this, param.getUrl(), new ResponseListener() {
-			@SuppressLint("InflateParams")
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (!gridView.isShown()) {
-					gridView.setVisibility(View.VISIBLE);
-				}
-				if (page == 1) {
-					if (helper != null && !isKeywords) {
-						helper.saveData(result);
-					}
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % size == 0) {
-							maxPage = totalNum / size;
-						} else {
-							maxPage = (totalNum / size) + 1;
-						}
-					} catch (JSONException e) {
-						isRefresh = false;
-						e.printStackTrace();
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				VipListModel list = gson.fromJson(result, VipListModel.class);
-				if (list != null && list.getUsers() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							isOver = 1;
-							refreshOver(code, "ISNULL");
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(code, "ISOVER");
-						} else {
-							page++;
-							refreshOver(code, "CLICK_MORE");
-						}
-						adapter.refreshItems(list.getUsers());
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, "CLICK_MORE");
-						} else {
-							isOver = 1;
-							loadMoreOver(code, "ISOVER");
-						}
-						adapter.addItems(list.getUsers());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, "ISNULL");
-						break;
-					case LOADMORE:
-						isOver = 1;
-						loadMoreOver(code, "ISOVER");
-						break;
-					}
-				}
-				isRefresh = false;
-			}
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (!gridView.isShown()) {
+                    gridView.setVisibility(View.VISIBLE);
+                }
+                if (page == 1) {
+                    if (helper != null && !isKeywords) {
+                        helper.saveData(result);
+                    }
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % size == 0) {
+                            maxPage = totalNum / size;
+                        } else {
+                            maxPage = (totalNum / size) + 1;
+                        }
+                    } catch (JSONException e) {
+                        isRefresh = false;
+                        e.printStackTrace();
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                VipListModel list = gson.fromJson(result, VipListModel.class);
+                if (list != null && list.getUsers() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                isOver = 1;
+                                refreshOver(returnCode, "ISNULL");
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(returnCode, "ISOVER");
+                            } else {
+                                page++;
+                                refreshOver(returnCode, "CLICK_MORE");
+                            }
+                            adapter.refreshItems(list.getUsers());
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(returnCode, "CLICK_MORE");
+                            } else {
+                                isOver = 1;
+                                loadMoreOver(returnCode, "ISOVER");
+                            }
+                            adapter.addItems(list.getUsers());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(returnCode, "ISNULL");
+                            break;
+                        case LOADMORE:
+                            isOver = 1;
+                            loadMoreOver(returnCode, "ISOVER");
+                            break;
+                    }
+                }
+                isRefresh = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRefresh = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRefresh = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("获取活动达人失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-				isRefresh = false;
-				errorMessage();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("获取活动达人失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-				isRefresh = false;
-				errorMessage();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("获取活动达人失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+                isRefresh = false;
+                errorMessage();
+            }
+        });
 	}
 
 	private void refreshOver(int code, String msg) {

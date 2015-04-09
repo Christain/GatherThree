@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 系统消息列表
  */
-public class SystemMessageParam extends StringParams {
+public class SystemMessageParam extends BaseParams {
 
-	public SystemMessageParam(Context context, int page, int size) {
-		super(context, "act/user/systemMsgs");
-		setParameter("page", page);
-		setParameter("size", size);
+	public SystemMessageParam(int page, int size) {
+		super("act/user/systemMsgs");
+        put("page", page);
+        put("size", size);
 	}
 }

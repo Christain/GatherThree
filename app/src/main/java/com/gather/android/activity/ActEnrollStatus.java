@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
@@ -18,8 +20,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActEnrollStatusCommentAdapter;
 import com.gather.android.adapter.ActEnrollStatusGridViewAdapter;
@@ -27,8 +27,9 @@ import com.gather.android.application.GatherApplication;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
+import com.gather.android.model.ActCheckInListModel;
 import com.gather.android.model.ActEnrollStatusCommentListModel;
 import com.gather.android.model.ActEnrollStatusCommentModel;
 import com.gather.android.model.ActModel;
@@ -36,18 +37,21 @@ import com.gather.android.model.ActModulesStatusModel;
 import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.model.VipListModel;
+import com.gather.android.params.ActCheckInListParam;
 import com.gather.android.params.ActEnrollStatusCommentParam;
 import com.gather.android.params.ActEnrollStatusCommentSendParam;
 import com.gather.android.params.ActManagerListParam;
 import com.gather.android.params.ActMemeberListParam;
 import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
+import com.gather.android.utils.DES;
 import com.gather.android.utils.TimeUtil;
 import com.gather.android.widget.NoScrollGridView;
 import com.gather.android.widget.NoScrollListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -104,13 +108,22 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             this.tvRight = (TextView) findViewById(R.id.tvRight);
             this.tvLeft.setVisibility(View.GONE);
             this.ivRight.setVisibility(View.GONE);
-            this.tvRight.setVisibility(View.VISIBLE);
             this.ivLeft.setVisibility(View.VISIBLE);
             this.tvTitle.setText("报名情况");
-            this.tvRight.setText("签到");
+
+            if (modulesStatusModel.getShow_checkin() == 1) {
+                if (actMoreInfoModel.getEnroll_status() == 3) {
+                    this.tvRight.setVisibility(View.VISIBLE);
+                    this.tvRight.setText("签到");
+                    this.tvRight.setOnClickListener(this);
+                } else {
+                    this.tvRight.setVisibility(View.GONE);
+                }
+            } else {
+                this.tvRight.setVisibility(View.GONE);
+            }
             this.ivLeft.setImageResource(R.drawable.title_back_click_style);
             this.ivLeft.setOnClickListener(this);
-            this.tvRight.setOnClickListener(this);
 
             this.mLoadingDialog = LoadingDialog.createDialog(ActEnrollStatus.this, true);
             this.dialog = DialogTipsBuilder.getInstance(ActEnrollStatus.this);
@@ -170,7 +183,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                     UserInfoModel model = managerAdapter.getItem(position);
                     if (model != null && !ClickUtil.isFastClick()) {
-                        Intent intent = new Intent(ActEnrollStatus.this, UserCenter.class);
+                        Intent intent = new Intent(ActEnrollStatus.this, Chat.class);
                         intent.putExtra("UID", model.getUid());
                         intent.putExtra("MODEL", model);
                         startActivity(intent);
@@ -181,6 +194,25 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             this.initView();
             this.getManagerList();
             this.getMemberList();
+
+            String str = "{\"filter\":\"checkin_id\",\"value\":99}";
+            // 在这里使用的是encode方式，返回的是byte类型加密数据，可使用new String转为String类型
+            String strBase64 = new String(Base64.encode(str.getBytes(), Base64.DEFAULT));
+            Log.i("Test", "encode >>>" + strBase64);
+            // 这里 encodeToString 则直接将返回String类型的加密数据
+            String enToStr = Base64.encodeToString(str.getBytes(), Base64.DEFAULT);
+            Log.i("Test", "encodeToString >>> " + enToStr);
+            // 对base64加密后的数据进行解密
+            Log.i("Test", "decode >>>" + new String(Base64.decode(strBase64.getBytes(), Base64.DEFAULT)));
+            try {
+                DES des = new DES("zero2all");
+                Log.e("json", des.encrypt("{\"filter\":\"checkin_id\",\"value\":99}"));
+                String json = des.decrypt(des.encrypt("{\"filter\":\"checkin_id\",\"value\":99}"));
+                Log.e("json", json);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+
         } else {
             toast("查看失败，请重试");
             finish();
@@ -223,7 +255,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 break;
             case R.id.tvRight:
                 if (!ClickUtil.isFastClick()) {
-
+                    getCheckin();
                 }
                 break;
             case R.id.llActProcess:
@@ -304,10 +336,10 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
         mLoadingDialog.setMessage("加载中...");
         mLoadingDialog.show();
         GatherApplication application = GatherApplication.getInstance();
-        ActMemeberListParam param = new ActMemeberListParam(ActEnrollStatus.this, application.getCityId(), model.getId(), 1, 5);
-        HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new com.gather.android.http.ResponseListener() {
+        ActMemeberListParam param = new ActMemeberListParam(application.getCityId(), model.getId(), 1, 5);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -320,6 +352,16 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                         tvMemberMore.setVisibility(View.VISIBLE);
                     } else {
                         tvMemberMore.setVisibility(View.VISIBLE);
+                    }
+                    int myUserId = AppPreference.getUserPersistentInt(ActEnrollStatus.this, AppPreference.USER_ID);
+                    for (int i = 0; i < list.getUsers().size(); i++) {
+                        if (myUserId == list.getUsers().get(i).getId()) {
+                            list.getUsers().remove(i);
+                            break;
+                        }
+                    }
+                    if (actMoreInfoModel.getEnroll_status() == 3) {
+                        list.getUsers().add(0,GatherApplication.getInstance().getUserInfoModel());
                     }
                     memberAdapter = new ActEnrollStatusGridViewAdapter(ActEnrollStatus.this, list.getUsers());
                     memberGridView.setAdapter(memberAdapter);
@@ -336,7 +378,7 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -344,24 +386,14 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 toast("加载报名情况失败，请重试");
                 finish();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                toast("加载报名情况失败，请重试");
-                finish();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     /**
@@ -369,10 +401,10 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
      */
     private void getManagerList() {
         GatherApplication application = GatherApplication.getInstance();
-        ActManagerListParam param = new ActManagerListParam(ActEnrollStatus.this, application.getCityId(), model.getId(), 1, 4);
-        HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new ResponseListener() {
+        ActManagerListParam param = new ActManagerListParam(application.getCityId(), model.getId(), 1, 4);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 Gson gson = new Gson();
                 VipListModel list = gson.fromJson(result, VipListModel.class);
                 if (list != null && list.getUsers() != null && list.getUsers().size() > 0) {
@@ -387,35 +419,28 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 llNoManager.setVisibility(View.VISIBLE);
                 managerGradView.setVisibility(View.GONE);
                 needLogin(msg);
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 llNoManager.setVisibility(View.VISIBLE);
                 managerGradView.setVisibility(View.GONE);
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                llNoManager.setVisibility(View.VISIBLE);
-                managerGradView.setVisibility(View.GONE);
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     /**
      * 获取留言列表
      */
     private void getCommentList() {
-        ActEnrollStatusCommentParam param = new ActEnrollStatusCommentParam(ActEnrollStatus.this, model.getId(), page, size);
-        HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new ResponseListener() {
+        ActEnrollStatusCommentParam param = new ActEnrollStatusCommentParam(model.getId(), page, size);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (page == 1) {
                     JSONObject object = null;
                     try {
@@ -438,38 +463,31 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
                 if (list != null && list.getMessages() != null && list.getMessages().size() > 0) {
                     if (page != maxPage) {
                         page++;
-                        loadMoreOver(code, "CLICK_MORE");
+                        loadMoreOver(returnCode, "CLICK_MORE");
                     } else {
                         isOver = 1;
-                        loadMoreOver(code, "ISOVER");
+                        loadMoreOver(returnCode, "ISOVER");
                     }
                     commentAdapter.addItems(list.getMessages());
                 } else {
                     isOver = 1;
-                    loadMoreOver(code, "NULL");
+                    loadMoreOver(returnCode, "NULL");
                 }
                 isRefresh = false;
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 isRefresh = false;
                 needLogin(msg);
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 isRefresh = false;
                 errorMessage();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                isRefresh = false;
-                errorMessage();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     private void loadMoreOver(int code, String msg) {
@@ -498,10 +516,10 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
     }
 
     private void sendComment(final String content) {
-        ActEnrollStatusCommentSendParam param = new ActEnrollStatusCommentSendParam(ActEnrollStatus.this, model.getId(), content);
-        HttpStringPost task = new HttpStringPost(ActEnrollStatus.this, param.getUrl(), new ResponseListener() {
+        ActEnrollStatusCommentSendParam param = new ActEnrollStatusCommentSendParam(model.getId(), content);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (page == 1) {
                     ActEnrollStatusCommentModel model = new ActEnrollStatusCommentModel();
                     model.setAuthor_id(AppPreference.getUserPersistentInt(ActEnrollStatus.this, AppPreference.USER_ID));
@@ -521,24 +539,68 @@ public class ActEnrollStatus extends SwipeBackActivity implements View.OnClickLi
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 isComment = false;
                 needLogin(msg);
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 isComment = false;
                 toast("留言失败，请重试");
             }
-        }, new Response.ErrorListener() {
+        });
+    }
+
+    /**
+     * 签到列表
+     */
+    private void getCheckin() {
+        if (mLoadingDialog != null && !mLoadingDialog.isShowing()) {
+            mLoadingDialog.setMessage("加载中...");
+            mLoadingDialog.show();
+        }
+        ActCheckInListParam param = new ActCheckInListParam(model.getId());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                isComment = false;
-                toast("留言失败，请重试");
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Gson gson = new Gson();
+                ActCheckInListModel list = gson.fromJson(result, ActCheckInListModel.class);
+                if (list != null ) {
+                    if (list.getCheckins().size() == 0) {
+                        Intent checkin = new Intent(ActEnrollStatus.this, QRCodeScan.class);
+                        checkin.putExtra("MORE_INFO", actMoreInfoModel);
+                        startActivity(checkin);
+                    } else {
+                        Intent intent = new Intent(ActEnrollStatus.this, ActPassPort.class);
+                        intent.putExtra("MODEL", list.getCheckins().get(list.getCheckins().size() - 1));
+                        intent.putExtra("MORE_INFO", actMoreInfoModel);
+                        startActivity(intent);
+                    }
+                } else {
+                    toast("签到失败，请重试");
+                }
             }
-        }, param.getParameters());
-        executeRequest(task);
+
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("签到失败，请重试");
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("签到失败，请重试");
+            }
+        });
     }
 
     /**

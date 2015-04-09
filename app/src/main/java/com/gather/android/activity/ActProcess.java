@@ -11,14 +11,12 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActProcessAdapter;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActModulesStatusModel;
 import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.model.ActProcessListModel;
@@ -28,6 +26,8 @@ import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.NoScrollListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
 
 import java.util.ArrayList;
 
@@ -187,6 +187,7 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
      */
     private void setActProcess(ArrayList<ActProcessModel> list) {
         adapter.setActProcessList(list);
+        ivActProcess.setImageResource(R.drawable.icon_act_notify_arrow_buttom);
         llProcess.setVisibility(View.VISIBLE);
     }
 
@@ -195,10 +196,10 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
      * 获取活动流程信息
      */
     private void getActProcess() {
-        ActProcessParam param = new ActProcessParam(ActProcess.this, actId, 1, 30);
-        HttpStringPost task = new HttpStringPost(ActProcess.this, param.getUrl(), new ResponseListener() {
+        ActProcessParam param = new ActProcessParam(actId, 1, 30);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 Gson gson = new Gson();
                 ActProcessListModel list = gson.fromJson(result, ActProcessListModel.class);
                 if (list != null && list.getAct_process().size() > 0) {
@@ -209,34 +210,16 @@ public class ActProcess extends SwipeBackActivity implements View.OnClickListene
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 needLogin(msg);
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (Constant.SHOW_LOG) {
                     toast("获取活动流程信息失败");
                 }
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                ArrayList<ActProcessModel> list = new ArrayList<ActProcessModel>();
-                for (int i = 0; i < 10; i++) {
-                    ActProcessModel model = new ActProcessModel();
-                    model.setB_time("20:30");
-                    model.setE_time("12:20");
-                    model.setStatus(2);
-                    model.setSubject("测试数据，真是烦测试数据，真是烦测试数据，真是烦测试数据，真是烦");
-                    list.add(model);
-                }
-                setActProcess(list);
-                if (Constant.SHOW_LOG) {
-                    toast("获取活动流程信息失败");
-                }
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 }

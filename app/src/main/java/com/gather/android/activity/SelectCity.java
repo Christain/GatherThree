@@ -1,10 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,8 +15,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.location.BDLocation;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
@@ -34,9 +27,8 @@ import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.CityList;
 import com.gather.android.model.CityListModel;
 import com.gather.android.model.NewsModel;
@@ -52,6 +44,12 @@ import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.NoScrollListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class SelectCity extends SwipeBackActivity implements OnClickListener {
 
@@ -189,40 +187,34 @@ public class SelectCity extends SwipeBackActivity implements OnClickListener {
 	 * 获取城市列表
 	 */
 	private void getCityList() {
-		GetCityListParam param = new GetCityListParam(SelectCity.this);
-		HttpStringPost task = new HttpStringPost(SelectCity.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				SharedPreferences cityPreferences = SelectCity.this.getSharedPreferences("CITY_LIST", Context.MODE_PRIVATE);
-				SharedPreferences.Editor editor = cityPreferences.edit();
-				editor.putString("CITY", result);
-				editor.commit();
-				Gson gson = new Gson();
-				list = gson.fromJson(result, CityList.class);
-				for (int i = 0; i < list.getCities().size(); i++) {
-					if (application.getCityId() != 0 && list.getCities().get(i).getId() == application.getCityId()) {
-						list.getCities().get(i).setSelect(true);
-					}
-				}
-				adapter.setNotifyData(list.getCities());
-			}
+		GetCityListParam param = new GetCityListParam();
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                SharedPreferences cityPreferences = SelectCity.this.getSharedPreferences("CITY_LIST", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = cityPreferences.edit();
+                editor.putString("CITY", result);
+                editor.commit();
+                Gson gson = new Gson();
+                list = gson.fromJson(result, CityList.class);
+                for (int i = 0; i < list.getCities().size(); i++) {
+                    if (application.getCityId() != 0 && list.getCities().get(i).getId() == application.getCityId()) {
+                        list.getCities().get(i).setSelect(true);
+                    }
+                }
+                adapter.setNotifyData(list.getCities());
+            }
 
-			@Override
-			public void relogin(String msg) {
+            @Override
+            public void onNeedLogin(String msg) {
 
-			}
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				Toast.makeText(SelectCity.this, "获取城市失败", Toast.LENGTH_SHORT).show();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				Toast.makeText(SelectCity.this, "获取城市失败", Toast.LENGTH_SHORT).show();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, SelectCity.this);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                Toast.makeText(SelectCity.this, "获取城市失败", Toast.LENGTH_SHORT).show();
+            }
+        });
 	}
 
 	@Override
@@ -287,123 +279,101 @@ public class SelectCity extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("切换城市中...");
 			mLoadingDialog.show();
 		}
-		GetUserInfoParam param = new GetUserInfoParam(SelectCity.this, cityId);
-		HttpStringPost task = new HttpStringPost(SelectCity.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					Gson gson = new Gson();
-					UserInfoModel userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
-					if (userInfoModel != null) {
-						if (application != null) {
-							application.setUserInfoModel(userInfoModel);
-						}
-						AppPreference.saveUserInfo(SelectCity.this, userInfoModel);
-						application.setCityId(cityId);
-						AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY, name);
-						AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY_CODE, cityId);
-						getHomePic(cityId, name);
-						if (AppPreference.hasLogin(SelectCity.this) && PushMessageReceiver.baiduUserId.length() > 1 && PushMessageReceiver.baiduChannelId.length() > 1) {
-							BindService(SelectCity.this, PushMessageReceiver.baiduUserId, PushMessageReceiver.baiduChannelId);
-						}
-					} else {
-						Toast.makeText(SelectCity.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					Toast.makeText(SelectCity.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
-				}
-			}
+		GetUserInfoParam param = new GetUserInfoParam(cityId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    Gson gson = new Gson();
+                    UserInfoModel userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
+                    if (userInfoModel != null) {
+                        if (application != null) {
+                            application.setUserInfoModel(userInfoModel);
+                        }
+                        AppPreference.saveUserInfo(SelectCity.this, userInfoModel);
+                        application.setCityId(cityId);
+                        AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY, name);
+                        AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY_CODE, cityId);
+                        getHomePic(cityId, name);
+                        if (AppPreference.hasLogin(SelectCity.this) && PushMessageReceiver.baiduUserId.length() > 1 && PushMessageReceiver.baiduChannelId.length() > 1) {
+                            BindService(SelectCity.this, PushMessageReceiver.baiduUserId, PushMessageReceiver.baiduChannelId);
+                        }
+                    } else {
+                        Toast.makeText(SelectCity.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(SelectCity.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
 	 * 获取首页轮播图片
 	 */
 	private void getHomePic(final int cityId, final String name) {
-		HomePicParam param = new HomePicParam(SelectCity.this, cityId, 1, 10);
-		HttpStringPost task = new HttpStringPost(SelectCity.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Gson gson = new Gson();
-				NewsModelList list = gson.fromJson(result, NewsModelList.class);
-				ArrayList<NewsModel> imgList = null;
-				if (list != null && list.getNews() != null) {
-					imgList = list.getNews();
-				} else {
-					imgList = new ArrayList<NewsModel>();
-				}
-				AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY, name);
-				AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY_CODE, cityId);
-				application.setCityId(cityId);
-				Intent intent = new Intent();
-				intent.putExtra("CITY", name);
-				intent.putExtra("PIC_LIST", imgList);
-				setResult(RESULT_OK, intent);
-				finish();
-			}
+		HomePicParam param = new HomePicParam(cityId, 1, 10);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Gson gson = new Gson();
+                NewsModelList list = gson.fromJson(result, NewsModelList.class);
+                ArrayList<NewsModel> imgList = null;
+                if (list != null && list.getNews() != null) {
+                    imgList = list.getNews();
+                } else {
+                    imgList = new ArrayList<NewsModel>();
+                }
+                AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY, name);
+                AppPreference.save(SelectCity.this, AppPreference.LOCATION_CITY_CODE, cityId);
+                application.setCityId(cityId);
+                Intent intent = new Intent();
+                intent.putExtra("CITY", name);
+                intent.putExtra("PIC_LIST", imgList);
+                setResult(RESULT_OK, intent);
+                finish();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (Constant.SHOW_LOG) {
-					toast("获取轮播图 失败");
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (Constant.SHOW_LOG) {
-					toast("获取轮播图 失败");
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (Constant.SHOW_LOG) {
+                    toast("获取轮播图 失败");
+                }
+            }
+        });
 	}
 
 	/**
@@ -414,35 +384,27 @@ public class SelectCity extends SwipeBackActivity implements OnClickListener {
 	 * @param baiduChannelId
 	 */
 	private void BindService(final Context context, String baiduUserId, String baiduChannelId) {
-		BindPushParam param = new BindPushParam(context, GatherApplication.cityId, 3, baiduUserId, baiduChannelId);
-		HttpStringPost task = new HttpStringPost(context, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(context, "绑定服务成功", Toast.LENGTH_SHORT).show();
-				}
-			}
+		BindPushParam param = new BindPushParam(GatherApplication.cityId, 3, baiduUserId, baiduChannelId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (Constant.SHOW_LOG) {
+                    Toast.makeText(context, "绑定服务成功", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
+            @Override
+            public void onNeedLogin(String msg) {
 
-			}
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
-				}
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, context);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (Constant.SHOW_LOG) {
+                    Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 	}
 
 	/**

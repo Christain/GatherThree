@@ -1,23 +1,21 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
 import com.gather.android.application.GatherApplication;
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 签到
  */
-public class SignInParam extends StringParams {
+public class SignInParam extends BaseParams {
 
-	public SignInParam(Context context, int actId) {
-		super(context, "/act/activity/checkin");
-		setParameter("actId", actId);
-		GatherApplication app = (GatherApplication) context.getApplicationContext();
+	public SignInParam(int checkinId) {
+		super("act/actMore/checkin");
+        put("checkinId", checkinId);
+		GatherApplication app = GatherApplication.getInstance();
 		if (app.mLocation != null && app.mLocation.getAddrStr() != null) {
-			setParameter("lon", app.mLocation.getLongitude());
-			setParameter("lat", app.mLocation.getLatitude());
-			setParameter("address", app.mLocation.getAddrStr());
+            put("lon", app.mLocation.getLongitude());
+            put("lat", app.mLocation.getLatitude());
+            put("address", app.mLocation.getAddrStr());
 		}
 	}
 

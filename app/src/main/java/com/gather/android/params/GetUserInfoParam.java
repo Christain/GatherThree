@@ -1,20 +1,18 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取个人信息//自己的不用传uid
  */
-public class GetUserInfoParam extends StringParams {
+public class GetUserInfoParam extends BaseParams {
 
-	public GetUserInfoParam(Context context, int cityId) {
-		super(context, "act/user/fullprofile");
-		setParameter("cityId", cityId);
+	public GetUserInfoParam(int cityId) {
+		super("act/user/fullprofile");
+        put("cityId", cityId);
 	}
 
 	public void addUserId(int uid) {
-		setParameter("uid", uid);
+        put("uid", uid);
 	}
 }

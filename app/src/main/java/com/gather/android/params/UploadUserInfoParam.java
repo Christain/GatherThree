@@ -1,32 +1,29 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.MultipartParams;
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 修改个人信息
  */
-public class UploadUserInfoParam extends StringParams {
+public class UploadUserInfoParam extends BaseParams {
 	
-	public UploadUserInfoParam (Context context) {
-		super(context, "act/user/updateFullprofile");
+	public UploadUserInfoParam () {
+		super("act/user/updateFullprofile");
 	}
 
-	public UploadUserInfoParam(Context context, String nickName, int sex, String birth, String address, String real_name, String contact_phone, int headImgId) {
-		super(context, "act/user/updateFullprofile");
-		setParameter("nickName", nickName);
-		setParameter("sex", sex);
+	public UploadUserInfoParam(String nickName, int sex, String birth, String address, String real_name, String contact_phone, int headImgId) {
+		super("act/user/updateFullprofile");
+        put("nickName", nickName);
+        put("sex", sex);
 		if (birth.contains(" 00:00:00")) {
 			birth = birth.substring(0, birth.indexOf(" "));
 		}
-		setParameter("birth", birth);
-		setParameter("address", address);
-		setParameter("realName", real_name);
-		setParameter("contactPhone", contact_phone);
+        put("birth", birth);
+        put("address", address);
+        put("realName", real_name);
+        put("contactPhone", contact_phone);
 		if (headImgId != 0) {
-			setParameter("headImgId", headImgId);
+            put("headImgId", headImgId);
 		}
 	}
 	
@@ -35,7 +32,7 @@ public class UploadUserInfoParam extends StringParams {
 	 * @param nickName
 	 */
 	public void SaveNickName(String nickName) {
-		setParameter("nickName", nickName);
+        put("nickName", nickName);
 	}
 	
 	/**
@@ -43,7 +40,7 @@ public class UploadUserInfoParam extends StringParams {
 	 * @param sex
 	 */
 	public void SaveSex(int sex) {
-		setParameter("sex", sex);
+        put("sex", sex);
 	}
 	
 	/**
@@ -54,7 +51,7 @@ public class UploadUserInfoParam extends StringParams {
 		if (birth.contains(" 00:00:00")) {
 			birth = birth.substring(0, birth.indexOf(" "));
 		}
-		setParameter("birth", birth);
+        put("birth", birth);
 	}
 	
 	/**
@@ -62,15 +59,15 @@ public class UploadUserInfoParam extends StringParams {
 	 * @param address
 	 */
 	public void SaveAddress(String address) {
-		setParameter("address", address);
+        put("address", address);
 	}
 	
 	/**
 	 * 修改个性签名
-	 * @param brief
+	 * @param intro
 	 */
 	public void SaveBrief(String intro) {
-		setParameter("intro", intro);
+        put("intro", intro);
 	}
 	
 	/**
@@ -78,7 +75,7 @@ public class UploadUserInfoParam extends StringParams {
 	 * @param hobby
 	 */
 	public void SaveHobby(String hobby) {
-		setParameter("hobby", hobby);
+        put("hobby", hobby);
 	}
 	
 	/**
@@ -86,14 +83,14 @@ public class UploadUserInfoParam extends StringParams {
 	 * @param name
 	 */
 	public void SaveUserName(String name) {
-		setParameter("realName", name);
+        put("realName", name);
 	}
 	
 	/**
 	 * 修改联系电话
 	 */
 	public void SavePhone(String phone) {
-		setParameter("contactPhone", phone);
+        put("contactPhone", phone);
 	}
 	
 	/**
@@ -102,7 +99,7 @@ public class UploadUserInfoParam extends StringParams {
 	 */
 	public void SaveUserIcon(int headImgId) {
 		if (headImgId != 0) {
-			setParameter("headImgId", headImgId);
+            put("headImgId", headImgId);
 		}
 	}
 }

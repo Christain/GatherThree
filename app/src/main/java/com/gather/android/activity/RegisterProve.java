@@ -1,12 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -24,16 +17,13 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.params.FindPasswordGetNumParam;
 import com.gather.android.params.LoginThirdParam;
 import com.gather.android.params.RegisterPhoneGetNumParam;
@@ -50,6 +40,14 @@ import com.tencent.connect.common.Constants;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class RegisterProve extends SwipeBackActivity implements OnClickListener {
 
@@ -221,70 +219,57 @@ public class RegisterProve extends SwipeBackActivity implements OnClickListener 
 	private void IdentifyNum() {
 		mLoadingDialog.setMessage("正在验证...");
 		mLoadingDialog.show();
-		RegisterPhoneIdentifyNumParam param = new RegisterPhoneIdentifyNumParam(RegisterProve.this, type, phoneNum.replace(" ", ""), etProveNum.getText().toString().trim());
-		HttpStringPost task = new HttpStringPost(RegisterProve.this, param.getUrl(), new ResponseListener() {
+		RegisterPhoneIdentifyNumParam param = new RegisterPhoneIdentifyNumParam(type, phoneNum.replace(" ", ""), etProveNum.getText().toString().trim());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (type == 1) {
+                    Intent intent = new Intent(RegisterProve.this, RegisterData.class);
+                    intent.putExtra("TYPE", AppPreference.TYPE_SELF);
+                    startActivity(intent);
+                    finishActivity();
+                } else {
+                    Intent mIntent = new Intent(RegisterProve.this, ResetPassword.class);
+                    startActivity(mIntent);
+                    finishActivity();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (type == 1) {
-					Intent intent = new Intent(RegisterProve.this, RegisterData.class);
-					intent.putExtra("TYPE", AppPreference.TYPE_SELF);
-					startActivity(intent);
-					finishActivity();
-				} else {
-					Intent mIntent = new Intent(RegisterProve.this, ResetPassword.class);
-					startActivity(mIntent);
-					finishActivity();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				switch (code) {
-				case 7:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("您的验证码已超时，请重新发送。").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				case 8:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("您输入的验证码不正确，请重新输入。").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				default:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("验证失败").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				}
-			}
-		}, new ErrorListener() {
-
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                switch (returnCode) {
+                    case 7:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("您的验证码已超时，请重新发送。").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                    case 8:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("您输入的验证码不正确，请重新输入。").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                    default:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("验证失败").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                }
+            }
+        });
 	}
 	
 	/**
@@ -294,65 +279,53 @@ public class RegisterProve extends SwipeBackActivity implements OnClickListener 
 	private void getIdentifyNum(String content) {
 		mLoadingDialog.setMessage("正在获取...");
 		mLoadingDialog.show();
-		RegisterPhoneGetNumParam param = new RegisterPhoneGetNumParam(RegisterProve.this, content.replace(" ", ""));
-		HttpStringPost task = new HttpStringPost(RegisterProve.this, param.getUrl(), new ResponseListener() {
+		RegisterPhoneGetNumParam param = new RegisterPhoneGetNumParam(content.replace(" ", ""));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                second = 60;
+                tvTime.setVisibility(View.VISIBLE);
+                tvResend.setTextColor(0xffFFFFFF);
+                llResend.setBackgroundColor(0x00000000);
+                timerTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        handler.sendEmptyMessage(0);
+                    }
+                };
+                timer.schedule(timerTask, 200, 1000);
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				second = 60;
-				tvTime.setVisibility(View.VISIBLE);
-				tvResend.setTextColor(0xffFFFFFF);
-				llResend.setBackgroundColor(0x00000000);
-				timerTask = new TimerTask() {
-					@Override
-					public void run() {
-						handler.sendEmptyMessage(0);
-					}
-				};
-				timer.schedule(timerTask, 200, 1000);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				switch (code) {
-				case 10:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("您输入的手机号已经注册过，请直接登录。").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				default:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("验证失败").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                switch (returnCode) {
+                    case 10:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("您输入的手机号已经注册过，请直接登录。").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                    default:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("验证失败").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                }
+            }
+        });
 	}
 	
 	/**
@@ -362,66 +335,53 @@ public class RegisterProve extends SwipeBackActivity implements OnClickListener 
 	private void getFindPasswordIdentifyNum(String content) {
 		mLoadingDialog.setMessage("正在获取...");
 		mLoadingDialog.show();
-		FindPasswordGetNumParam param = new FindPasswordGetNumParam(RegisterProve.this, content.replace(" ", ""));
-		HttpStringPost task = new HttpStringPost(RegisterProve.this, param.getUrl(), new ResponseListener() {
-			
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				second = 60;
-				tvTime.setVisibility(View.VISIBLE);
-				tvResend.setTextColor(0xffFFFFFF);
-				llResend.setBackgroundColor(0x00000000);
-				timerTask = new TimerTask() {
-					@Override
-					public void run() {
-						handler.sendEmptyMessage(0);
-					}
-				};
-				timer.schedule(timerTask, 200, 1000);
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				switch (code) {
-				case 1:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("您输入的账号未注册，请直接注册。").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				default:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-					}
-					break;
-				}
-			}
-		}, new ErrorListener() {
+		FindPasswordGetNumParam param = new FindPasswordGetNumParam(content.replace(" ", ""));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                second = 60;
+                tvTime.setVisibility(View.VISIBLE);
+                tvResend.setTextColor(0xffFFFFFF);
+                llResend.setBackgroundColor(0x00000000);
+                timerTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        handler.sendEmptyMessage(0);
+                    }
+                };
+                timer.schedule(timerTask, 200, 1000);
+            }
 
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                switch (returnCode) {
+                    case 1:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("您输入的账号未注册，请直接注册。").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                    default:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                }
+            }
+        });
 	}
 	
 	class AuthListener implements WeiboAuthListener {
@@ -452,62 +412,50 @@ public class RegisterProve extends SwipeBackActivity implements OnClickListener 
 	private void SinaLogin() {
 		mLoadingDialog.setMessage("正在登录...");
 		mLoadingDialog.show();
-		LoginThirdParam params = new LoginThirdParam(RegisterProve.this, 3, mAccessToken.getUid(), mAccessToken.getToken(), mAccessToken.getExpiresTime());
-		HttpStringPost post = new HttpStringPost(RegisterProve.this, params.getUrl(), new ResponseListener() {
+		LoginThirdParam params = new LoginThirdParam(3, mAccessToken.getUid(), mAccessToken.getToken(), mAccessToken.getExpiresTime());
+        AsyncHttpTask.post(params.getUrl(), params, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    if (object.has("is_regist") && object.getInt("is_regist") == 0) {
+                        Intent intent = new Intent(RegisterProve.this, RegisterData.class);
+                        intent.putExtra("TYPE", AppPreference.TYPE_SINA);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        AppPreference.save(RegisterProve.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_QQ);
+                        Intent intent = new Intent(RegisterProve.this, IndexHome.class);
+                        startActivity(intent);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					if (object.has("is_regist") && object.getInt("is_regist") == 0) {
-						Intent intent = new Intent(RegisterProve.this, RegisterData.class);
-						intent.putExtra("TYPE", AppPreference.TYPE_SINA);
-						startActivity(intent);
-						finish();
-					} else {
-						AppPreference.save(RegisterProve.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_QQ);
-						Intent intent = new Intent(RegisterProve.this, IndexHome.class);
-						startActivity(intent);
-						overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-						finish();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, params.getParameters());
-		executeRequest(post);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -516,63 +464,50 @@ public class RegisterProve extends SwipeBackActivity implements OnClickListener 
 	private void TencentLogin() {
 		mLoadingDialog.setMessage("正在登录...");
 		mLoadingDialog.show();
-		LoginThirdParam params = new LoginThirdParam(RegisterProve.this, 4, mTencent.getOpenId(), mTencent.getAccessToken(), mTencent.getExpiresIn());
-		HttpStringPost post = new HttpStringPost(RegisterProve.this, params.getUrl(), new ResponseListener() {
+		LoginThirdParam params = new LoginThirdParam(4, mTencent.getOpenId(), mTencent.getAccessToken(), mTencent.getExpiresIn());
+        AsyncHttpTask.post(params.getUrl(), params, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    if (object.has("is_regist") && object.getInt("is_regist") == 0) {
+                        Intent intent = new Intent(RegisterProve.this, RegisterData.class);
+                        intent.putExtra("TYPE", AppPreference.TYPE_QQ);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        AppPreference.save(RegisterProve.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_QQ);
+                        Intent intent = new Intent(RegisterProve.this, IndexHome.class);
+                        startActivity(intent);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					if (object.has("is_regist") && object.getInt("is_regist") == 0) {
-						Intent intent = new Intent(RegisterProve.this, RegisterData.class);
-						intent.putExtra("TYPE", AppPreference.TYPE_QQ);
-						startActivity(intent);
-						finish();
-					} else {
-						AppPreference.save(RegisterProve.this, AppPreference.LOGIN_TYPE, AppPreference.TYPE_QQ);
-						Intent intent = new Intent(RegisterProve.this, IndexHome.class);
-						startActivity(intent);
-						overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-						finish();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, params.getParameters());
-		executeRequest(post);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**

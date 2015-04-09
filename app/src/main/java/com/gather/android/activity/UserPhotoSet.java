@@ -1,16 +1,5 @@
 package com.gather.android.activity;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.R.integer;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -23,15 +12,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.UserPhotoSetAdapter;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.IntentManage;
 import com.gather.android.model.UserPhotoModel;
 import com.gather.android.params.UpdateUserPhotoParam;
@@ -43,6 +29,16 @@ import com.gather.android.widget.DragGridView;
 import com.gather.android.widget.DragGridView.OnChanageListener;
 import com.gather.android.widget.MMAlert;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 个人相册设置
@@ -208,63 +204,53 @@ public class UserPhotoSet extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("上传中...");
 			mLoadingDialog.show();
 		}
-		UploadPicParam param = new UploadPicParam(UserPhotoSet.this, new File(picList.get(index).getPath()));
-		MultipartRequest task = new MultipartRequest(UserPhotoSet.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					if (imgIdList == null) {
-						imgIdList = new ArrayList<Integer>();
-					}
-					imgIdList.add(object.getInt("img_id"));
-					if (index + 1 < picList.size()) {
-						for (int i = index + 1; i < picList.size(); i++) {
-							if (picList.get(i).getId() == 0) {
-								uploadNewPic(i);
-								break;
-							}  else {
-								imgIdList.add(picList.get(i).getId());
-								if (i == picList.size() - 1) {
-									UpdateUserPhoto();
-								}
-							}
-						}
-					} else {
-						UpdateUserPhoto();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				startIndex = index;
-				toast("上传图片失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				startIndex = index;
-				toast("上传图片失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+		UploadPicParam param = new UploadPicParam(new File(picList.get(index).getPath()));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    if (imgIdList == null) {
+                        imgIdList = new ArrayList<Integer>();
+                    }
+                    imgIdList.add(object.getInt("img_id"));
+                    if (index + 1 < picList.size()) {
+                        for (int i = index + 1; i < picList.size(); i++) {
+                            if (picList.get(i).getId() == 0) {
+                                uploadNewPic(i);
+                                break;
+                            } else {
+                                imgIdList.add(picList.get(i).getId());
+                                if (i == picList.size() - 1) {
+                                    UpdateUserPhoto();
+                                }
+                            }
+                        }
+                    } else {
+                        UpdateUserPhoto();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                startIndex = index;
+                toast("上传图片失败，请重试");
+            }
+        });
 	}
 	
 	/**
@@ -275,42 +261,32 @@ public class UserPhotoSet extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("更新中...");
 			mLoadingDialog.show();
 		}
-		UpdateUserPhotoParam param = new UpdateUserPhotoParam(UserPhotoSet.this, imgIdList);
-		HttpStringPost task = new HttpStringPost(UserPhotoSet.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				setResult(RESULT_OK);
-				toast("更新相册成功");
-				finish();
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				startIndex = 100;
-				toast("更新相册失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				startIndex = 100;
-				toast("更新相册失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+		UpdateUserPhotoParam param = new UpdateUserPhotoParam(imgIdList);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                setResult(RESULT_OK);
+                toast("更新相册成功");
+                finish();
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                startIndex = 100;
+                toast("更新相册失败，请重试");
+            }
+        });
 	}
 
 	private void showMenuDialog(int type, final int actionPosition) {

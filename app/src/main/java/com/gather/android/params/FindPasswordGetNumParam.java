@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 找回密码时获取验证码
  *
  */
-public class FindPasswordGetNumParam extends StringParams {
+public class FindPasswordGetNumParam extends BaseParams {
 
-	public FindPasswordGetNumParam(Context context, String phoneNum) {
-		super(context, "user/userInfo/getPhCode");
-		setParameter("phoneNum", phoneNum);
+	public FindPasswordGetNumParam(String phoneNum) {
+		super("user/userInfo/getPhCode");
+        put("phoneNum", phoneNum);
 	}
 
 }

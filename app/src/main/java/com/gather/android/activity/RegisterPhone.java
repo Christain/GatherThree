@@ -9,19 +9,19 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
 import com.gather.android.dialog.LoadingDialog.OnDismissListener;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.params.FindPasswordGetNumParam;
 import com.gather.android.params.RegisterPhoneGetNumParam;
 import com.gather.android.utils.MobileUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
+
+import org.apache.http.Header;
 
 public class RegisterPhone extends SwipeBackActivity implements OnClickListener {
 
@@ -96,59 +96,47 @@ public class RegisterPhone extends SwipeBackActivity implements OnClickListener 
 	private void getIdentifyNum(String content) {
 		mLoadingDialog.setMessage("正在获取...");
 		mLoadingDialog.show();
-		RegisterPhoneGetNumParam param = new RegisterPhoneGetNumParam(RegisterPhone.this, content.replace(" ", ""));
-		HttpStringPost task = new HttpStringPost(RegisterPhone.this, param.getUrl(), new ResponseListener() {
+		RegisterPhoneGetNumParam param = new RegisterPhoneGetNumParam(content.replace(" ", ""));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Intent intent = new Intent(RegisterPhone.this, RegisterProve.class);
+                intent.putExtra("TYPE", type);
+                intent.putExtra("PHONE", etPhone.getText().toString().trim());
+                startActivity(intent);
+                finish();
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Intent intent = new Intent(RegisterPhone.this, RegisterProve.class);
-				intent.putExtra("TYPE", type);
-				intent.putExtra("PHONE", etPhone.getText().toString().trim());
-				startActivity(intent);
-				finish();
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				switch (code) {
-				case 10:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("您输入的手机号已经注册过，请直接登录。").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				default:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-					}
-					break;
-				}
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                switch (returnCode) {
+                    case 10:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("您输入的手机号已经注册过，请直接登录。").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                    default:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                }
+            }
+        });
 	}
 	
 	/**
@@ -158,60 +146,47 @@ public class RegisterPhone extends SwipeBackActivity implements OnClickListener 
 	private void getFindPasswordIdentifyNum(String content) {
 		mLoadingDialog.setMessage("正在获取...");
 		mLoadingDialog.show();
-		FindPasswordGetNumParam param = new FindPasswordGetNumParam(RegisterPhone.this, content.replace(" ", ""));
-		HttpStringPost task = new HttpStringPost(RegisterPhone.this, param.getUrl(), new ResponseListener() {
-			
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Intent intent = new Intent(RegisterPhone.this, RegisterProve.class);
-				intent.putExtra("TYPE", type);
-				intent.putExtra("PHONE", etPhone.getText().toString().trim());
-				startActivity(intent);
-				finish();
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				switch (code) {
-				case 1:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("您输入的账号未注册，请直接注册。").withEffect(Effectstype.Shake).show();
-					}
-					break;
-				default:
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-					}
-					break;
-				}
-			}
-		}, new Response.ErrorListener() {
+		FindPasswordGetNumParam param = new FindPasswordGetNumParam(content.replace(" ", ""));
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Intent intent = new Intent(RegisterPhone.this, RegisterProve.class);
+                intent.putExtra("TYPE", type);
+                intent.putExtra("PHONE", etPhone.getText().toString().trim());
+                startActivity(intent);
+                finish();
+            }
 
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                switch (returnCode) {
+                    case 1:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage("您输入的账号未注册，请直接注册。").withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                    default:
+                        if (dialog != null && !dialog.isShowing()) {
+                            dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                        }
+                        break;
+                }
+            }
+        });
 	}
 
 	private class phoneTextWatcher implements TextWatcher {

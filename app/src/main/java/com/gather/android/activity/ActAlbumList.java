@@ -15,13 +15,10 @@ import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.listener.OnAdapterLoadMoreOverListener;
 import com.gather.android.listener.OnAdapterRefreshOverListener;
-import com.gather.android.model.ActAlbumDetailModel;
 import com.gather.android.model.ActMoreInfoModel;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.XListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
-
-import java.util.ArrayList;
 
 /**
  * 活动相册列表
@@ -93,7 +90,7 @@ public class ActAlbumList extends SwipeBackActivity implements View.OnClickListe
             this.adapter.setRefreshOverListener(new OnAdapterRefreshOverListener() {
                 @Override
                 public void refreshOver(int code, String msg) {
-                    if (adapter.myAlbumId() == -1) {
+                    if (moreInfoModel.getEnroll_status() == 3) {
                         ivRight.setVisibility(View.VISIBLE);
                     } else {
                         ivRight.setVisibility(View.GONE);
@@ -162,13 +159,22 @@ public class ActAlbumList extends SwipeBackActivity implements View.OnClickListe
             case R.id.ivRight:
                 if (!ClickUtil.isFastClick()) {
                     Intent intent = new Intent(ActAlbumList.this, ActAlbumAddPhoto.class);
-                    ArrayList<ActAlbumDetailModel> list = new ArrayList<ActAlbumDetailModel>();
-                    intent.putExtra("LIST", list);
                     intent.putExtra("ACT_ID", actId);
-                    startActivity(intent);
+                    intent.putExtra("ID", adapter.myAlbumId());
+                    startActivityForResult(intent, 500);
                 }
                 break;
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 500) {
+                listView.onClickRefush();
+                adapter.getActAlbumList(actId, application.getCityId());
+            }
+        }
+    }
 }

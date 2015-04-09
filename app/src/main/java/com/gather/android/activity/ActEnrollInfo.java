@@ -18,16 +18,14 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActEnrollInfoAdapter;
 import com.gather.android.dialog.DialogDateSelect;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActEnrollCustomKeyModel;
 import com.gather.android.model.ActEnrollCustomKeyModelList;
 import com.gather.android.model.ActMoreInfoModel;
@@ -39,6 +37,8 @@ import com.gather.android.utils.MobileUtil;
 import com.gather.android.utils.TimeUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
 
 import java.util.ArrayList;
 
@@ -168,10 +168,10 @@ public class ActEnrollInfo extends SwipeBackActivity implements View.OnClickList
             mLoadingDialog.setMessage("加载中...");
             mLoadingDialog.show();
         }
-        EnrollCustomKeyParam param = new EnrollCustomKeyParam(ActEnrollInfo.this, actId);
-        HttpStringPost task = new HttpStringPost(ActEnrollInfo.this, param.getUrl(), new ResponseListener() {
+        EnrollCustomKeyParam param = new EnrollCustomKeyParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -181,14 +181,14 @@ public class ActEnrollInfo extends SwipeBackActivity implements View.OnClickList
                     hasCustomKey = true;
                     adapter.setCustomKey(list.getCustom_keys());
                 }
-                if (listView != null && !listView.isShown()){
+                if (listView != null && !listView.isShown()) {
                     listView.startAnimation(alphaIn);
                     listView.setVisibility(View.VISIBLE);
                 }
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -196,24 +196,14 @@ public class ActEnrollInfo extends SwipeBackActivity implements View.OnClickList
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 toast("加载失败");
                 finish();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                toast("加载失败");
-                finish();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     @Override
@@ -285,10 +275,10 @@ public class ActEnrollInfo extends SwipeBackActivity implements View.OnClickList
             mLoadingDialog.setMessage("提交中...");
             mLoadingDialog.show();
         }
-        ActEnrollParam param = new ActEnrollParam(ActEnrollInfo.this, actId, userName, userSex, birth, userPhone, list);
-        HttpStringPost task = new HttpStringPost(ActEnrollInfo.this, param.getUrl(), new ResponseListener() {
+        ActEnrollParam param = new ActEnrollParam(actId, userName, userSex, birth, userPhone, list);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -298,7 +288,7 @@ public class ActEnrollInfo extends SwipeBackActivity implements View.OnClickList
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -306,22 +296,13 @@ public class ActEnrollInfo extends SwipeBackActivity implements View.OnClickList
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 toast("报名失败，请重试");
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                toast("报名失败，请重试");
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     /**

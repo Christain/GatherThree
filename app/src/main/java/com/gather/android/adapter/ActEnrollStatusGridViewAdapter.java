@@ -39,7 +39,11 @@ public class ActEnrollStatusGridViewAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return list.size();
+        if (list.size() > 4) {
+            return 4;
+        } else {
+            return list.size();
+        }
     }
 
     @Override

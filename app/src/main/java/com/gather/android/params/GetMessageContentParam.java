@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取和某人的私信内容
  */
-public class GetMessageContentParam extends StringParams {
+public class GetMessageContentParam extends BaseParams {
 
-	public GetMessageContentParam(Context context, int userId, int page, int size) {
-		super(context, "act/message/history");
-		setParameter("contactId", userId);
-		setParameter("page", page);
-		setParameter("size", size);
+	public GetMessageContentParam(int userId, int page, int size) {
+		super("act/message/history");
+        put("contactId", userId);
+        put("page", page);
+        put("size", size);
 	}
 
 }

@@ -4,18 +4,16 @@ package com.gather.android.params;
  * Created by Christain on 2015/3/27.
  */
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动更多地址
  */
-public class ActMoreAddressParam extends StringParams{
-    public ActMoreAddressParam(Context context, int actId) {
-        super(context, "act/actMore/addrs");
-        setParameter("actId", actId);
-        setParameter("page", 1);
-        setParameter("size", 20);
+public class ActMoreAddressParam extends BaseParams {
+    public ActMoreAddressParam(int actId) {
+        super("act/actMore/addrs");
+        put("actId", actId);
+        put("page", 1);
+        put("size", 20);
     }
 }

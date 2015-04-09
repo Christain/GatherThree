@@ -10,15 +10,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.ActAlbumDetailList;
 import com.gather.android.baseclass.SuperAdapter;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActAlbumContentModel;
 import com.gather.android.model.ActAlbumModel;
 import com.gather.android.params.ActAlbumListParam;
@@ -30,6 +27,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -39,8 +37,7 @@ import org.json.JSONObject;
 public class ActAlbumListAdapter extends SuperAdapter{
 
     private int page, limit = 20, actId, cityId, isOver = 0, totalNum, maxPage;
-    private ResponseListener listener;
-    private Response.ErrorListener errorListener;
+    private ResponseHandler responseHandler;
     private Context mContext;
     private ImageLoader imageLoader = ImageLoader.getInstance();
     private DisplayImageOptions options;
@@ -57,9 +54,9 @@ public class ActAlbumListAdapter extends SuperAdapter{
     }
 
     private void initListener() {
-        listener = new ResponseListener() {
+        responseHandler = new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int code, Header[] headers, String result) {
                 if (page == 1) {
                     JSONObject object = null;
                     try {
@@ -82,8 +79,27 @@ public class ActAlbumListAdapter extends SuperAdapter{
                 Gson gson = new Gson();
                 ActAlbumModel list = gson.fromJson(result, ActAlbumModel.class);
                 if (list != null && list.getAlbums() != null) {
+                    for (int i = 0; i < list.getAlbums().size(); i++) {
+                        if (list.getAlbums().get(i).getSum() <= 0) {
+                            list.getAlbums().remove(i);
+                            i--;
+                        }
+                    }
                     switch (loadType) {
                         case REFRESH:
+                            if (page == 1) {
+                                myAlbumId = list.getMy_album_id();
+//                                if (null != list.getBusi_video()) {
+//                                    list.getBusi_video().setOwner(true);
+//                                    list.getBusi_video().setType(2);
+//                                    list.getAlbums().add(0, list.getBusi_video());
+//                                }
+                                if (null != list.getBusi_photo()) {
+                                    list.getBusi_photo().setOwner(true);
+                                    list.getBusi_photo().setType(1);
+                                    list.getAlbums().add(0, list.getBusi_photo());
+                                }
+                            }
                             if (totalNum == 0) {
                                 refreshOver(code, ISNULL);
                             } else if (page == maxPage) {
@@ -93,19 +109,6 @@ public class ActAlbumListAdapter extends SuperAdapter{
                                 page++;
                                 refreshOver(code, CLICK_MORE);
                             }
-                            if (page == 1) {
-                                myAlbumId = list.getMy_album_id();
-                                if (null != list.getBusi_video()) {
-                                    list.getBusi_video().setOwner(true);
-                                    list.getBusi_video().setType(2);
-                                    list.getAlbums().add(0, list.getBusi_video());
-                                }
-                                if (null != list.getBusi_photo()) {
-                                    list.getBusi_photo().setOwner(true);
-                                    list.getBusi_photo().setType(1);
-                                    list.getAlbums().add(0, list.getBusi_photo());
-                                }
-                            }
                             refreshItems(list.getAlbums());
                             break;
                         case LOADMORE:
@@ -113,9 +116,9 @@ public class ActAlbumListAdapter extends SuperAdapter{
                                 page++;
                                 loadMoreOver(code, CLICK_MORE);
                             } else {
-                                isOver = 1;
-                                loadMoreOver(code, ISOVER);
-                            }
+                            isOver = 1;
+                            loadMoreOver(code, ISOVER);
+                        }
                             addItems(list.getAlbums());
                             break;
                     }
@@ -133,7 +136,7 @@ public class ActAlbumListAdapter extends SuperAdapter{
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 switch (loadType) {
                     case REFRESH:
                         refreshOver(5, msg);
@@ -146,27 +149,13 @@ public class ActAlbumListAdapter extends SuperAdapter{
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int code, String msg) {
                 switch (loadType) {
                     case REFRESH:
                         refreshOver(code, msg);
                         break;
                     case LOADMORE:
                         loadMoreOver(code, msg);
-                        break;
-                }
-                isRequest = false;
-            }
-        };
-        errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                switch (loadType) {
-                    case REFRESH:
-                        refreshOver(-1, error.getMsg());
-                        break;
-                    case LOADMORE:
-                        loadMoreOver(-1, error.getMsg());
                         break;
                 }
                 isRequest = false;
@@ -253,9 +242,8 @@ public class ActAlbumListAdapter extends SuperAdapter{
             if (!isRequest) {
                 this.isRequest = true;
                 this.loadType = LOADMORE;
-                ActAlbumListParam param = new ActAlbumListParam(mContext, actId, cityId, page, limit);
-                HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-                RequestManager.addRequest(task, context);
+                ActAlbumListParam param = new ActAlbumListParam(actId, cityId, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
             }
         }
     }
@@ -268,9 +256,8 @@ public class ActAlbumListAdapter extends SuperAdapter{
             isOver = 0;
             this.actId = actId;
             this.cityId = cityId;
-            ActAlbumListParam param = new ActAlbumListParam(mContext, actId, cityId, page, limit);
-            HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-            RequestManager.addRequest(task, context);
+            ActAlbumListParam param = new ActAlbumListParam(actId, cityId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
         }
     }
 

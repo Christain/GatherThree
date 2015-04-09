@@ -1,7 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.ArrayList;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -12,13 +10,11 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.UserPhotoAdapter;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.UserPhotoList;
 import com.gather.android.model.UserPhotoModel;
 import com.gather.android.params.GetUserPhotoParam;
@@ -26,6 +22,10 @@ import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+
+import java.util.ArrayList;
 
 /**
  * 个人的相册
@@ -95,48 +95,38 @@ public class UserPhoto extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("获取相册中...");
 			mLoadingDialog.show();
 		}
-		GetUserPhotoParam param = new GetUserPhotoParam(UserPhoto.this, AppPreference.getUserPersistentInt(UserPhoto.this, AppPreference.USER_ID), 1, 20);
-		HttpStringPost task = new HttpStringPost(UserPhoto.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Gson gson = new Gson();
-				UserPhotoList list = gson.fromJson(result, UserPhotoList.class);
-				if (list != null && list.getPhotos() != null) {
-					picList = list.getPhotos();
-					adapter.setPicLis(picList);
-				}
-			}
-			
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-			
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取相册失败，请重试");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取相册失败，请重试");
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+		GetUserPhotoParam param = new GetUserPhotoParam(AppPreference.getUserPersistentInt(UserPhoto.this, AppPreference.USER_ID), 1, 20);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Gson gson = new Gson();
+                UserPhotoList list = gson.fromJson(result, UserPhotoList.class);
+                if (list != null && list.getPhotos() != null) {
+                    picList = list.getPhotos();
+                    adapter.setPicLis(picList);
+                }
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("获取相册失败，请重试");
+                finish();
+            }
+        });
 	}
 
 	@Override

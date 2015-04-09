@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 发送私信
  */
-public class SendChatMessageParam extends StringParams {
+public class SendChatMessageParam extends BaseParams {
 
-	public SendChatMessageParam(Context context, int acptUserId, String content) {
-		super(context, "act/message/add");
-		setParameter("revId", acptUserId);
-		setParameter("content", content);
+	public SendChatMessageParam(int acptUserId, String content) {
+		super("act/message/add");
+        put("revId", acptUserId);
+        put("content", content);
 	}
 }

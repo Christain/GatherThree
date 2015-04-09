@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取用户照片墙
  */
-public class GetUserPhotoParam extends StringParams {
+public class GetUserPhotoParam extends BaseParams {
 
-	public GetUserPhotoParam(Context context, int uid, int page, int size) {
-		super(context, "act/user/photos");
-		setParameter("uid", uid);
-		setParameter("page", page);
-		setParameter("size", size);
+	public GetUserPhotoParam(int uid, int page, int size) {
+		super("act/user/photos");
+        put("uid", uid);
+        put("page", page);
+        put("size", size);
 	}
 
 }

@@ -1,29 +1,26 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 收藏的资讯列表
  */
-public class CollectionNewsListParam extends StringParams {
+public class CollectionNewsListParam extends BaseParams {
 
 	/**
-	 * @param context
 	 * @param uid
 	 * @param typeId  类型id：1攻略，2回忆，3票务，4专访
 	 * @param page
 	 * @param size
 	 */
-	public CollectionNewsListParam(Context context, int uid, int typeId, int page, int size) {
-		super(context, "act/news/lovNews");
-		setParameter("uid", uid);
+	public CollectionNewsListParam(int uid, int typeId, int page, int size) {
+		super("act/news/lovNews");
+        put("uid", uid);
 		if (typeId != 0) {
-			setParameter("typeId", typeId);
+            put("typeId", typeId);
 		}
-		setParameter("page", page);
-		setParameter("size", size);
+        put("page", page);
+        put("size", size);
 	}
 
 }

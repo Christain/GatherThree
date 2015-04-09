@@ -23,12 +23,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request.Method;
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
 import com.gather.android.application.GatherApplication;
@@ -39,8 +33,8 @@ import com.gather.android.dialog.DialogShareAct.ShareClickListener;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.NewsModel;
 import com.gather.android.params.CancelCollectNewsParam;
 import com.gather.android.params.CollectNewsParam;
@@ -50,6 +44,8 @@ import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
 import com.sina.weibo.sdk.auth.WeiboAuth;
 import com.sina.weibo.sdk.auth.WeiboAuthListener;
@@ -67,13 +63,12 @@ import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
 import com.tendcloud.tenddata.TCAgent;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 网页（攻略）
@@ -235,56 +230,46 @@ public class WebStrategy extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("加载中...");
 			mLoadingDialog.show();
 		}
-		NewsDetailParam param = new NewsDetailParam(WebStrategy.this, id);
-		HttpStringPost task = new HttpStringPost(WebStrategy.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Gson gson = new Gson();
-				try {
-					JSONObject object = new JSONObject(result);
-					NewsModel news = gson.fromJson(object.getString("news"), NewsModel.class);
-					if (news != null) {
-						model = news;
-						initView();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					toast("数据解析失败");
-					finish();
-				}
-			}
+		NewsDetailParam param = new NewsDetailParam(id);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Gson gson = new Gson();
+                try {
+                    JSONObject object = new JSONObject(result);
+                    NewsModel news = gson.fromJson(object.getString("news"), NewsModel.class);
+                    if (news != null) {
+                        model = news;
+                        initView();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    toast("数据解析失败");
+                    finish();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取失败");
-				finish();
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("获取失败");
+                finish();
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取失败");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取失败");
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("获取失败");
+                finish();
+            }
+        });
 	}
 
 	@Override
@@ -381,47 +366,37 @@ public class WebStrategy extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("收藏中");
 			mLoadingDialog.show();
 		}
-		CollectNewsParam param = new CollectNewsParam(WebStrategy.this, model.getId());
-		HttpStringPost task = new HttpStringPost(WebStrategy.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				model.setIs_loved(1);
-				tvCollection.setText("取消收藏");
-				toast("收藏成功");
-			}
+		CollectNewsParam param = new CollectNewsParam(model.getId());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                model.setIs_loved(1);
+                tvCollection.setText("取消收藏");
+                toast("收藏成功");
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("收藏失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("收藏失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                toast("收藏失败，请重试");
+            }
+        });
 	}
 
 	/**
@@ -432,47 +407,37 @@ public class WebStrategy extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("取消收藏中...");
 			mLoadingDialog.show();
 		}
-		CancelCollectNewsParam param = new CancelCollectNewsParam(WebStrategy.this, model.getId());
-		HttpStringPost task = new HttpStringPost(WebStrategy.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				model.setIs_loved(0);
-				tvCollection.setText("收藏");
-				toast("取消成功");
-			}
+		CancelCollectNewsParam param = new CancelCollectNewsParam(model.getId());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                model.setIs_loved(0);
+                tvCollection.setText("收藏");
+                toast("取消成功");
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("取消收藏失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("取消收藏失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                toast("取消收藏失败，请重试");
+            }
+        });
 	}
 
 	/**
@@ -483,53 +448,44 @@ public class WebStrategy extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("生成订单中...");
 			mLoadingDialog.show();
 		}
-		CreateOrderParam param = new CreateOrderParam(WebStrategy.this, price, title, intro);
-		HttpStringPost task = new HttpStringPost(WebStrategy.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					String num = object.getString("trade_no");
-					Intent intent = new Intent(WebStrategy.this, PayView.class);
-					intent.putExtra("NAME", title);
-					intent.putExtra("NUM", num);
-					intent.putExtra("DETAIL", intro);
-					intent.putExtra("PRICE", price);
-					startActivity(intent);
-				} catch (JSONException e) {
-					toast("订单解析失败，请重试");
-					e.printStackTrace();
-				}
-			}
+		CreateOrderParam param = new CreateOrderParam(price, title, intro);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    String num = object.getString("trade_no");
+                    Intent intent = new Intent(WebStrategy.this, PayView.class);
+                    intent.putExtra("NAME", title);
+                    intent.putExtra("NUM", num);
+                    intent.putExtra("DETAIL", intro);
+                    intent.putExtra("PRICE", price);
+                    startActivity(intent);
+                } catch (JSONException e) {
+                    toast("订单解析失败，请重试");
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("生成订单失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("生成订单失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("生成订单失败，请重试");
+            }
+        });
 	}
 
 	@Override
@@ -699,41 +655,31 @@ public class WebStrategy extends SwipeBackActivity implements OnClickListener {
 	private void ShareToSina() {
 		mLoadingDialog.setMessage("分享到新浪微博...");
 		mLoadingDialog.show();
-		StringRequest task = new StringRequest(Method.POST, "https://api.weibo.com/2/statuses/upload_url_text.json", new Response.Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				TCAgent.onEvent(WebStrategy.this, "分享到新浪微博");
-				toast("分享成功");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast(error.getMessage());
-			}
-		}) {
-			@Override
-			protected Map<String, String> getParams() {
-				Map<String, String> params = new HashMap<String, String>();
-				params.put("access_token", AppPreference.getUserPersistent(WebStrategy.this, AppPreference.SINA_TOKEN));
-				params.put("status", "#" + model.getTitle() + "#" + Share_Message  + model.getDetail_url());
-				params.put("url", model.getH_img_url());
-				return params;
-			}
+        RequestParams params = new RequestParams();
+        params.put("access_token", AppPreference.getUserPersistent(WebStrategy.this, AppPreference.SINA_TOKEN));
+        params.put("status", "#" + model.getTitle() + "#" + Share_Message  + model.getDetail_url());
+        params.put("url", model.getH_img_url());
+        AsyncHttpTask.post("https://api.weibo.com/2/statuses/upload_url_text.json", params, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                TCAgent.onEvent(WebStrategy.this, "分享到新浪微博");
+                toast("分享成功");
+            }
 
-			@Override
-			public Map<String, String> getHeaders() throws AuthFailureError {
-				Map<String, String> params = new HashMap<String, String>();
-				return params;
-			}
-		};
-		executeRequest(task);
-	}
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("分享失败，请重试");
+            }
+        });
+    }
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {

@@ -1,7 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.ArrayList;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -10,25 +8,25 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.VipClassifyGridviewAdapter;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.UserInterestList;
 import com.gather.android.model.UserInterestModel;
-import com.gather.android.params.GetActTagsParam;
 import com.gather.android.params.GetUserTagsParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.NoScrollGridView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+
+import java.util.ArrayList;
 
 /**
  * 达人分类筛选
@@ -201,102 +199,84 @@ public class VipClassify extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("获取分类中...");
 			mLoadingDialog.show();
 		}
-//		GetActTagsParam param = new GetActTagsParam(VipClassify.this);
-		GetUserTagsParam param = new GetUserTagsParam(VipClassify.this, 1);
-		HttpStringPost task = new HttpStringPost(VipClassify.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				Gson gson = new Gson();
-				UserInterestList list = gson.fromJson(result, UserInterestList.class);
-				if (list != null) {
-					tagIdList = list.getTags();
-					if (tagId != 0) {
-						for (int i = 0; i < tagIdList.size(); i++) {
-							if (tagId == tagIdList.get(i).getId()) {
-								tagIdList.get(i).setSelect(true);
-								break;
-							}
-						}
-					}
-					tagIdAdapter.setNotifyChanged(tagIdList);
-					tvSexMale.setVisibility(View.VISIBLE);
-					tvSexFemale.setVisibility(View.VISIBLE);
-				}
-			}
+		GetUserTagsParam param = new GetUserTagsParam(1);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                Gson gson = new Gson();
+                UserInterestList list = gson.fromJson(result, UserInterestList.class);
+                if (list != null) {
+                    tagIdList = list.getTags();
+                    if (tagId != 0) {
+                        for (int i = 0; i < tagIdList.size(); i++) {
+                            if (tagId == tagIdList.get(i).getId()) {
+                                tagIdList.get(i).setSelect(true);
+                                break;
+                            }
+                        }
+                    }
+                    tagIdAdapter.setNotifyChanged(tagIdList);
+                    tvSexMale.setVisibility(View.VISIBLE);
+                    tvSexFemale.setVisibility(View.VISIBLE);
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取活动标签失败，请重试");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("获取活动标签失败，请重试");
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("获取活动标签失败，请重试");
+                finish();
+            }
+        });
 	}
 
 	/**
 	 * 获取个性标签
 	 */
 	private void getUserTags() {
-		GetUserTagsParam param = new GetUserTagsParam(VipClassify.this, 2);
-		HttpStringPost task = new HttpStringPost(VipClassify.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				UserInterestList list = gson.fromJson(result, UserInterestList.class);
-				if (list != null) {
-					userList = list.getTags();
-					if (userTagId != 0) {
-						for (int i = 0; i < userList.size(); i++) {
-							if (userTagId == userList.get(i).getId()) {
-								userList.get(i).setSelect(true);
-								break;
-							}
-						}
-					}
-					userAdapter.setNotifyChanged(userList);
-				}
-			}
+		GetUserTagsParam param = new GetUserTagsParam(2);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                UserInterestList list = gson.fromJson(result, UserInterestList.class);
+                if (list != null) {
+                    userList = list.getTags();
+                    if (userTagId != 0) {
+                        for (int i = 0; i < userList.size(); i++) {
+                            if (userTagId == userList.get(i).getId()) {
+                                userList.get(i).setSelect(true);
+                                break;
+                            }
+                        }
+                    }
+                    userAdapter.setNotifyChanged(userList);
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("获取用户标签失败，请重试");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("获取用户标签失败，请重试");
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("获取用户标签失败，请重试");
+                finish();
+            }
+        });
 	}
 }

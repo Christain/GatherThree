@@ -11,8 +11,6 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
@@ -20,7 +18,8 @@ import com.gather.android.dialog.DialogVersionUpdate;
 import com.gather.android.dialog.DialogVersionUpdate.OnUpdateClickListener;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.VersionManage;
 import com.gather.android.model.VersionModel;
 import com.gather.android.params.UpdateVersionParam;
@@ -28,6 +27,7 @@ import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -121,10 +121,12 @@ public class About extends SwipeBackActivity implements OnClickListener {
 			break;
 		case R.id.llOne:
 			if (!ClickUtil.isFastClick()) {
-				intent = new Intent(About.this, Web.class);
-				intent.putExtra("URL", Constant.DEFOULT_REQUEST_URL + "act/site/businessLogin");
-				intent.putExtra("TITLE", "商户登录");
-				startActivity(intent);
+//				intent = new Intent(About.this, Web.class);
+//				intent.putExtra("URL", Constant.DEFOULT_REQUEST_URL + "act/site/businessLogin");
+//				intent.putExtra("TITLE", "商户登录");
+//				startActivity(intent);
+                intent = new Intent(About.this, WXPayTest.class);
+                startActivity(intent);
 			}
 			break;
 		case R.id.llTwo:
@@ -197,61 +199,50 @@ public class About extends SwipeBackActivity implements OnClickListener {
 	private void getVersionInfo() {
 		mLoadingDialog.setMessage("检测中...");
 		mLoadingDialog.show();
-		UpdateVersionParam param = new UpdateVersionParam(About.this);
-		HttpStringPost task = new HttpStringPost(About.this, param.getUrl(), new com.gather.android.http.ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				try {
-					JSONObject object = new JSONObject(result);
-					if (object.getString("app").length() > 2) {
-						Gson gson = new Gson();
-						VersionModel versionModel = gson.fromJson(object.getString("app"), VersionModel.class);
-						if (versionModel.getCode() > VersionManage.getPackageInfo(About.this).versionCode) {
-							updateVersionDialog(versionModel);
-						} else {
-							toast("已是最新版本");
-						}
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					if (dialog != null && !dialog.isShowing()) {
-						dialog.setMessage("版本数据格式错误").withEffect(Effectstype.Shake).show();
-					}
-				}
-			}
+		UpdateVersionParam param = new UpdateVersionParam();
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    if (object.getString("app").length() > 2) {
+                        Gson gson = new Gson();
+                        VersionModel versionModel = gson.fromJson(object.getString("app"), VersionModel.class);
+                        if (versionModel.getCode() > VersionManage.getPackageInfo(About.this).versionCode) {
+                            updateVersionDialog(versionModel);
+                        } else {
+                            toast("已是最新版本");
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    if (dialog != null && !dialog.isShowing()) {
+                        dialog.setMessage("版本数据格式错误").withEffect(Effectstype.Shake).show();
+                    }
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**

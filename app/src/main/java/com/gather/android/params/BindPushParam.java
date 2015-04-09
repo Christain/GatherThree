@@ -1,28 +1,25 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 百度推送帐号绑定
  */
-public class BindPushParam extends StringParams {
+public class BindPushParam extends BaseParams {
 
 	/**
-	 * @param context
 	 * @param cityId
 	 * @param platform 平台：3Android，4Ios
 	 * @param baiduUserId
 	 * @param baiduChannelId
 	 */
-	public BindPushParam(Context context, int cityId, int platform, String baiduUserId, String baiduChannelId) {
-		super(context, "act/user/setBaiduPush");
+	public BindPushParam(int cityId, int platform, String baiduUserId, String baiduChannelId) {
+		super("act/user/setBaiduPush");
 		if (cityId != 0) {
-			setParameter("cityId", cityId);
+            put("cityId", cityId);
 		}
-		setParameter("platform", 3);
-		setParameter("baiduUserId", baiduUserId);
-		setParameter("baiduChannelId", baiduChannelId);
+        put("platform", 3);
+        put("baiduUserId", baiduUserId);
+        put("baiduChannelId", baiduChannelId);
 	}
 }

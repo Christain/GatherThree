@@ -23,8 +23,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
 import com.gather.android.activity.About;
@@ -43,9 +41,8 @@ import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.CityList;
 import com.gather.android.model.NewsModel;
 import com.gather.android.model.NewsModelList;
@@ -66,6 +63,7 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -301,10 +299,10 @@ public class HomeFragment extends BaseFragment implements OnClickListener {
      * 获取个人信息
      */
     private void getUserInfo(int cityId) {
-        GetUserInfoParam param = new GetUserInfoParam(getActivity(), cityId);
-        HttpStringPost task = new HttpStringPost(getActivity(), param.getUrl(), new ResponseListener() {
+        GetUserInfoParam param = new GetUserInfoParam(cityId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 try {
                     JSONObject object = new JSONObject(result);
                     Gson gson = new Gson();
@@ -324,35 +322,27 @@ public class HomeFragment extends BaseFragment implements OnClickListener {
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 needLogin(msg);
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (dialog != null && !dialog.isShowing()) {
-                    dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
                 }
             }
-        }, new ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (dialog != null && !dialog.isShowing()) {
-                    dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-                }
-            }
-        }, param.getParameters());
-        RequestManager.addRequest(task, getActivity());
+        });
     }
 
     /**
      * 获取首页轮播图片
      */
     private void getHomePic() {
-        HomePicParam param = new HomePicParam(getActivity(), mApplication.getCityId(), 1, 10);
-        HttpStringPost task = new HttpStringPost(getActivity(), param.getUrl(), new ResponseListener() {
+        HomePicParam param = new HomePicParam(mApplication.getCityId(), 1, 10);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 Gson gson = new Gson();
                 NewsModelList list = gson.fromJson(result, NewsModelList.class);
                 if (list != null && list.getNews() != null) {
@@ -364,25 +354,17 @@ public class HomeFragment extends BaseFragment implements OnClickListener {
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
 
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (Constant.SHOW_LOG) {
                     toast("获取轮播图 失败");
                 }
             }
-        }, new ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (Constant.SHOW_LOG) {
-                    toast("获取轮播图 失败");
-                }
-            }
-        }, param.getParameters());
-        RequestManager.addRequest(task, getActivity());
+        });
     }
 
     @Override
@@ -636,35 +618,27 @@ public class HomeFragment extends BaseFragment implements OnClickListener {
      * @param baiduChannelId
      */
     private void BindService(final Context context, String baiduUserId, String baiduChannelId) {
-        BindPushParam param = new BindPushParam(context, GatherApplication.cityId, 3, baiduUserId, baiduChannelId);
-        HttpStringPost task = new HttpStringPost(context, param.getUrl(), new ResponseListener() {
+        BindPushParam param = new BindPushParam(GatherApplication.cityId, 3, baiduUserId, baiduChannelId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (Constant.SHOW_LOG) {
                     Toast.makeText(context, "绑定服务成功", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
 
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (Constant.SHOW_LOG) {
                     Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
                 }
             }
-        }, new ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (Constant.SHOW_LOG) {
-                    Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }, param.getParameters());
-        RequestManager.addRequest(task, context);
+        });
     }
 
     /**

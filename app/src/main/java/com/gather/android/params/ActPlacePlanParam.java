@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 场地平面图
  * Created by Christain on 2015/3/30.
  */
-public class ActPlacePlanParam extends StringParams{
+public class ActPlacePlanParam extends BaseParams {
 
-    public ActPlacePlanParam(Context context, int actId) {
-        super(context, "act/actMore/placeImgs");
-        setParameter("actId", actId);
-        setParameter("page", 1);
-        setParameter("size", 50);
+    public ActPlacePlanParam(int actId) {
+        super("act/actMore/placeImgs");
+        put("actId", actId);
+        put("page", 1);
+        put("size", 50);
     }
 }

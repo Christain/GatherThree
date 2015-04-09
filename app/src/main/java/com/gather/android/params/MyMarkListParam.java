@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取已关注兴趣标签
  *
  */
-public class MyMarkListParam extends StringParams {
+public class MyMarkListParam extends BaseParams {
 
-	public MyMarkListParam(Context context) {
-		super(context, "act/tagInfo/getUTags");
+	public MyMarkListParam() {
+		super("act/tagInfo/getUTags");
 	}
 
 }

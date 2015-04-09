@@ -11,18 +11,18 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActLocationAndCarPlaceAdapter;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActAddressAndCarLocationListModel;
 import com.gather.android.params.ActMoreAddressParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
 
 /**
  * 活动位置导航及停车点
@@ -86,10 +86,10 @@ public class ActLocationAndCarPlace extends SwipeBackActivity implements View.On
             mLoadingDialog.setMessage("加载中...");
             mLoadingDialog.show();
         }
-        ActMoreAddressParam param = new ActMoreAddressParam(ActLocationAndCarPlace.this, actId);
-        HttpStringPost task = new HttpStringPost(ActLocationAndCarPlace.this, param.getUrl(), new ResponseListener() {
+        ActMoreAddressParam param = new ActMoreAddressParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -108,7 +108,7 @@ public class ActLocationAndCarPlace extends SwipeBackActivity implements View.On
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
@@ -116,24 +116,14 @@ public class ActLocationAndCarPlace extends SwipeBackActivity implements View.On
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
                     mLoadingDialog.dismiss();
                 }
                 toast("加载失败，请重试");
                 finish();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-                    mLoadingDialog.dismiss();
-                }
-                toast("加载失败，请重试");
-                finish();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 
     @Override

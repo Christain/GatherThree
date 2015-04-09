@@ -1,8 +1,5 @@
 package com.gather.android.adapter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -14,9 +11,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
 import com.gather.android.activity.LoginIndex;
@@ -26,9 +20,8 @@ import com.gather.android.baseclass.SuperAdapter;
 import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.model.UserList;
 import com.gather.android.params.AddFocusParam;
@@ -44,11 +37,14 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 import com.tendcloud.tenddata.TCAgent;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class FriendsListAdapter extends SuperAdapter {
 
 	private int page, limit = 20, uid, titleType, cityId, isOverOne = 0, isOverTwo = 0, totalNum, maxPage;
-	private ResponseListener listener;
-	private ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private Context mContext;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DialogChoiceBuilder choiceBuilder;
@@ -68,116 +64,102 @@ public class FriendsListAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(-1, "数据解析出错");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				UserList list = gson.fromJson(result, UserList.class);
-				if (list != null && list.getUsers() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(code, ISNULL);
-						} else if (page == maxPage) {
-							if (titleType == 1) {
-								isOverOne = 1;
-							} else {
-								isOverTwo = 1;
-							}
-							refreshOver(code, ISOVER);
-						} else {
-							page++;
-							refreshOver(code, CLICK_MORE);
-						}
-						refreshItems(list.getUsers());
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, CLICK_MORE);
-						} else {
-							if (titleType == 1) {
-								isOverOne = 1;
-							} else {
-								isOverTwo = 1;
-							}
-							loadMoreOver(code, ISOVER);
-						}
-						addItems(list.getUsers());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(code, ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int code, Header[] headers, String result) {
+                if (page == 1) {
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(-1, "数据解析出错");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                UserList list = gson.fromJson(result, UserList.class);
+                if (list != null && list.getUsers() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(code, ISNULL);
+                            } else if (page == maxPage) {
+                                if (titleType == 1) {
+                                    isOverOne = 1;
+                                } else {
+                                    isOverTwo = 1;
+                                }
+                                refreshOver(code, ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(code, CLICK_MORE);
+                            }
+                            refreshItems(list.getUsers());
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(code, CLICK_MORE);
+                            } else {
+                                if (titleType == 1) {
+                                    isOverOne = 1;
+                                } else {
+                                    isOverTwo = 1;
+                                }
+                                loadMoreOver(code, ISOVER);
+                            }
+                            addItems(list.getUsers());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(code, ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(code, ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(5, msg);
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(5, msg);
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(code, msg);
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, error.getMsg());
-					break;
-				case LOADMORE:
-					loadMoreOver(-1, error.getMsg());
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(code, msg);
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@SuppressLint("InflateParams")
@@ -293,50 +275,40 @@ public class FriendsListAdapter extends SuperAdapter {
 			mLoadingDialog.setMessage("取消关注中...");
 			mLoadingDialog.show();
 		}
-		CancelFocusParam param = new CancelFocusParam(mContext, model.getUid());
-		HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (titleType == 2) {
-					model.setIs_focus(0);
-				} else {
-					getMsgList().remove(position);
-				}
-				notifyDataSetChanged();
-			}
+		CancelFocusParam param = new CancelFocusParam(model.getUid());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                if (titleType == 2) {
+                    model.setIs_focus(0);
+                } else {
+                    getMsgList().remove(position);
+                }
+                notifyDataSetChanged();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("取消关注失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("取消关注失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                toast("取消关注失败");
+            }
+        });
 	}
 
 	/**
@@ -347,47 +319,37 @@ public class FriendsListAdapter extends SuperAdapter {
 			mLoadingDialog.setMessage("关注中...");
 			mLoadingDialog.show();
 		}
-		AddFocusParam param = new AddFocusParam(mContext, model.getUid());
-		HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				TCAgent.onEvent(mContext, "关注人");
-				isRequest = false;
-				model.setIs_focus(1);
-				notifyDataSetChanged();
-			}
+		AddFocusParam param = new AddFocusParam(model.getUid());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                TCAgent.onEvent(mContext, "关注人");
+                isRequest = false;
+                model.setIs_focus(1);
+                notifyDataSetChanged();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("加关注失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				toast("加关注失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                toast("加关注失败");
+            }
+        });
 	}
 
 	@Override
@@ -405,9 +367,8 @@ public class FriendsListAdapter extends SuperAdapter {
 			if (!isRequest) {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
-				FansAndFocusListParam param = new FansAndFocusListParam(mContext, uid, cityId, titleType, page, limit);
-				HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-				RequestManager.addRequest(task, context);
+				FansAndFocusListParam param = new FansAndFocusListParam(uid, cityId, titleType, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 			}
 		}
 	}
@@ -425,9 +386,8 @@ public class FriendsListAdapter extends SuperAdapter {
 			this.uid = uid;
 			this.cityId = cityId;
 			this.titleType = titleType;
-			FansAndFocusListParam param = new FansAndFocusListParam(mContext, uid, cityId, titleType, page, limit);
-			HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+            FansAndFocusListParam param = new FansAndFocusListParam(uid, cityId, titleType, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 

@@ -1,11 +1,5 @@
 package com.gather.android.service;
 
-import java.util.List;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Context;
@@ -14,8 +8,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.frontia.api.FrontiaPushMessageReceiver;
 import com.gather.android.activity.ActDetail;
 import com.gather.android.activity.Chat;
@@ -24,13 +16,17 @@ import com.gather.android.activity.UserCenter;
 import com.gather.android.activity.WebStrategy;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.constant.Constant;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.AppManage;
 import com.gather.android.params.BindPushParam;
 import com.gather.android.preference.AppPreference;
-import com.gather.android.widget.swipeback.SwipeBackActivity;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.List;
 
 /**
  * Push消息处理receiver。请编写您需要的回调函数， 一般来说： onBind是必须的，用来处理startWork返回值；
@@ -201,7 +197,7 @@ public class PushMessageReceiver extends FrontiaPushMessageReceiver {
 	 *            上下文
 	 * @param errorCode
 	 *            错误码。0表示某些tag已经设置成功；非0表示所有tag的设置均失败。
-	 * @param successTags
+	 * @param sucessTags
 	 *            设置成功的tag
 	 * @param failTags
 	 *            设置失败的tag
@@ -226,7 +222,7 @@ public class PushMessageReceiver extends FrontiaPushMessageReceiver {
 	 *            上下文
 	 * @param errorCode
 	 *            错误码。0表示某些tag已经删除成功；非0表示所有tag均删除失败。
-	 * @param successTags
+	 * @param sucessTags
 	 *            成功删除的tag
 	 * @param failTags
 	 *            删除失败的tag
@@ -296,35 +292,27 @@ public class PushMessageReceiver extends FrontiaPushMessageReceiver {
 	 * @param baiduChannelId
 	 */
 	private void BindService(final Context context, String baiduUserId, String baiduChannelId) {
-		BindPushParam param = new BindPushParam(context, GatherApplication.cityId, 3, baiduUserId, baiduChannelId);
-		HttpStringPost task = new HttpStringPost(context, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(context, "绑定服务成功", Toast.LENGTH_SHORT).show();
-				}
-			}
+		BindPushParam param = new BindPushParam(GatherApplication.cityId, 3, baiduUserId, baiduChannelId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (Constant.SHOW_LOG) {
+                    Toast.makeText(context, "绑定服务成功", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
+            @Override
+            public void onNeedLogin(String msg) {
 
-			}
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
-				}
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, context);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (Constant.SHOW_LOG) {
+                    Toast.makeText(context, "绑定服务失败", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 	}
 
 	private String getTopActivity(Context context) {

@@ -1,26 +1,24 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
 import com.gather.android.application.GatherApplication;
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动报名
  */
-public class ActDetailEnrollParam extends StringParams {
+public class ActDetailEnrollParam extends BaseParams {
 
-	public ActDetailEnrollParam(Context context, int actId, String name, String phone, String people_num) {
-		super(context, "act/activity/enroll");
-		setParameter("actId", actId);
-		setParameter("name", name);
-		setParameter("phone", phone);
-		setParameter("peopleNum", people_num);
-		GatherApplication application = (GatherApplication) context.getApplicationContext();
+	public ActDetailEnrollParam(int actId, String name, String phone, String people_num) {
+		super("act/activity/enroll");
+        put("actId", actId);
+        put("name", name);
+        put("phone", phone);
+        put("peopleNum", people_num);
+		GatherApplication application = GatherApplication.getInstance();
 		if (application.mLocation != null) {
-			setParameter("lon", application.mLocation.getLongitude());
-			setParameter("lat", application.mLocation.getLatitude());
-			setParameter("address", application.mLocation.getAddrStr());
+            put("lon", application.mLocation.getLongitude());
+            put("lat", application.mLocation.getLatitude());
+            put("address", application.mLocation.getAddrStr());
 		}
 	}
 

@@ -1,12 +1,5 @@
 package com.gather.android.adapter;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -21,18 +14,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.PublishTrendsPicGallery;
 import com.gather.android.activity.TrendsPicGallery;
 import com.gather.android.baseclass.SuperAdapter;
 import com.gather.android.database.PublishTrendsInfo;
 import com.gather.android.database.PublishTrendsService;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.TrendsListModel;
 import com.gather.android.model.TrendsModel;
 import com.gather.android.model.TrendsPicModel;
@@ -50,12 +39,19 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 @SuppressLint("InflateParams")
 public class UserTrendsAdapter extends SuperAdapter {
 
 	private int page, limit = 20, isOver = 0, totalNum, maxPage, userId, myUserId;
-	private ResponseListener listener;
-	private ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private Context mContext;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions picOptions;
@@ -77,137 +73,123 @@ public class UserTrendsAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					timeMap.clear();
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(-1, "数据解析出错");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				TrendsListModel list = gson.fromJson(result, TrendsListModel.class);
-				if (list != null && list.getDynamics() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(code, ISNULL);
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(code, ISOVER);
-						} else {
-							page++;
-							refreshOver(code, CLICK_MORE);
-						}
-						if (userId == myUserId) {
-							getList().clear();
-							addItemsNoChanged(getDataBaseTrends());
-							addItemsNoChanged(list.getDynamics());
-							for (int i = 0; i < getMsgList().size(); i++) {
-								String time = ((TrendsModel) getList().get(i)).getUserTrendsTime();
-								if (!timeMap.containsKey(time)) {
-									timeMap.put(time, i);
-								}
-								time = null;
-							}
-							notifyDataSetChanged();
-						} else {
-							for (int i = 0; i < list.getDynamics().size(); i++) {
-								String time = list.getDynamics().get(i).getUserTrendsTime();
-								if (!timeMap.containsKey(time)) {
-									timeMap.put(time, i);
-								}
-								time = null;
-							}
-							refreshItems(list.getDynamics());
-						}
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, CLICK_MORE);
-						} else {
-							isOver = 1;
-							loadMoreOver(code, ISOVER);
-						}
-						for (int i = 0; i < list.getDynamics().size(); i++) {
-							String time = list.getDynamics().get(i).getUserTrendsTime();
-							if (!timeMap.containsKey(time)) {
-								timeMap.put(time, getCount() + i);
-							}
-							time = null;
-						}
-						addItems(list.getDynamics());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(code, ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int code, Header[] headers, String result) {
+                if (page == 1) {
+                    timeMap.clear();
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(-1, "数据解析出错");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                TrendsListModel list = gson.fromJson(result, TrendsListModel.class);
+                if (list != null && list.getDynamics() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(code, ISNULL);
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(code, ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(code, CLICK_MORE);
+                            }
+                            if (userId == myUserId) {
+                                getList().clear();
+                                addItemsNoChanged(getDataBaseTrends());
+                                addItemsNoChanged(list.getDynamics());
+                                for (int i = 0; i < getMsgList().size(); i++) {
+                                    String time = ((TrendsModel) getList().get(i)).getUserTrendsTime();
+                                    if (!timeMap.containsKey(time)) {
+                                        timeMap.put(time, i);
+                                    }
+                                    time = null;
+                                }
+                                notifyDataSetChanged();
+                            } else {
+                                for (int i = 0; i < list.getDynamics().size(); i++) {
+                                    String time = list.getDynamics().get(i).getUserTrendsTime();
+                                    if (!timeMap.containsKey(time)) {
+                                        timeMap.put(time, i);
+                                    }
+                                    time = null;
+                                }
+                                refreshItems(list.getDynamics());
+                            }
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(code, CLICK_MORE);
+                            } else {
+                                isOver = 1;
+                                loadMoreOver(code, ISOVER);
+                            }
+                            for (int i = 0; i < list.getDynamics().size(); i++) {
+                                String time = list.getDynamics().get(i).getUserTrendsTime();
+                                if (!timeMap.containsKey(time)) {
+                                    timeMap.put(time, getCount() + i);
+                                }
+                                time = null;
+                            }
+                            addItems(list.getDynamics());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(code, ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(code, ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(5, msg);
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(5, msg);
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(code, msg);
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, error.getMsg());
-					break;
-				case LOADMORE:
-					loadMoreOver(-1, error.getMsg());
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(code, msg);
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@Override
@@ -400,33 +382,26 @@ public class UserTrendsAdapter extends SuperAdapter {
 	 * 删除动态
 	 */
 	private void DelTrends(int dynamicId, final int position) {
-		DelTrendsParam param = new DelTrendsParam(mContext, dynamicId);
-		HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				isRequest = false;
-				removeItem(position);
-			}
+		DelTrendsParam param = new DelTrendsParam(dynamicId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                isRequest = false;
+                removeItem(position);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				isRequest = false;
-				toast("删除失败，请重试");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				isRequest = false;
-				toast("删除失败，请重试");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                isRequest = false;
+                toast("删除失败，请重试");
+            }
+        });
 	}
 
 	/**
@@ -549,9 +524,8 @@ public class UserTrendsAdapter extends SuperAdapter {
 			if (!isRequest) {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
-				UserTrendsParam param = new UserTrendsParam(mContext, userId, page, limit);
-				HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-				RequestManager.addRequest(task, context);
+				UserTrendsParam param = new UserTrendsParam(userId, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 			}
 		}
 	}
@@ -563,9 +537,8 @@ public class UserTrendsAdapter extends SuperAdapter {
 			this.page = 1;
 			this.userId = userId;
 			isOver = 0;
-			UserTrendsParam param = new UserTrendsParam(mContext, userId, page, limit);
-			HttpStringPost task = new HttpStringPost(mContext, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+            UserTrendsParam param = new UserTrendsParam(userId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 	

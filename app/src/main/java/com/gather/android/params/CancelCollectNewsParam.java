@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 取消收藏（攻略，记忆，订购）
  */
-public class CancelCollectNewsParam extends StringParams {
+public class CancelCollectNewsParam extends BaseParams {
 
-	public CancelCollectNewsParam(Context context, int newsId) {
-		super(context, "act/news/delLov");
-		setParameter("newsId", newsId);
+	public CancelCollectNewsParam(int newsId) {
+		super("act/news/delLov");
+        put("newsId", newsId);
 	}
 
 }

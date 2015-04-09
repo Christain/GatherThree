@@ -15,8 +15,6 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.android.pushservice.PushConstants;
 import com.baidu.android.pushservice.PushManager;
 import com.baidu.location.LocationClient;
@@ -25,9 +23,8 @@ import com.baidu.location.LocationClientOption.LocationMode;
 import com.gather.android.R;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.constant.Constant;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.ExceptionManage;
 import com.gather.android.manage.PhoneManage;
 import com.gather.android.params.GetActTagsParam;
@@ -36,6 +33,8 @@ import com.gather.android.preference.AppPreference;
 import com.gather.android.service.PushMessageReceiver;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.tendcloud.tenddata.TCAgent;
+
+import org.apache.http.Header;
 
 @SuppressLint("HandlerLeak")
 public class StartActivity extends SwipeBackActivity implements Runnable {
@@ -102,68 +101,54 @@ public class StartActivity extends SwipeBackActivity implements Runnable {
 	 * 获取城市列表
 	 */
 	private void getCityList() {
-		GetCityListParam param = new GetCityListParam(StartActivity.this);
-		HttpStringPost task = new HttpStringPost(StartActivity.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				SharedPreferences cityPreferences = StartActivity.this.getSharedPreferences("CITY_LIST", Context.MODE_PRIVATE);
-				SharedPreferences.Editor editor = cityPreferences.edit();
-				editor.putString("CITY", result);
-				editor.commit();
-			}
+		GetCityListParam param = new GetCityListParam();
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                SharedPreferences cityPreferences = StartActivity.this.getSharedPreferences("CITY_LIST", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = cityPreferences.edit();
+                editor.putString("CITY", result);
+                editor.commit();
+            }
 
-			@Override
-			public void relogin(String msg) {
+            @Override
+            public void onNeedLogin(String msg) {
 
-			}
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(StartActivity.this, "获取城市失败", Toast.LENGTH_SHORT).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (Constant.SHOW_LOG) {
-					Toast.makeText(StartActivity.this, "获取城市失败", Toast.LENGTH_SHORT).show();
-				}
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, StartActivity.this);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (Constant.SHOW_LOG) {
+                    Toast.makeText(StartActivity.this, "获取城市失败", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 	}
 
 	/**
 	 * 获取活动标签列表
 	 */
 	private void getActMarkList() {
-		GetActTagsParam param = new GetActTagsParam(StartActivity.this, application.getCityId());
-		HttpStringPost task = new HttpStringPost(StartActivity.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				SharedPreferences cityPreferences = StartActivity.this.getSharedPreferences("ACT_MARK_LIST_"+ application.getCityId(), Context.MODE_PRIVATE);
-				SharedPreferences.Editor editor = cityPreferences.edit();
-				editor.putString("MARK", result);
-				editor.commit();
-			}
+		GetActTagsParam param = new GetActTagsParam(application.getCityId());
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                SharedPreferences cityPreferences = StartActivity.this.getSharedPreferences("ACT_MARK_LIST_"+ application.getCityId(), Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = cityPreferences.edit();
+                editor.putString("MARK", result);
+                editor.commit();
+            }
 
-			@Override
-			public void relogin(String msg) {
+            @Override
+            public void onNeedLogin(String msg) {
 
-			}
+            }
 
-			@Override
-			public void error(int code, String msg) {
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
 
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, StartActivity.this);
+            }
+        });
 	}
 
 	// 获取ApiKey

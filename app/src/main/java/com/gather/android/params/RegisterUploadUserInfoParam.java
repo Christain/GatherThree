@@ -1,17 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 完善用户资料（包括头像和兴趣）在兴趣页面调用
  *
  */
-public class RegisterUploadUserInfoParam extends StringParams {
+public class RegisterUploadUserInfoParam extends BaseParams {
 
 	/**
-	 * @param context
 	 * @param userPass
 	 * @param nickName
 	 * @param sex
@@ -20,21 +17,21 @@ public class RegisterUploadUserInfoParam extends StringParams {
 	 * @param email(可选填)
 	 * @param headImgId 头像ID
 	 */
-	public RegisterUploadUserInfoParam(Context context, String userPass, String nickName, int sex, String birth, String address, String email, int headImgId) {
-		super(context, "user/userInfo/regiInfo");
+	public RegisterUploadUserInfoParam(String userPass, String nickName, int sex, String birth, String address, String email, int headImgId) {
+		super("user/userInfo/regiInfo");
 		if (userPass != null && userPass.length() > 2) {
-			setParameter("userPass", userPass);
+			put("userPass", userPass);
 		}
-		setParameter("nickName", nickName);
-		setParameter("sex", sex);
-		setParameter("birth", birth);
+        put("nickName", nickName);
+        put("sex", sex);
+        put("birth", birth);
 		if (!address.equals("")) {
-			setParameter("address", address);
+            put("address", address);
 		}
 		if (!email.equals("")) {
-			setParameter("email", email);
+            put("email", email);
 		}
-		setParameter("headImgId", headImgId);
+        put("headImgId", headImgId);
 	}
 
 }

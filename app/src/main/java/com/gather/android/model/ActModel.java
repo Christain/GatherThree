@@ -8,7 +8,7 @@ public class ActModel implements Serializable {
     private int id;// 活动id
     private String title;// 标题
     private String intro;// 标题简介
-    private int cost;// 价格
+    private double cost;// 价格
     private double lon;// 经度
     private double lat;// 纬度
     private String addr_city;// 地址（城市）
@@ -82,11 +82,11 @@ public class ActModel implements Serializable {
         this.intro = intro;
     }
 
-    public int getCost() {
+    public double getCost() {
         return cost;
     }
 
-    public void setCost(int cost) {
+    public void setCost(double cost) {
         this.cost = cost;
     }
 

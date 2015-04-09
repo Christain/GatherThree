@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取可选兴趣标签
  *
  */
-public class RegisterGetInterestParam extends StringParams {
+public class RegisterGetInterestParam extends BaseParams {
 
-	public RegisterGetInterestParam(Context context) {
-		super(context, "act/tagInfo/getSltTags");
+	public RegisterGetInterestParam() {
+		super("act/tagInfo/getSltTags");
 	}
 
 }

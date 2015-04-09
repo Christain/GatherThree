@@ -3,11 +3,12 @@ package com.gather.android.model;
 import android.graphics.Bitmap;
 
 import java.io.File;
+import java.io.Serializable;
 
 /**
  * Created by Christain on 2015/4/1.
  */
-public class ActAlbumDetailModel {
+public class ActAlbumDetailModel implements Serializable{
 
     private int id;//图片关联id
     private String img_url;//

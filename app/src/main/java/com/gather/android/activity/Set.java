@@ -20,8 +20,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
 import com.gather.android.application.GatherApplication;
@@ -32,8 +30,8 @@ import com.gather.android.dialog.DialogShareAct.ShareClickListener;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.params.ShareToSinaParam;
 import com.gather.android.preference.AppPreference;
 import com.gather.android.utils.BitmapUtils;
@@ -55,6 +53,8 @@ import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
+
+import org.apache.http.Header;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -527,43 +527,33 @@ public class Set extends SwipeBackActivity implements OnClickListener {
 		mFile = getImageTempFile();
 		ShareToSinaParam param = null;
 		if (BitmapUtils.saveBitmapToImageFile(Set.this, Bitmap.CompressFormat.JPEG, convertDrawable2BitmapSimple(getResources().getDrawable(R.drawable.ic_launcher)), mFile, 100)) {
-			param = new ShareToSinaParam(Set.this, AppPreference.getUserPersistent(Set.this, AppPreference.SINA_TOKEN), Share_Message + "下载链接：" + Constant.OFFICIAL_WEB, mFile);
-			MultipartRequest task = new MultipartRequest(Set.this, param.getUrl(), new ResponseListener() {
+			param = new ShareToSinaParam(AppPreference.getUserPersistent(Set.this, AppPreference.SINA_TOKEN), Share_Message + "下载链接：" + Constant.OFFICIAL_WEB, mFile);
+            AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                @Override
+                public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                    if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                        mLoadingDialog.dismiss();
+                    }
+                }
 
-				@Override
-				public void success(int code, String msg, String result) {
-					if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-						mLoadingDialog.dismiss();
-					}
-				}
+                @Override
+                public void onNeedLogin(String msg) {
+                    if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                        mLoadingDialog.dismiss();
+                    }
+                }
 
-				@Override
-				public void relogin(String msg) {
-					if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-						mLoadingDialog.dismiss();
-					}
-				}
-
-				@Override
-				public void error(int code, String msg) {
-					if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-						mLoadingDialog.dismiss();
-					}
-					toast("分享成功");
-					if (mFile != null && mFile.exists()) {
-						mFile.delete();
-					}
-				}
-			}, new ErrorListener() {
-				@Override
-				public void onErrorResponse(VolleyError error) {
-					if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-						mLoadingDialog.dismiss();
-					}
-					toast(error.getMessage());
-				}
-			}, param.getParameters());
-			executeRequest(task);
+                @Override
+                public void onResponseFailed(int returnCode, String errorMsg) {
+                    if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                        mLoadingDialog.dismiss();
+                    }
+                    toast("分享成功");
+                    if (mFile != null && mFile.exists()) {
+                        mFile.delete();
+                    }
+                }
+            });
 		} else {
 			if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
 				mLoadingDialog.dismiss();

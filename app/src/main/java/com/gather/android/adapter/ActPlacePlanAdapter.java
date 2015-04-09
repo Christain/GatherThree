@@ -10,14 +10,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.TrendsPicGallery;
 import com.gather.android.baseclass.SuperAdapter;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActPlacePlanModel;
 import com.gather.android.model.ActPlacePlanModelList;
 import com.gather.android.model.UserPhotoModel;
@@ -30,6 +27,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,8 +38,7 @@ import java.util.ArrayList;
  */
 public class ActPlacePlanAdapter extends SuperAdapter{
     private Activity context;
-    private ResponseListener listener;
-    private Response.ErrorListener errorListener;
+    private ResponseHandler responseHandler;
     private int page, limit = 50, totalNum, maxPage, isOver, actId;
     private ImageLoader imageLoader = ImageLoader.getInstance();
     private DisplayImageOptions options;
@@ -54,9 +51,9 @@ public class ActPlacePlanAdapter extends SuperAdapter{
     }
 
     private void initListener() {
-        listener = new ResponseListener() {
+        this.responseHandler = new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int code, Header[] headers, String result) {
                 if (page == 1) {
                     JSONObject object = null;
                     try {
@@ -117,7 +114,7 @@ public class ActPlacePlanAdapter extends SuperAdapter{
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 switch (loadType) {
                     case REFRESH:
                         refreshOver(5, msg);
@@ -130,27 +127,13 @@ public class ActPlacePlanAdapter extends SuperAdapter{
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int code, String msg) {
                 switch (loadType) {
                     case REFRESH:
                         refreshOver(code, msg);
                         break;
                     case LOADMORE:
                         loadMoreOver(code, msg);
-                        break;
-                }
-                isRequest = false;
-            }
-        };
-        errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                switch (loadType) {
-                    case REFRESH:
-                        refreshOver(-1, error.getMsg());
-                        break;
-                    case LOADMORE:
-                        loadMoreOver(-1, error.getMsg());
                         break;
                 }
                 isRequest = false;
@@ -232,9 +215,8 @@ public class ActPlacePlanAdapter extends SuperAdapter{
             if (!isRequest) {
                 this.isRequest = true;
                 this.loadType = LOADMORE;
-                ActPlacePlanParam param = new ActPlacePlanParam(context, actId);
-                HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-                RequestManager.addRequest(task, context);
+                ActPlacePlanParam param = new ActPlacePlanParam(actId);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
             }
         }
     }
@@ -246,9 +228,8 @@ public class ActPlacePlanAdapter extends SuperAdapter{
             this.page = 1;
             this.isOver = 0;
             this.actId = actId;
-            ActPlacePlanParam param = new ActPlacePlanParam(context, actId);
-            HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-            RequestManager.addRequest(task, context);
+            ActPlacePlanParam param = new ActPlacePlanParam(actId);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
         }
     }
 

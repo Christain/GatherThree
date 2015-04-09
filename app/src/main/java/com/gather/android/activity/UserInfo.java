@@ -1,10 +1,5 @@
 package com.gather.android.activity;
 
-import java.io.File;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -19,13 +14,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.constant.Constant;
@@ -34,9 +25,8 @@ import com.gather.android.dialog.DialogDateSelect.OnDateClickListener;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.IntentManage;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.params.GetUserInfoParam;
@@ -53,6 +43,12 @@ import com.google.gson.Gson;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
 
 /**
  * 自己的个人资料
@@ -243,49 +239,41 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 	 * 获取个人信息
 	 */
 	private void getUserInfo(int cityId) {
-		GetUserInfoParam param = new GetUserInfoParam(UserInfo.this, cityId);
-		HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					Gson gson = new Gson();
-					userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
-					if (userInfoModel != null) {
-						if (application != null) {
-							application.setUserInfoModel(userInfoModel);
-						}
-						AppPreference.saveUserInfo(UserInfo.this, userInfoModel);
-						setUserInfo();
-					} else {
-						Toast.makeText(UserInfo.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					Toast.makeText(UserInfo.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
-				}
-			}
+		GetUserInfoParam param = new GetUserInfoParam(cityId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    Gson gson = new Gson();
+                    userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
+                    if (userInfoModel != null) {
+                        if (application != null) {
+                            application.setUserInfoModel(userInfoModel);
+                        }
+                        AppPreference.saveUserInfo(UserInfo.this, userInfoModel);
+                        setUserInfo();
+                    } else {
+                        Toast.makeText(UserInfo.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(UserInfo.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	@Override
@@ -343,33 +331,27 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 					} else {
 						age = TimeUtil.getUserAge(date);
 						tvUserAge.setText(age + "");
-						UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
+						UploadUserInfoParam param = new UploadUserInfoParam();
 						param.SaveAge(date);
-						HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-							@Override
-							public void success(int code, String msg, String result) {
-								hasChange = true;
-								userInfoModel.setBirth(date);
-								application.setUserInfoModel(userInfoModel);
-								AppPreference.save(UserInfo.this, AppPreference.USER_BIRTHDAY, date);
-							}
+                        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                            @Override
+                            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                                hasChange = true;
+                                userInfoModel.setBirth(date);
+                                application.setUserInfoModel(userInfoModel);
+                                AppPreference.save(UserInfo.this, AppPreference.USER_BIRTHDAY, date);
+                            }
 
-							@Override
-							public void relogin(String msg) {
-								needLogin(msg);
-							}
+                            @Override
+                            public void onNeedLogin(String msg) {
+                                needLogin(msg);
+                            }
 
-							@Override
-							public void error(int code, String msg) {
-								toast("年龄保存失败，请重试");
-							}
-						}, new ErrorListener() {
-							@Override
-							public void onErrorResponse(VolleyError error) {
-								toast("年龄保存失败，请重试");
-							}
-						}, param.getParameters());
-						executeRequest(task);
+                            @Override
+                            public void onResponseFailed(int returnCode, String errorMsg) {
+                                toast("年龄保存失败，请重试");
+                            }
+                        });
 					}
 				}
 			}).show();
@@ -436,33 +418,27 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 						nickName = "未填写";
 					}
 					tvNickName.setText(nickName);
-					UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
+					UploadUserInfoParam param = new UploadUserInfoParam();
 					param.SaveNickName(nickName);
-					HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-						@Override
-						public void success(int code, String msg, String result) {
-							hasChange = true;
-							userInfoModel.setNick_name(nickName);
-							application.setUserInfoModel(userInfoModel);
-							AppPreference.save(UserInfo.this, AppPreference.NICK_NAME, nickName);
-						}
+					AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                        @Override
+                        public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                            hasChange = true;
+                            userInfoModel.setNick_name(nickName);
+                            application.setUserInfoModel(userInfoModel);
+                            AppPreference.save(UserInfo.this, AppPreference.NICK_NAME, nickName);
+                        }
 
-						@Override
-						public void relogin(String msg) {
-							needLogin(msg);
-						}
+                        @Override
+                        public void onNeedLogin(String msg) {
+                            needLogin(msg);
+                        }
 
-						@Override
-						public void error(int code, String msg) {
-							toast("昵称保存失败，请重试");
-						}
-					}, new ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							toast("昵称保存失败，请重试");
-						}
-					}, param.getParameters());
-					executeRequest(task);
+                        @Override
+                        public void onResponseFailed(int returnCode, String errorMsg) {
+                            toast("昵称保存失败，请重试");
+                        }
+                    });
 				}
 				break;
 			case REQUEST_USER_NAME:
@@ -472,33 +448,27 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 						userName = "未填写";
 					}
 					tvUserName.setText(userName);
-					UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
+					UploadUserInfoParam param = new UploadUserInfoParam();
 					param.SaveUserName(userName);
-					HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-						@Override
-						public void success(int code, String msg, String result) {
-							hasChange = true;
-							userInfoModel.setReal_name(userName);
-							application.setUserInfoModel(userInfoModel);
-							AppPreference.save(UserInfo.this, AppPreference.REAL_NAME, userName);
-						}
+                    AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                        @Override
+                        public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                            hasChange = true;
+                            userInfoModel.setReal_name(userName);
+                            application.setUserInfoModel(userInfoModel);
+                            AppPreference.save(UserInfo.this, AppPreference.REAL_NAME, userName);
+                        }
 
-						@Override
-						public void relogin(String msg) {
-							needLogin(msg);
-						}
+                        @Override
+                        public void onNeedLogin(String msg) {
+                            needLogin(msg);
+                        }
 
-						@Override
-						public void error(int code, String msg) {
-							toast("姓名保存失败，请重试");
-						}
-					}, new ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							toast("姓名保存失败，请重试");
-						}
-					}, param.getParameters());
-					executeRequest(task);
+                        @Override
+                        public void onResponseFailed(int returnCode, String errorMsg) {
+                            toast("姓名保存失败，请重试");
+                        }
+                    });
 				}
 				break;
 			case REQUEST_USER_BRIEF:
@@ -513,33 +483,27 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 					} else {
 						tvUserBrief.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
 					}
-					UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
+					UploadUserInfoParam param = new UploadUserInfoParam();
 					param.SaveBrief(user_brief);
-					HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-						@Override
-						public void success(int code, String msg, String result) {
-							hasChange = true;
-							userInfoModel.setIntro(user_brief);
-							application.setUserInfoModel(userInfoModel);
-							AppPreference.save(UserInfo.this, AppPreference.INTRO, user_brief);
-						}
+                    AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                        @Override
+                        public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                            hasChange = true;
+                            userInfoModel.setIntro(user_brief);
+                            application.setUserInfoModel(userInfoModel);
+                            AppPreference.save(UserInfo.this, AppPreference.INTRO, user_brief);
+                        }
 
-						@Override
-						public void relogin(String msg) {
-							needLogin(msg);
-						}
+                        @Override
+                        public void onNeedLogin(String msg) {
+                            needLogin(msg);
+                        }
 
-						@Override
-						public void error(int code, String msg) {
-							toast("个性签名保存失败，请重试");
-						}
-					}, new ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							toast("个性签名保存失败，请重试");
-						}
-					}, param.getParameters());
-					executeRequest(task);
+                        @Override
+                        public void onResponseFailed(int returnCode, String errorMsg) {
+                            toast("个性签名保存失败，请重试");
+                        }
+                    });
 				}
 				break;
 			case REQUEST_CONTACT_PHONE:
@@ -549,33 +513,27 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 						user_phone = "未填写";
 					}
 					tvUserPhone.setText(user_phone);
-					UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
+					UploadUserInfoParam param = new UploadUserInfoParam();
 					param.SavePhone(user_phone);
-					HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-						@Override
-						public void success(int code, String msg, String result) {
-							hasChange = true;
-							userInfoModel.setPho_num(user_phone);
-							application.setUserInfoModel(userInfoModel);
-							AppPreference.save(UserInfo.this, AppPreference.CONTACT_PHONE, user_phone);
-						}
+                    AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                        @Override
+                        public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                            hasChange = true;
+                            userInfoModel.setPho_num(user_phone);
+                            application.setUserInfoModel(userInfoModel);
+                            AppPreference.save(UserInfo.this, AppPreference.CONTACT_PHONE, user_phone);
+                        }
 
-						@Override
-						public void relogin(String msg) {
-							needLogin(msg);
-						}
+                        @Override
+                        public void onNeedLogin(String msg) {
+                            needLogin(msg);
+                        }
 
-						@Override
-						public void error(int code, String msg) {
-							toast("联系电话保存失败，请重试");
-						}
-					}, new ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							toast("联系电话保存失败，请重试");
-						}
-					}, param.getParameters());
-					executeRequest(task);
+                        @Override
+                        public void onResponseFailed(int returnCode, String errorMsg) {
+                            toast("联系电话保存失败，请重试");
+                        }
+                    });
 				}
 				break;
 			case REQUEST_CONTACT_ADDRESS:
@@ -590,33 +548,27 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 					} else {
 						tvUserAddress.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
 					}
-					UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
+					UploadUserInfoParam param = new UploadUserInfoParam();
 					param.SaveAddress(user_address);
-					HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-						@Override
-						public void success(int code, String msg, String result) {
-							hasChange = true;
-							userInfoModel.setAddress(user_address);
-							application.setUserInfoModel(userInfoModel);
-							AppPreference.save(UserInfo.this, AppPreference.ADDRESS, user_address);
-						}
+                    AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                        @Override
+                        public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                            hasChange = true;
+                            userInfoModel.setAddress(user_address);
+                            application.setUserInfoModel(userInfoModel);
+                            AppPreference.save(UserInfo.this, AppPreference.ADDRESS, user_address);
+                        }
 
-						@Override
-						public void relogin(String msg) {
-							needLogin(msg);
-						}
+                        @Override
+                        public void onNeedLogin(String msg) {
+                            needLogin(msg);
+                        }
 
-						@Override
-						public void error(int code, String msg) {
-							toast("通讯地址保存失败，请重试");
-						}
-					}, new ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							toast("通讯地址保存失败，请重试");
-						}
-					}, param.getParameters());
-					executeRequest(task);
+                        @Override
+                        public void onResponseFailed(int returnCode, String errorMsg) {
+                            toast("通讯地址保存失败，请重试");
+                        }
+                    });
 				}
 				break;
 			case REQUEST_USER_LOVE:
@@ -631,33 +583,27 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 					} else {
 						tvUserInterest.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
 					}
-					UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
+					UploadUserInfoParam param = new UploadUserInfoParam();
 					param.SaveHobby(user_love);
-					HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-						@Override
-						public void success(int code, String msg, String result) {
-							hasChange = true;
-							userInfoModel.setHobby(user_love);
-							application.setUserInfoModel(userInfoModel);
-							AppPreference.save(UserInfo.this, AppPreference.HOBBY, user_love);
-						}
+                    AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                        @Override
+                        public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                            hasChange = true;
+                            userInfoModel.setHobby(user_love);
+                            application.setUserInfoModel(userInfoModel);
+                            AppPreference.save(UserInfo.this, AppPreference.HOBBY, user_love);
+                        }
 
-						@Override
-						public void relogin(String msg) {
-							needLogin(msg);
-						}
+                        @Override
+                        public void onNeedLogin(String msg) {
+                            needLogin(msg);
+                        }
 
-						@Override
-						public void error(int code, String msg) {
-							toast("爱好保存失败，请重试");
-						}
-					}, new ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							toast("爱好保存失败，请重试");
-						}
-					}, param.getParameters());
-					executeRequest(task);
+                        @Override
+                        public void onResponseFailed(int returnCode, String errorMsg) {
+                            toast("爱好保存失败，请重试");
+                        }
+                    });
 				}
 				break;
 			}
@@ -743,78 +689,59 @@ public class UserInfo extends SwipeBackActivity implements OnClickListener {
 	private void uploadPhoto() {
 		mLoadingDialog.setMessage("正在提交...");
 		mLoadingDialog.show();
-		RegisterUploadPhotoParam param = new RegisterUploadPhotoParam(UserInfo.this, mIconFile);
-		MultipartRequest task = new MultipartRequest(UserInfo.this, param.getUrl(), new ResponseListener() {
+		RegisterUploadPhotoParam param = new RegisterUploadPhotoParam(mIconFile);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                        mLoadingDialog.dismiss();
+                    }
+                    JSONObject object = new JSONObject(result);
+                    UploadUserInfoParam param = new UploadUserInfoParam();
+                    param.SaveUserIcon(object.getInt("img_id"));
+                    AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+                        @Override
+                        public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                            hasChange = true;
+                            userInfoModel.setHead_img_url("file:///mnt/sdcard/Gather/upload/" + mIconFile.getName());
+                            application.setUserInfoModel(userInfoModel);
+                            AppPreference.save(UserInfo.this, AppPreference.USER_PHOTO, "file:///mnt/sdcard/Gather/upload/" + mIconFile.getName());
+                        }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-						mLoadingDialog.dismiss();
-					}
-					JSONObject object = new JSONObject(result);
-					UploadUserInfoParam param = new UploadUserInfoParam(UserInfo.this);
-					param.SaveUserIcon(object.getInt("img_id"));
-					HttpStringPost task = new HttpStringPost(UserInfo.this, param.getUrl(), new ResponseListener() {
-						@Override
-						public void success(int code, String msg, String result) {
-							hasChange = true;
-							userInfoModel.setHead_img_url("file:///mnt/sdcard/Gather/upload/" + mIconFile.getName());
-							application.setUserInfoModel(userInfoModel);
-							AppPreference.save(UserInfo.this, AppPreference.USER_PHOTO, "file:///mnt/sdcard/Gather/upload/" + mIconFile.getName());
-						}
+                        @Override
+                        public void onNeedLogin(String msg) {
+                            needLogin(msg);
+                        }
 
-						@Override
-						public void relogin(String msg) {
-							needLogin(msg);
-						}
+                        @Override
+                        public void onResponseFailed(int returnCode, String errorMsg) {
+                            toast("头像保存失败，请重试");
+                        }
+                    });
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-						@Override
-						public void error(int code, String msg) {
-							toast("头像保存失败，请重试");
-						}
-					}, new ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							toast("头像保存失败，请重试");
-						}
-					}, param.getParameters());
-					executeRequest(task);
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	@Override

@@ -3,6 +3,9 @@ package com.gather.android.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,8 +81,8 @@ public class ActEnrollStatusCommentAdapter extends BaseAdapter {
             holder.tvContent.setTextColor(0xFFFF9933);
         } else {
             imageLoader.displayImage(ThumbnailUtil.ThumbnailMethod(model.getUser().getHead_img_url(), 150, 150, 50), holder.ivUserIcon, options);
-            holder.tvContent.setText(model.getUser().getNick_name() + "：" + model.getContent());
             holder.tvContent.setTextColor(0xFF6F7376);
+            holder.tvContent.setText(NameProgress(model.getUser().getNick_name() + "：" + model.getContent()));
         }
         holder.tvTime.setText(TimeUtil.getUserMessageTime(TimeUtil.getStringtoLong(model.getCreate_time())));
         holder.ivUserIcon.setOnClickListener(new OnUserIconClickListener(model.getUser(), model.getAuthor_id()));
@@ -111,6 +114,17 @@ public class ActEnrollStatusCommentAdapter extends BaseAdapter {
             }
         }
 
+    }
+
+    /**
+     * 关键字颜色区别
+     */
+    private Spannable NameProgress(String name) {
+        int start = 0;
+        int end = name.indexOf("：", 1);
+        Spannable word = new SpannableString(name);
+        word.setSpan(new ForegroundColorSpan(0xff000000), start, end, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        return word;
     }
 
     public void refreshItems(ArrayList<ActEnrollStatusCommentModel> items) {

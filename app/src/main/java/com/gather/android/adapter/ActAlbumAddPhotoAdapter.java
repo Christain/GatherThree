@@ -43,7 +43,7 @@ public class ActAlbumAddPhotoAdapter extends BaseAdapter {
     }
 
     public boolean isFull() {
-        return list.size() == 100;
+        return list.size() == 12;
     }
 
     public void setUserPhotoList(ArrayList<ActAlbumDetailModel> list) {

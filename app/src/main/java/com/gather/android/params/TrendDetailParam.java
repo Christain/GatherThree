@@ -1,16 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 某一条动态详情
  */
-public class TrendDetailParam extends StringParams {
+public class TrendDetailParam extends BaseParams {
 
-	public TrendDetailParam(Context context, int dynamicId) {
-		super(context, "act/dynamic/profile");
-		setParameter("dynamicId", dynamicId);
+	public TrendDetailParam(int dynamicId) {
+		super("act/dynamic/profile");
+        put("dynamicId", dynamicId);
 	}
 }

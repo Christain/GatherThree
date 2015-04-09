@@ -1,15 +1,5 @@
 package com.gather.android.activity;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -31,9 +21,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ApplyVipCityAdapter;
 import com.gather.android.adapter.ApplyVipInterestAdapter;
@@ -43,10 +30,8 @@ import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.MultipartRequest;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.manage.IntentManage;
 import com.gather.android.model.CityList;
 import com.gather.android.model.CityListModel;
@@ -65,6 +50,17 @@ import com.gather.android.widget.MMAlert;
 import com.gather.android.widget.NoScrollGridView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 申请成为达人
@@ -567,61 +563,48 @@ public class ApplyVip extends SwipeBackActivity implements OnClickListener {
 			mLoadingDialog.setMessage("正在提交申请...");
 			mLoadingDialog.show();
 		}
-		UploadPicParam param = new UploadPicParam(ApplyVip.this, file);
-		MultipartRequest task = new MultipartRequest(ApplyVip.this, param.getUrl(), new ResponseListener() {
+		UploadPicParam param = new UploadPicParam(file);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    imgList.add(object.getInt("img_id"));
+                    if (index < userIconAdapter.getList().size() - 1) {
+                        UploadPhoto(userIconAdapter.getList().get(index + 1).getImageFile(), index + 1);
+                    } else {
+                        UploadVipData();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					imgList.add(object.getInt("img_id"));
-					if (index < userIconAdapter.getList().size() - 1) {
-						UploadPhoto(userIconAdapter.getList().get(index + 1).getImageFile(), index + 1);
-					} else {
-						UploadVipData();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
-
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
 	 * 申请达人（提交资料）
 	 */
 	private void UploadVipData() {
-		ApplyVipParam param = new ApplyVipParam(ApplyVip.this);
+		ApplyVipParam param = new ApplyVipParam();
 		param.setRealName(etUserName.getText().toString().trim());
 		param.setContactPhone(etUserPhone.getText().toString().trim());
 		param.setEmail(etUserEmail.getText().toString().trim());
@@ -648,160 +631,128 @@ public class ApplyVip extends SwipeBackActivity implements OnClickListener {
 		}
 		param.setUserTags(user);
 		param.setImgList(imgList);
-		HttpStringPost task = new HttpStringPost(ApplyVip.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (userIconAdapter.getList().size() > 0) {
-					for (int i = 0; i < userIconAdapter.getList().size(); i++) {
-						File file = new File(userIconAdapter.getList().get(i).getPath());
-						if (file != null && file.exists()) {
-							file.delete();
-							file = null;
-						}
-					}
-				}
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				toast("申请成功，请等待审核通知");
-				finish();
-			}
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (userIconAdapter.getList().size() > 0) {
+                    for (int i = 0; i < userIconAdapter.getList().size(); i++) {
+                        File file = new File(userIconAdapter.getList().get(i).getPath());
+                        if (file != null && file.exists()) {
+                            file.delete();
+                            file = null;
+                        }
+                    }
+                }
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                toast("申请成功，请等待审核通知");
+                finish();
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("提交申请失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("提交申请失败，请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("提交申请失败，请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
 	 * 获取类别标签
 	 */
 	private void getActTags() {
-//		GetActTagsParam param = new GetActTagsParam(ApplyVip.this);
-		GetUserTagsParam param = new GetUserTagsParam(ApplyVip.this, 1);
-		HttpStringPost task = new HttpStringPost(ApplyVip.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				UserInterestList list = gson.fromJson(result, UserInterestList.class);
-				if (list != null) {
-					actList = list.getTags();
-					actAdapter.setNotifyChanged(actList);
-				}
-			}
+		GetUserTagsParam param = new GetUserTagsParam(1);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                UserInterestList list = gson.fromJson(result, UserInterestList.class);
+                if (list != null) {
+                    actList = list.getTags();
+                    actAdapter.setNotifyChanged(actList);
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("获取活动标签失败，请重试");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("获取活动标签失败，请重试");
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("获取活动标签失败，请重试");
+                finish();
+            }
+        });
 	}
 
 	/**
 	 * 获取个性标签
 	 */
 	private void getUserTags() {
-		GetUserTagsParam param = new GetUserTagsParam(ApplyVip.this, 2);
-		HttpStringPost task = new HttpStringPost(ApplyVip.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				UserInterestList list = gson.fromJson(result, UserInterestList.class);
-				if (list != null) {
-					userList = list.getTags();
-					userAdapter.setNotifyChanged(userList);
-				}
-			}
+		GetUserTagsParam param = new GetUserTagsParam(2);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                UserInterestList list = gson.fromJson(result, UserInterestList.class);
+                if (list != null) {
+                    userList = list.getTags();
+                    userAdapter.setNotifyChanged(userList);
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				toast("获取用户标签失败，请重试");
-				finish();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast("获取用户标签失败，请重试");
-				finish();
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast("获取用户标签失败，请重试");
+                finish();
+            }
+        });
 	}
 
 	/**
 	 * 获取城市列表
 	 */
 	private void getCityList() {
-		GetCityListParam param = new GetCityListParam(ApplyVip.this);
-		HttpStringPost task = new HttpStringPost(ApplyVip.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				SharedPreferences cityPreferences = ApplyVip.this.getSharedPreferences("CITY_LIST", Context.MODE_PRIVATE);
-				SharedPreferences.Editor editor = cityPreferences.edit();
-				editor.putString("CITY", result);
-				editor.commit();
-				Gson gson = new Gson();
-				CityList list = gson.fromJson(result, CityList.class);
-				cityList = list.getCities();
-				cityAdapter.setNotifyChanged(cityList);
-			}
+		GetCityListParam param = new GetCityListParam();
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                SharedPreferences cityPreferences = ApplyVip.this.getSharedPreferences("CITY_LIST", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = cityPreferences.edit();
+                editor.putString("CITY", result);
+                editor.commit();
+                Gson gson = new Gson();
+                CityList list = gson.fromJson(result, CityList.class);
+                cityList = list.getCities();
+                cityAdapter.setNotifyChanged(cityList);
+            }
 
-			@Override
-			public void relogin(String msg) {
+            @Override
+            public void onNeedLogin(String msg) {
 
-			}
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				Toast.makeText(ApplyVip.this, "获取城市失败", Toast.LENGTH_SHORT).show();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				Toast.makeText(ApplyVip.this, "获取城市失败", Toast.LENGTH_SHORT).show();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, ApplyVip.this);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                Toast.makeText(ApplyVip.this, "获取城市失败", Toast.LENGTH_SHORT).show();
+            }
+        });
 	}
 
 	/**

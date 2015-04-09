@@ -18,12 +18,13 @@ public class ActMoreInfoModel implements Serializable{
     private String busi_url;//主办方介绍url
     private int album_id;//自己的相册id：-1无
     private int group_id;//自己的分组id：-1无
-    private int enroll_status;//自己的报名状态：-1未报名，0待审核，1已通过，2已拒绝
+    private int enroll_status;//自己的报名状态：-1未报名，0未报名，1审核中，2核中， 3通过，4拒绝
     private int enroll_num;//已成功报名的人数
     private int enroll_male_num;//已成功报名的男性人数
     private int enroll_female_num;//已成功报名的女性人数
     private int is_manager;//自己是否是该活动管理员：0否，1是
-    private int serial_no;//编号
+    private int serial_no;//序号，报名成功后的id
+    private String pass_no;//编号，分组后可能有的编号
 
     public int getId() {
         return id;
@@ -163,5 +164,16 @@ public class ActMoreInfoModel implements Serializable{
 
     public void setSerial_no(int serial_no) {
         this.serial_no = serial_no;
+    }
+
+    public String getPass_no() {
+        if (pass_no != null) {
+            return pass_no;
+        }
+        return "null";
+    }
+
+    public void setPass_no(String pass_no) {
+        this.pass_no = pass_no;
     }
 }

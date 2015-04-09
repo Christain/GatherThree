@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取动态评论列表
  */
-public class TrendsCommentListParam extends StringParams {
+public class TrendsCommentListParam extends BaseParams {
 
-	public TrendsCommentListParam(Context context, int dynamicId, int page, int size) {
-		super(context, "act/dynamic/comments");
-		setParameter("dynamicId", dynamicId);
-		setParameter("page", page);
-		setParameter("size", size);
+	public TrendsCommentListParam(int dynamicId, int page, int size) {
+		super("act/dynamic/comments");
+        put("dynamicId", dynamicId);
+        put("page", page);
+        put("size", size);
 	}
 
 }

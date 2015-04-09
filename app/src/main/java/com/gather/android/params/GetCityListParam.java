@@ -1,16 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取城市列表
  */
-public class GetCityListParam extends StringParams {
+public class GetCityListParam extends BaseParams {
 
-	public GetCityListParam(Context context) {
-		super(context, "act/city/cities");
+	public GetCityListParam() {
+		super("act/city/cities");
 	}
 
 }

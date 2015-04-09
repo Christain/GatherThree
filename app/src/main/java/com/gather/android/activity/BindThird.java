@@ -1,10 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.List;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -13,27 +8,23 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.Response.Listener;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.gather.android.R;
 import com.gather.android.constant.Constant;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.params.BindThirdParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
+import com.loopj.android.http.RequestParams;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
 import com.sina.weibo.sdk.auth.WeiboAuth;
 import com.sina.weibo.sdk.auth.WeiboAuthListener;
@@ -43,6 +34,12 @@ import com.tencent.connect.common.Constants;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.List;
 
 @SuppressLint("InflateParams")
 public class BindThird extends SwipeBackActivity implements OnClickListener {
@@ -271,117 +268,114 @@ public class BindThird extends SwipeBackActivity implements OnClickListener {
 	private void Bind(final int openType, final String openid, final String token, final long expires_in) {
 		mLoadingDialog.setMessage("正在绑定");
 		mLoadingDialog.show();
-		BindThirdParam param = new BindThirdParam(BindThird.this, openType, openid, token, expires_in);
-		HttpStringPost task = new HttpStringPost(BindThird.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isDataChange = true;
-				if (openType == 4) {
-					model.setQq_openid(openid);
-					model.setQq_token(token);
-					model.setQq_expires_in(expires_in);
-					tvBindTencent.setText("已绑定");
-					tvBindTencent.setTextColor(0xFF999999);
-					tvBindTencent.setSelected(false);
-					tvBindTencent.setClickable(false);
-					getTencentInfo();
-				} else {
-					model.setSina_openid(openid);
-					model.setSina_token(token);
-					model.setSina_expires_in(expires_in);
-					tvBindSina.setText("已绑定");
-					tvBindSina.setTextColor(0xFF999999);
-					tvBindSina.setSelected(false);
-					tvBindSina.setClickable(false);
-					getSinaInfo();
-				}
-			}
+		BindThirdParam param = new BindThirdParam(openType, openid, token, expires_in);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isDataChange = true;
+                if (openType == 4) {
+                    model.setQq_openid(openid);
+                    model.setQq_token(token);
+                    model.setQq_expires_in(expires_in);
+                    tvBindTencent.setText("已绑定");
+                    tvBindTencent.setTextColor(0xFF999999);
+                    tvBindTencent.setSelected(false);
+                    tvBindTencent.setClickable(false);
+                    getTencentInfo();
+                } else {
+                    model.setSina_openid(openid);
+                    model.setSina_token(token);
+                    model.setSina_expires_in(expires_in);
+                    tvBindSina.setText("已绑定");
+                    tvBindSina.setTextColor(0xFF999999);
+                    tvBindSina.setSelected(false);
+                    tvBindSina.setClickable(false);
+                    getSinaInfo();
+                }
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(msg).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage(error.getMsg()).withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage(errorMsg).withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
 	 * 获取新浪微博个人信息
 	 */
 	private void getSinaInfo() {
-		StringRequest task = new StringRequest("https://api.weibo.com/2/users/show.json" + "?uid=" + model.getSina_openid() + "&access_token=" + model.getSina_token(), new Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				try {
-					JSONObject object = new JSONObject(response);
-					tvSinaName.setVisibility(View.VISIBLE);
-					tvSinaName.setText(object.getString("screen_name"));
-				} catch (JSONException e) {
-					tvSinaName.setVisibility(View.GONE);
-					e.printStackTrace();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast(error.getMsg());
-			}
-		});
-		executeRequest(task);
+        AsyncHttpTask.get("https://api.weibo.com/2/users/show.json" + "?uid=" + model.getSina_openid() + "&access_token=" + model.getSina_token(), new RequestParams(), new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    tvSinaName.setVisibility(View.VISIBLE);
+                    tvSinaName.setText(object.getString("screen_name"));
+                } catch (JSONException e) {
+                    tvSinaName.setVisibility(View.GONE);
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast(errorMsg);
+            }
+        });
 	}
 
 	/**
 	 * 获取QQ个人信息
 	 */
 	private void getTencentInfo() {
-		StringRequest task = new StringRequest("https://graph.qq.com/user/get_user_info?" + "oauth_consumer_key=" + Constant.TENCENT_APPID + "&access_token=" + model.getQq_token() + "&openid=" + model.getQq_openid(), new Listener<String>() {
-			@Override
-			public void onResponse(String response) {
-				if (Constant.SHOW_LOG) {
-					Log.e("response", "https://graph.qq.com/user/get_user_info?" + "oauth_consumer_key=" + Constant.TENCENT_APPID + "&access_token=" + model.getQq_token() + "&openid=" + model.getQq_openid() + "\n" + response);
-				}
-				try {
-					JSONObject object = new JSONObject(response);
-					tvTencentName.setVisibility(View.VISIBLE);
-					tvTencentName.setText(object.getString("nickname"));
-				} catch (JSONException e) {
-					tvTencentName.setVisibility(View.GONE);
-					e.printStackTrace();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				toast(error.getMsg());
-			}
-		});
-		executeRequest(task);
+        AsyncHttpTask.get("https://graph.qq.com/user/get_user_info?" + "oauth_consumer_key=" + Constant.TENCENT_APPID + "&access_token=" + model.getQq_token() + "&openid=" + model.getQq_openid(), new RequestParams(), new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (Constant.SHOW_LOG) {
+                    Log.e("response", "https://graph.qq.com/user/get_user_info?" + "oauth_consumer_key=" + Constant.TENCENT_APPID + "&access_token=" + model.getQq_token() + "&openid=" + model.getQq_openid() + "\n" + result);
+                }
+                try {
+                    JSONObject object = new JSONObject(result);
+                    tvTencentName.setVisibility(View.VISIBLE);
+                    tvTencentName.setText(object.getString("nickname"));
+                } catch (JSONException e) {
+                    tvTencentName.setVisibility(View.GONE);
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                toast(errorMsg);
+            }
+        });
 	}
 
 	@Override

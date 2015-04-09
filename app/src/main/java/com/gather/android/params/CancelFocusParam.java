@@ -1,16 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 取消关注
  */
-public class CancelFocusParam extends StringParams {
+public class CancelFocusParam extends BaseParams {
 
-	public CancelFocusParam(Context context, int focusId) {
-		super(context, "act/friend/delete");
-		setParameter("focusId", focusId);
+	public CancelFocusParam(int focusId) {
+		super("act/friend/delete");
+        put("focusId", focusId);
 	}
 }

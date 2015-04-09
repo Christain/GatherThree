@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 删除私信联系人
  */
-public class CancelMessageUserParam extends StringParams {
+public class CancelMessageUserParam extends BaseParams {
 
-	public CancelMessageUserParam(Context context, int contactId) {
-		super(context, "act/message/delContact");
-		setParameter("contactId", contactId);
+	public CancelMessageUserParam(int contactId) {
+		super("act/message/delContact");
+        put("contactId", contactId);
 	}
 
 }

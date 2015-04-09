@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 收藏（攻略，记忆，订购）
  */
-public class CollectNewsParam extends StringParams {
+public class CollectNewsParam extends BaseParams {
 
-	public CollectNewsParam(Context context, int newsId) {
-		super(context, "act/news/lov");
-		setParameter("newsId", newsId);
+	public CollectNewsParam(int newsId) {
+		super("act/news/lov");
+        put("newsId", newsId);
 	}
 
 }

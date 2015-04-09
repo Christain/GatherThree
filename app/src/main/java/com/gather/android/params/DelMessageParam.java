@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 删除单条私信
  */
-public class DelMessageParam extends StringParams {
+public class DelMessageParam extends BaseParams {
 
-	public DelMessageParam(Context context, int messageId) {
-		super(context, "act/message/delete");
-		setParameter("messageId", messageId);
+	public DelMessageParam(int messageId) {
+		super("act/message/delete");
+        put("messageId", messageId);
 	}
 
 }

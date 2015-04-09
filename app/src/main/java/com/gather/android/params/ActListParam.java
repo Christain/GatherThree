@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动列表（根据条件获取）
  */
-public class ActListParam extends StringParams {
+public class ActListParam extends BaseParams {
 
-	public ActListParam(Context context, int cityId, int page, int size) {
-		super(context, "act/activity/acts");
-		setParameter("cityId", cityId);
-		setParameter("page", page);
-		setParameter("size", size);
+	public ActListParam(int cityId, int page, int size) {
+		super("act/activity/acts");
+        put("cityId", cityId);
+        put("page", page);
+        put("size", size);
 	}
 
 	/**
@@ -22,7 +20,7 @@ public class ActListParam extends StringParams {
 	 * @param tagId
 	 */
 	public void setTagId(int tagId) {
-		setParameter("tagId", tagId);
+        put("tagId", tagId);
 	}
 
 	/**
@@ -31,7 +29,7 @@ public class ActListParam extends StringParams {
 	 * @param keyWords
 	 */
 	public void setKeyWords(String keyWords) {
-		setParameter("keyWords", keyWords);
+        put("keyWords", keyWords);
 	}
 
 	/**
@@ -41,8 +39,8 @@ public class ActListParam extends StringParams {
 	 * @param endTime
 	 */
 	public void setTime(String startTime, String endTime) {
-		setParameter("startTime", startTime);
-		setParameter("endTime", endTime);
+        put("startTime", startTime);
+        put("endTime", endTime);
 	}
 
 }

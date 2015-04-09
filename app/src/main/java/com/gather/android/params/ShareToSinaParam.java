@@ -1,18 +1,20 @@
 package com.gather.android.params;
 
+import com.gather.android.baseclass.BaseParams;
+
 import java.io.File;
 
-import android.content.Context;
+public class ShareToSinaParam extends BaseParams {
 
-import com.gather.android.baseclass.MultipartParams;
-
-public class ShareToSinaParam extends MultipartParams {
-
-	public ShareToSinaParam(Context context, String access_token, String status, File pic) {
-		super(context, "https://upload.api.weibo.com/2/statuses/upload.json");
-		setParameter("access_token", access_token);
-		setParameter("status", status);
-		setParameter("pic", pic);
+	public ShareToSinaParam(String access_token, String status, File pic) {
+		super("https://upload.api.weibo.com/2/statuses/upload.json");
+        put("access_token", access_token);
+        put("status", status);
+        try {
+            put("pic", pic);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 }

@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 收藏的活动列表
  */
-public class CollectionActListParam extends StringParams {
+public class CollectionActListParam extends BaseParams {
 
-	public CollectionActListParam(Context context, int uid, int page, int size) {
-		super(context, "act/activity/lovActs");
-		setParameter("uid", uid);
-		setParameter("page", page);
-		setParameter("size", size);
+	public CollectionActListParam(int uid, int page, int size) {
+		super("act/activity/lovActs");
+        put("uid", uid);
+        put("page", page);
+        put("size", size);
 	}
 }

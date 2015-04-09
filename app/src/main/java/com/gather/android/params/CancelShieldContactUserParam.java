@@ -1,17 +1,15 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 取消对联系人的屏蔽
  */
-public class CancelShieldContactUserParam extends StringParams {
+public class CancelShieldContactUserParam extends BaseParams {
 
-	public CancelShieldContactUserParam(Context context, int contactId) {
-		super(context, "act/message/delShield");
-		setParameter("contactId", contactId);
+	public CancelShieldContactUserParam(int contactId) {
+		super("act/message/delShield");
+        put("contactId", contactId);
 	}
 
 }

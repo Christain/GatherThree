@@ -15,7 +15,6 @@ import com.baidu.location.LocationClient;
 import com.baidu.mapapi.SDKInitializer;
 import com.gather.android.constant.Constant;
 import com.gather.android.constant.Constant.Config;
-import com.gather.android.http.RequestManager;
 import com.gather.android.model.UserInfoModel;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
@@ -58,7 +57,6 @@ public class GatherApplication extends FrontiaApplication {
 			StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyDialog().build());
 			StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectAll().penaltyDeath().build());
 		}
-		initVolley();
 		initImageLoader(getApplicationContext());
 
 
@@ -74,10 +72,6 @@ public class GatherApplication extends FrontiaApplication {
         }
         return instance;
     }
-
-	private void initVolley() {
-		RequestManager.init(this);
-	}
 
 	public static void initImageLoader(Context context) {
 		if (Constant.SHOW_LOG) {

@@ -1,5 +1,6 @@
 package com.gather.android.constant;
 
+import com.gather.android.BuildConfig;
 import com.gather.android.manage.PhoneManage;
 
 import java.io.File;
@@ -8,7 +9,7 @@ public final class Constant {
 	
 	public static final String DEFOULT_REQUEST_URL = "http://staging.app.jhla.com.cn/";// 外网数据访问地址
 //	public static final String DEFOULT_REQUEST_URL = "http://app.jhla.com.cn/";// 外网数据访问地址
-	public static final boolean SHOW_LOG = true;// 显示log信息
+	public static final boolean SHOW_LOG = BuildConfig.DEBUG;// 显示log信息
 	public static final String VERSION_SIZE = "5.0M";
 	public static final String OFFICIAL_WEB = "http://www.jhla.com.cn";
 	public static final String SHARE_QQZONE_IMAGE_URL = "http://jhla-app-icons.oss-cn-qingdao.aliyuncs.com/ic_launcher.jpg";
@@ -19,7 +20,18 @@ public final class Constant {
 	public static final String SINA_APPID = "2247106580";	//新浪登录ID	
 	public static final String SINA_CALLBACK_URL = "http://www.jhla.com.cn"; //新浪回调地址
 	public static final String SINA_SCOPE = "all"; //新浪授权权限
-	
+
+    /**
+     * 微信支付
+     */
+    //商户号
+    public static final String MCH_ID = "1233653402";
+    //  API密钥，在商户平台设置
+    public static final  String WX_PAY_API_KEY="9bfe7c6249f79ab1012e726fd84d872b";
+    //微信支付回调地址
+    public static final String WXPAY_CALLBACK_URL_TEST = "http://test.app.jhla.com.cn/act/pay/wxpayNotifyUrl";
+    public static final String WXPAY_CALLBACK_URL = "http://app.jhla.com.cn/act/pay/wxpayNotifyUrl";
+
 	/**
 	 * 支付宝
 	 */

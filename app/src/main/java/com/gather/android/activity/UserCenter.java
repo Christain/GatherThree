@@ -1,10 +1,5 @@
 package com.gather.android.activity;
 
-import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -22,8 +17,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.VolleyError;
 import com.baidu.android.pushservice.PushManager;
 import com.gather.android.R;
 import com.gather.android.adapter.UserCenterListViewAdapter;
@@ -32,9 +25,8 @@ import com.gather.android.dialog.DialogChoiceBuilder;
 import com.gather.android.dialog.DialogTipsBuilder;
 import com.gather.android.dialog.Effectstype;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.NewsModelList;
 import com.gather.android.model.UserInfoModel;
 import com.gather.android.model.UserPhotoModel;
@@ -53,6 +45,12 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 import com.tendcloud.tenddata.TCAgent;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class UserCenter extends SwipeBackActivity implements OnClickListener {
 
@@ -170,47 +168,40 @@ public class UserCenter extends SwipeBackActivity implements OnClickListener {
 	 */
 	private void getUserInfo(int cityId) {
 		isRequest = true;
-		GetUserCenterParam param = new GetUserCenterParam(UserCenter.this, cityId);
+		GetUserCenterParam param = new GetUserCenterParam(cityId);
 		param.addUserId(userId);
-		HttpStringPost task = new HttpStringPost(UserCenter.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				try {
-					JSONObject object = new JSONObject(result);
-					Gson gson = new Gson();
-					userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
-					if (userInfoModel != null) {
-						listViewAdapter.setUserInfoModel(userInfoModel);
-						setUserInfo();
-					} else {
-						Toast.makeText(UserCenter.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					Toast.makeText(UserCenter.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
-				}
-				isRequest = false;
-			}
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                try {
+                    JSONObject object = new JSONObject(result);
+                    Gson gson = new Gson();
+                    userInfoModel = gson.fromJson(object.getString("user"), UserInfoModel.class);
+                    if (userInfoModel != null) {
+                        listViewAdapter.setUserInfoModel(userInfoModel);
+                        setUserInfo();
+                    } else {
+                        Toast.makeText(UserCenter.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(UserCenter.this, "个人信息解析失败", Toast.LENGTH_SHORT).show();
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				isRequest = false;
-				Toast.makeText(UserCenter.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				isRequest = false;
-				Toast.makeText(UserCenter.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
-			}
-		}, param.getParameters());
-		RequestManager.addRequest(task, UserCenter.this);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                isRequest = false;
+                Toast.makeText(UserCenter.this, "获取个人信息失败", Toast.LENGTH_SHORT).show();
+            }
+        });
 	}
 
 	/**
@@ -279,50 +270,38 @@ public class UserCenter extends SwipeBackActivity implements OnClickListener {
 		mLoadingDialog.setMessage("取消关注...");
 		mLoadingDialog.show();
 		isRequest = true;
-		CancelFocusParam param = new CancelFocusParam(UserCenter.this, userId);
-		HttpStringPost task = new HttpStringPost(UserCenter.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				userInfoModel.setIs_focus(0);
-				tvFocus.setText("关注");
-				isRequest = false;
-			}
+		CancelFocusParam param = new CancelFocusParam(userId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                userInfoModel.setIs_focus(0);
+                tvFocus.setText("关注");
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("取消关注失败, 请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				isRequest = false;
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("取消关注失败, 请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("取消关注失败, 请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
@@ -332,89 +311,70 @@ public class UserCenter extends SwipeBackActivity implements OnClickListener {
 		isRequest = true;
 		mLoadingDialog.setMessage("关注中...");
 		mLoadingDialog.show();
-		AddFocusParam param = new AddFocusParam(UserCenter.this, userId);
-		HttpStringPost task = new HttpStringPost(UserCenter.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				TCAgent.onEvent(UserCenter.this, "关注人");
-				userInfoModel.setIs_focus(1);
-				tvFocus.setText("取消关注");
-				isRequest = false;
-			}
+		AddFocusParam param = new AddFocusParam(userId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                TCAgent.onEvent(UserCenter.this, "关注人");
+                userInfoModel.setIs_focus(1);
+                tvFocus.setText("取消关注");
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("关注失败, 请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
-					mLoadingDialog.dismiss();
-				}
-				isRequest = false;
-				if (dialog != null && !dialog.isShowing()) {
-					dialog.setMessage("关注失败, 请重试").withEffect(Effectstype.Shake).show();
-				}
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                if (mLoadingDialog != null && mLoadingDialog.isShowing()) {
+                    mLoadingDialog.dismiss();
+                }
+                isRequest = false;
+                if (dialog != null && !dialog.isShowing()) {
+                    dialog.setMessage("关注失败, 请重试").withEffect(Effectstype.Shake).show();
+                }
+            }
+        });
 	}
 
 	/**
 	 * 专访列表
 	 */
 	private void getInterviewList() {
-		UserInterviewParam param = new UserInterviewParam(UserCenter.this, userId, 1, 1);
-		HttpStringPost task = new HttpStringPost(UserCenter.this, param.getUrl(), new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				Gson gson = new Gson();
-				interviewList = gson.fromJson(result, NewsModelList.class);
-				listViewAdapter.setInterview(interviewList);
+		UserInterviewParam param = new UserInterviewParam(userId, 1, 1);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                Gson gson = new Gson();
+                interviewList = gson.fromJson(result, NewsModelList.class);
+                listViewAdapter.setInterview(interviewList);
 //				if (interviewList != null && interviewList.getNews() != null && interviewList.getNews().size() > 0) {
 //					flInterview.setVisibility(View.VISIBLE);
 //				} else {
 //					flInterview.setVisibility(View.GONE);
 //				}
-			}
+            }
 
-			@Override
-			public void relogin(String msg) {
-				needLogin(msg);
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                needLogin(msg);
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				flInterview.setVisibility(View.GONE);
-				toast("专访获取失败");
-			}
-		}, new ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				flInterview.setVisibility(View.GONE);
-				toast("专访获取失败");
-			}
-		}, param.getParameters());
-		executeRequest(task);
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                flInterview.setVisibility(View.GONE);
+                toast("专访获取失败");
+            }
+        });
 	}
 
 	@Override

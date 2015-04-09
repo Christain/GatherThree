@@ -1,30 +1,28 @@
 package com.gather.android.params;
 
+import com.gather.android.application.GatherApplication;
+import com.gather.android.baseclass.BaseParams;
+
 import java.util.ArrayList;
 
-import android.content.Context;
+public class FeedbackParam extends BaseParams {
 
-import com.gather.android.application.GatherApplication;
-import com.gather.android.baseclass.StringParams;
-
-public class FeedbackParam extends StringParams {
-
-	public FeedbackParam(Context context, String content, ArrayList<Integer> imgIds) {
-		super(context, "act/user/feedback");
-		GatherApplication application = (GatherApplication) context.getApplicationContext();
+	public FeedbackParam(String content, ArrayList<Integer> imgIds) {
+		super("act/user/feedback");
+		GatherApplication application = GatherApplication.getInstance();
 		if (application.getCityId() != 0) {
-			setParameter("cityId", application.getCityId());
+            put("cityId", application.getCityId());
 		}
-		setParameter("content", content);
+        put("content", content);
 		if (imgIds.size() > 0) {
 			for (int i = 0; i < imgIds.size(); i++) {
-				setParameter("imgIds[" + i + "]", imgIds.get(i));
+                put("imgIds[" + i + "]", imgIds.get(i));
 			}
 		}
 		if (application.mLocation != null && application.mLocation.getAddrStr() != null) {
-			setParameter("lon", application.mLocation.getLongitude());
-			setParameter("lat", application.mLocation.getLatitude());
-			setParameter("address", application.mLocation.getAddrStr());
+            put("lon", application.mLocation.getLongitude());
+            put("lat", application.mLocation.getLatitude());
+            put("address", application.mLocation.getAddrStr());
 		}
 	}
 

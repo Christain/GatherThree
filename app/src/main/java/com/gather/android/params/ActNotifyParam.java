@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动通知
  * Created by Christain on 2015/3/31.
  */
-public class ActNotifyParam extends StringParams {
+public class ActNotifyParam extends BaseParams {
 
-    public ActNotifyParam(Context context, int actId) {
-        super(context, "act/actMore/notices");
-        setParameter("actId", actId);
-        setParameter("page", 1);
-        setParameter("size", 50);
+    public ActNotifyParam(int actId) {
+        super("act/actMore/notices");
+        put("actId", actId);
+        put("page", 1);
+        put("size", 50);
     }
 }

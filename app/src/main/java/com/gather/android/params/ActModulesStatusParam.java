@@ -1,16 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动模块信息
  * Created by Christain on 2015/3/17.
  */
-public class ActModulesStatusParam extends StringParams{
-    public ActModulesStatusParam(Context context, int actId) {
-        super(context, "act/actMore/modules");
-        setParameter("actId", actId);
+public class ActModulesStatusParam extends BaseParams {
+    public ActModulesStatusParam( int actId) {
+        super("act/actMore/modules");
+        put("actId", actId);
     }
 }

@@ -1,8 +1,5 @@
 package com.gather.android.adapter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -16,16 +13,13 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.DistanceUtil;
 import com.gather.android.R;
 import com.gather.android.application.GatherApplication;
 import com.gather.android.baseclass.SuperAdapter;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActModel;
 import com.gather.android.model.ActModelList;
 import com.gather.android.params.ActHotListParam;
@@ -44,12 +38,15 @@ import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListener;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 @SuppressLint({ "InflateParams", "HandlerLeak" })
 public class ActListAdapter extends SuperAdapter {
 
 	private Activity context;
-	private ResponseListener listener;
-	private Response.ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private int cityId, titleIndex, page, limit = 10, totalNum, maxPage, isOver;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions options;
@@ -74,119 +71,105 @@ public class ActListAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					if (!isHot) {
-						if (titleIndex == 1) {
-							if (helper != null) {
-								helper.saveData(result);
-							}
-						}
-					} else {
-						if (hotHelper != null) {
-							hotHelper.saveData(result);
-						}
-					}
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(-1, "数据解析出错");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				ActModelList list = gson.fromJson(result, ActModelList.class);
-				if (list != null && list.getActs() != null) {
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(code, ISNULL);
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(code, ISOVER);
-						} else {
-							page++;
-							refreshOver(code, CLICK_MORE);
-						}
-						refreshItems(list.getActs());
-						break;
-					case LOADMORE:
-						if (page != maxPage) {
-							page++;
-							loadMoreOver(code, CLICK_MORE);
-						} else {
-							isOver = 1;
-							loadMoreOver(code, ISOVER);
-						}
-						addItems(list.getActs());
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(code, ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(code, ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int code, Header[] headers, String result) {
+                if (page == 1) {
+                    if (!isHot) {
+                        if (titleIndex == 1) {
+                            if (helper != null) {
+                                helper.saveData(result);
+                            }
+                        }
+                    } else {
+                        if (hotHelper != null) {
+                            hotHelper.saveData(result);
+                        }
+                    }
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(-1, "数据解析出错");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                ActModelList list = gson.fromJson(result, ActModelList.class);
+                if (list != null && list.getActs() != null) {
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(code, ISNULL);
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(code, ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(code, CLICK_MORE);
+                            }
+                            refreshItems(list.getActs());
+                            break;
+                        case LOADMORE:
+                            if (page != maxPage) {
+                                page++;
+                                loadMoreOver(code, CLICK_MORE);
+                            } else {
+                                isOver = 1;
+                                loadMoreOver(code, ISOVER);
+                            }
+                            addItems(list.getActs());
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(code, ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(code, ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(5, msg);
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(5, msg);
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, msg);
-					break;
-				case LOADMORE:
-					loadMoreOver(code, msg);
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, error.getMsg());
-					break;
-				case LOADMORE:
-					loadMoreOver(-1, error.getMsg());
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, msg);
+                        break;
+                    case LOADMORE:
+                        loadMoreOver(code, msg);
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@Override
@@ -308,16 +291,14 @@ public class ActListAdapter extends SuperAdapter {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
 				if (!isHot) {
-					ActListParam param = new ActListParam(context, cityId, page, limit);
+					ActListParam param = new ActListParam(cityId, page, limit);
 					if (titleIndex != 0) {
 						param.setTagId(titleIndex);
 					}
-					HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-					RequestManager.addRequest(task, context);
+                    AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 				} else {
-					ActHotListParam param = new ActHotListParam(context, cityId, page, limit);
-					HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-					RequestManager.addRequest(task, context);
+					ActHotListParam param = new ActHotListParam(cityId, page, limit);
+                    AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 				}
 			}
 		}
@@ -335,12 +316,11 @@ public class ActListAdapter extends SuperAdapter {
 			this.cityId = cityId;
 			this.titleIndex = titleIndex;
 			this.isHot = false;
-			ActListParam param = new ActListParam(context, cityId, page, limit);
+			ActListParam param = new ActListParam(cityId, page, limit);
 			if (titleIndex != 0) {
 				param.setTagId(titleIndex);
 			}
-			HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 
@@ -355,9 +335,8 @@ public class ActListAdapter extends SuperAdapter {
 			this.isOver = 0;
 			this.cityId = cityId;
 			this.isHot = true;
-			ActHotListParam param = new ActHotListParam(context, cityId, page, limit);
-			HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+			ActHotListParam param = new ActHotListParam(cityId, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 

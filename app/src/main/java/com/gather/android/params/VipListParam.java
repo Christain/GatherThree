@@ -1,17 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 获取达人列表
  */
-public class VipListParam extends StringParams {
+public class VipListParam extends BaseParams {
 
 	/**
 	 * 分类获取达人列表
-	 * @param context
 	 * @param cityId
 	 * @param tagId
 	 * @param sex
@@ -19,37 +16,36 @@ public class VipListParam extends StringParams {
 	 * @param page
 	 * @param size
 	 */
-	public VipListParam(Context context, int cityId, int tagId, int sex, int userTagId, int page, int size) {
-		super(context, "act/vip/users");
-		setParameter("cityId", cityId);
+	public VipListParam(int cityId, int tagId, int sex, int userTagId, int page, int size) {
+		super("act/vip/users");
+        put("cityId", cityId);
 		if (tagId != 0) {
-			setParameter("tagId", tagId);
+            put("tagId", tagId);
 		}
 		if (sex != 0) {
-			setParameter("sex", sex);
+            put("sex", sex);
 		}
 		if (userTagId != 0) {
-			setParameter("userTagId", userTagId);
+            put("userTagId", userTagId);
 		}
-		setParameter("page", page);
-		setParameter("size", size);
+        put("page", page);
+        put("size", size);
 	}
 
 	/**
 	 * 搜索达人（根据关键字）
-	 * @param context
 	 * @param cityId
 	 * @param keyWords
 	 */
-	public VipListParam(Context context, int cityId, String keyWords, int page, int size) {
-		super(context, "act/vip/users");
-		setParameter("cityId", cityId);
+	public VipListParam(int cityId, String keyWords, int page, int size) {
+		super("act/vip/users");
+        put("cityId", cityId);
 
 		if (keyWords != null && !keyWords.equals("")) {
-			setParameter("keyWords", keyWords);
+            put("keyWords", keyWords);
 		}
-		setParameter("page", page);
-		setParameter("size", size);
+        put("page", page);
+        put("size", size);
 	}
 
 }

@@ -1,10 +1,5 @@
 package com.gather.android.adapter;
 
-import java.util.Collections;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -19,15 +14,12 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.activity.ActStrategyAndMemoryAndTicket;
 import com.gather.android.activity.WebStrategy;
 import com.gather.android.baseclass.SuperAdapter;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.RequestManager;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.NewsModel;
 import com.gather.android.model.NewsModelList;
 import com.gather.android.params.NewsListParam;
@@ -42,13 +34,18 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Collections;
+
 @SuppressLint("InflateParams")
 public class ActStrategyListAdapter extends SuperAdapter {
 
 	private Context context;
 	private int page, maxPage, limit = 10, isOver, totalNum, cityId, tagId, type;
-	private ResponseListener listener;
-	private Response.ErrorListener errorListener;
+	private ResponseHandler responseHandler;
 	private ImageLoader imageLoader = ImageLoader.getInstance();
 	private DisplayImageOptions options;
 	private DisplayMetrics metrics;
@@ -71,128 +68,114 @@ public class ActStrategyListAdapter extends SuperAdapter {
 	}
 
 	private void initListener() {
-		listener = new ResponseListener() {
-			@Override
-			public void success(int code, String msg, String result) {
-				if (page == 1) {
-					if (tagId == 1) {
-						switch (type) {
-						case ActStrategyAndMemoryAndTicket.STRATEGY:
-							if (strategyHelper != null) {
-								strategyHelper.saveData(result);
-							}
-							break;
-						case ActStrategyAndMemoryAndTicket.MEMORY:
-							if (memoryHelper != null) {
-								memoryHelper.saveData(result);
-							}
-							break;
-						case ActStrategyAndMemoryAndTicket.TICKET:
-							if (ticketHelper != null) {
-								ticketHelper.saveData(result);
-							}
-							break;
-						}
-					}
-					JSONObject object = null;
-					try {
-						object = new JSONObject(result);
-						totalNum = object.getInt("total_num");
-						if (totalNum % limit == 0) {
-							maxPage = totalNum / limit;
-						} else {
-							maxPage = (totalNum / limit) + 1;
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
-						refreshOver(0, "错误");
-						isRequest = false;
-						return;
-					} finally {
-						object = null;
-					}
-				}
-				Gson gson = new Gson();
-				NewsModelList list = gson.fromJson(result, NewsModelList.class);
-				if (list != null && list.getNews() != null) {
-					Collections.reverse(list.getNews());
-					switch (loadType) {
-					case REFRESH:
-						if (totalNum == 0) {
-							refreshOver(list.getNews().size(), ISNULL);
-						} else if (page == maxPage) {
-							isOver = 1;
-							refreshOver(list.getNews().size(), ISOVER);
-						} else {
-							page++;
-							refreshOver(list.getNews().size(), CLICK_MORE);
-						}
-						refreshItems(list.getNews());
-						break;
-					case LOADMORE:
-						addItemsInFront(list.getNews());
-						if (page != maxPage) {
-							page++;
-							refreshOver(list.getNews().size(), CLICK_MORE);
-						} else {
-							isOver = 1;
-							refreshOver(list.getNews().size(), ISOVER);
-						}
-						break;
-					}
-				} else {
-					switch (loadType) {
-					case REFRESH:
-						refreshOver(list.getNews().size(), ISNULL);
-						break;
-					case LOADMORE:
-						loadMoreOver(list.getNews().size(), ISOVER);
-						break;
-					}
-				}
-				isRequest = false;
-			}
+        this.responseHandler = new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int code, Header[] headers, String result) {
+                if (page == 1) {
+                    if (tagId == 1) {
+                        switch (type) {
+                            case ActStrategyAndMemoryAndTicket.STRATEGY:
+                                if (strategyHelper != null) {
+                                    strategyHelper.saveData(result);
+                                }
+                                break;
+                            case ActStrategyAndMemoryAndTicket.MEMORY:
+                                if (memoryHelper != null) {
+                                    memoryHelper.saveData(result);
+                                }
+                                break;
+                            case ActStrategyAndMemoryAndTicket.TICKET:
+                                if (ticketHelper != null) {
+                                    ticketHelper.saveData(result);
+                                }
+                                break;
+                        }
+                    }
+                    JSONObject object = null;
+                    try {
+                        object = new JSONObject(result);
+                        totalNum = object.getInt("total_num");
+                        if (totalNum % limit == 0) {
+                            maxPage = totalNum / limit;
+                        } else {
+                            maxPage = (totalNum / limit) + 1;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        refreshOver(0, "错误");
+                        isRequest = false;
+                        return;
+                    } finally {
+                        object = null;
+                    }
+                }
+                Gson gson = new Gson();
+                NewsModelList list = gson.fromJson(result, NewsModelList.class);
+                if (list != null && list.getNews() != null) {
+                    Collections.reverse(list.getNews());
+                    switch (loadType) {
+                        case REFRESH:
+                            if (totalNum == 0) {
+                                refreshOver(list.getNews().size(), ISNULL);
+                            } else if (page == maxPage) {
+                                isOver = 1;
+                                refreshOver(list.getNews().size(), ISOVER);
+                            } else {
+                                page++;
+                                refreshOver(list.getNews().size(), CLICK_MORE);
+                            }
+                            refreshItems(list.getNews());
+                            break;
+                        case LOADMORE:
+                            addItemsInFront(list.getNews());
+                            if (page != maxPage) {
+                                page++;
+                                refreshOver(list.getNews().size(), CLICK_MORE);
+                            } else {
+                                isOver = 1;
+                                refreshOver(list.getNews().size(), ISOVER);
+                            }
+                            break;
+                    }
+                } else {
+                    switch (loadType) {
+                        case REFRESH:
+                            refreshOver(list.getNews().size(), ISNULL);
+                            break;
+                        case LOADMORE:
+                            loadMoreOver(list.getNews().size(), ISOVER);
+                            break;
+                    }
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void relogin(String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(5, "登录");
-					break;
-				case LOADMORE:
-					refreshOver(5, "登录");
-					break;
-				}
-				isRequest = false;
-			}
+            @Override
+            public void onNeedLogin(String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(5, "登录");
+                        break;
+                    case LOADMORE:
+                        refreshOver(5, "登录");
+                        break;
+                }
+                isRequest = false;
+            }
 
-			@Override
-			public void error(int code, String msg) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(code, "错误");
-					break;
-				case LOADMORE:
-					refreshOver(code, "错误");
-					break;
-				}
-				isRequest = false;
-			}
-		};
-		errorListener = new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				switch (loadType) {
-				case REFRESH:
-					refreshOver(-1, "错误");
-					break;
-				case LOADMORE:
-					refreshOver(-1, "错误");
-					break;
-				}
-				isRequest = false;
-			}
-		};
+            @Override
+            public void onResponseFailed(int code, String msg) {
+                switch (loadType) {
+                    case REFRESH:
+                        refreshOver(code, "错误");
+                        break;
+                    case LOADMORE:
+                        refreshOver(code, "错误");
+                        break;
+                }
+                isRequest = false;
+            }
+        };
 	}
 
 	@Override
@@ -305,9 +288,8 @@ public class ActStrategyListAdapter extends SuperAdapter {
 			if (!isRequest) {
 				this.isRequest = true;
 				this.loadType = LOADMORE;
-				NewsListParam param = new NewsListParam(context, cityId, tagId, type, page, limit);
-				HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-				RequestManager.addRequest(task, context);
+				NewsListParam param = new NewsListParam(cityId, tagId, type, page, limit);
+                AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 			}
 		}
 	}
@@ -324,9 +306,8 @@ public class ActStrategyListAdapter extends SuperAdapter {
 			this.cityId = cityId;
 			this.tagId = tagId;
 			this.type = type;
-			NewsListParam param = new NewsListParam(context, cityId, tagId, type, page, limit);
-			HttpStringPost task = new HttpStringPost(context, param.getUrl(), listener, errorListener, param.getParameters());
-			RequestManager.addRequest(task, context);
+			NewsListParam param = new NewsListParam(cityId, tagId, type, page, limit);
+            AsyncHttpTask.post(param.getUrl(), param, responseHandler);
 		}
 	}
 	

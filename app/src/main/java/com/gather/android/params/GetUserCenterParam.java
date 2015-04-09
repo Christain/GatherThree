@@ -1,16 +1,14 @@
 package com.gather.android.params;
 
-import android.content.Context;
+import com.gather.android.baseclass.BaseParams;
 
-import com.gather.android.baseclass.StringParams;
-
-public class GetUserCenterParam extends StringParams{
-	public GetUserCenterParam(Context context, int cityId) {
-		super(context, "act/user/profile");
-		setParameter("cityId", cityId);
+public class GetUserCenterParam extends BaseParams {
+	public GetUserCenterParam(int cityId) {
+		super("act/user/profile");
+        put("cityId", cityId);
 	}
 
 	public void addUserId(int uid) {
-		setParameter("uid", uid);
+        put("uid", uid);
 	}
 }

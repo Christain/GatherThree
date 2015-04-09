@@ -1,20 +1,18 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 活动分组成员
  * Created by Christain on 2015/4/1.
  */
-public class ActGroupMemberListParam extends StringParams {
+public class ActGroupMemberListParam extends BaseParams {
 
-    public ActGroupMemberListParam(Context context, int cityId, int groupId, int page, int size) {
-        super(context, "act/actMore/groupUsers");
-        setParameter("cityId", cityId);
-        setParameter("groupId", groupId);
-        setParameter("page", page);
-        setParameter("size", size);
+    public ActGroupMemberListParam(int cityId, int groupId, int page, int size) {
+        super("act/actMore/groupUsers");
+        put("cityId", cityId);
+        put("groupId", groupId);
+        put("page", page);
+        put("size", size);
     }
 }

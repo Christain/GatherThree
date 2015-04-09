@@ -1,18 +1,16 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 修改密码
  *
  */
-public class ResetPasswordParam extends StringParams {
+public class ResetPasswordParam extends BaseParams {
 
-	public ResetPasswordParam(Context context, String newPass) {
-		super(context, "user/userInfo/phRePass");
-		setParameter("newPass", newPass);
+	public ResetPasswordParam(String newPass) {
+		super("user/userInfo/phRePass");
+        put("newPass", newPass);
 	}
 
 }

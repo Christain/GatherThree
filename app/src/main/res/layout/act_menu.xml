@@ -27,7 +27,9 @@
                 android:id="@+id/llLunch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="12dp"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
+                android:layout_marginTop="12dp"
                 android:background="@color/font_white"
                 android:orientation="vertical">
 
@@ -76,7 +78,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginTop="4dp"
-                    android:text="2月12日 08:00 桃园餐厅"
+                    android:text=""
                     android:textColor="#FFB8B8B8"
                     android:textSize="14sp"/>
 
@@ -100,6 +102,7 @@
                 android:layout_marginBottom="12dp"
                 android:layout_marginLeft="12dp"
                 android:layout_marginRight="12dp"
+                android:layout_marginTop="12dp"
                 android:background="@color/font_white"
                 android:orientation="vertical">
 
@@ -148,7 +151,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginTop="4dp"
-                    android:text="2月12日 08:00 桃园餐厅"
+                    android:text=""
                     android:textColor="#FFB8B8B8"
                     android:textSize="14sp"/>
 

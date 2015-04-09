@@ -1,19 +1,17 @@
 package com.gather.android.params;
 
-import android.content.Context;
-
-import com.gather.android.baseclass.StringParams;
+import com.gather.android.baseclass.BaseParams;
 
 /**
  * 个人动态
  */
-public class UserTrendsParam extends StringParams {
+public class UserTrendsParam extends BaseParams {
 
-	public UserTrendsParam(Context context, int uid, int page, int size) {
-		super(context, "act/dynamic/list");
-		setParameter("uid", uid);
-		setParameter("page", page);
-		setParameter("size", size);
+	public UserTrendsParam(int uid, int page, int size) {
+		super("act/dynamic/list");
+        put("uid", uid);
+        put("page", page);
+        put("size", size);
 	}
 
 }

@@ -9,19 +9,19 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.gather.android.R;
 import com.gather.android.adapter.ActAttentionAdapter;
 import com.gather.android.dialog.LoadingDialog;
-import com.gather.android.http.HttpStringPost;
-import com.gather.android.http.ResponseListener;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
 import com.gather.android.model.ActAttentionListModel;
 import com.gather.android.params.ActAttentionParam;
 import com.gather.android.utils.ClickUtil;
 import com.gather.android.widget.NoScrollListView;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.google.gson.Gson;
+
+import org.apache.http.Header;
 
 /**
  * 活动注意事项
@@ -94,10 +94,10 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
             mLoadingDailog.setMessage("加载中...");
             mLoadingDailog.show();
         }
-        ActAttentionParam param = new ActAttentionParam(ActAttention.this, actId);
-        HttpStringPost task = new HttpStringPost(ActAttention.this, param.getUrl(), new ResponseListener() {
+        ActAttentionParam param = new ActAttentionParam(actId);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
             @Override
-            public void success(int code, String msg, String result) {
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
                 if (mLoadingDailog != null && mLoadingDailog.isShowing()) {
                     mLoadingDailog.dismiss();
                 }
@@ -117,7 +117,7 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
             }
 
             @Override
-            public void relogin(String msg) {
+            public void onNeedLogin(String msg) {
                 if (mLoadingDailog != null && mLoadingDailog.isShowing()) {
                     mLoadingDailog.dismiss();
                 }
@@ -125,23 +125,13 @@ public class ActAttention extends SwipeBackActivity implements View.OnClickListe
             }
 
             @Override
-            public void error(int code, String msg) {
+            public void onResponseFailed(int returnCode, String errorMsg) {
                 if (mLoadingDailog != null && mLoadingDailog.isShowing()) {
                     mLoadingDailog.dismiss();
                 }
                 toast("加载注意事项失败，请重试");
                 finish();
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                if (mLoadingDailog != null && mLoadingDailog.isShowing()) {
-                    mLoadingDailog.dismiss();
-                }
-                toast("加载注意事项失败，请重试");
-                finish();
-            }
-        }, param.getParameters());
-        executeRequest(task);
+        });
     }
 }

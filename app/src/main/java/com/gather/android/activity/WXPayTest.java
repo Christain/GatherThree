@@ -250,7 +250,6 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
         try {
             String nonceStr = genNonceStr();
 
-
             xml.append("</xml>");
             List<NameValuePair> packageParams = new LinkedList<NameValuePair>();
             packageParams.add(new BasicNameValuePair("appid", Constant.WE_CHAT_APPID));
@@ -258,13 +257,13 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
             packageParams.add(new BasicNameValuePair("mch_id", Constant.MCH_ID));
             packageParams.add(new BasicNameValuePair("nonce_str", nonceStr));
             if (Constant.SHOW_LOG) {
-                packageParams.add(new BasicNameValuePair("notify_url", Constant.ALIPAY_CALLBACK_URL_TEST));
+                packageParams.add(new BasicNameValuePair("notify_url", Constant.WXPAY_CALLBACK_URL_TEST));
             } else {
-                packageParams.add(new BasicNameValuePair("notify_url", Constant.ALIPAY_CALLBACK_URL));
+                packageParams.add(new BasicNameValuePair("notify_url", Constant.WXPAY_CALLBACK_URL));
             }
             packageParams.add(new BasicNameValuePair("out_trade_no", genOutTradNo()));
             packageParams.add(new BasicNameValuePair("spbill_create_ip", "127.0.0.1"));
-            packageParams.add(new BasicNameValuePair("total_fee", "1"));
+            packageParams.add(new BasicNameValuePair("total_fee", "0.01"));
             packageParams.add(new BasicNameValuePair("trade_type", "APP"));
 
 

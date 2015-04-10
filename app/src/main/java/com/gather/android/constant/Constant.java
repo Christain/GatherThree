@@ -30,7 +30,7 @@ public final class Constant {
     public static final  String WX_PAY_API_KEY="9bfe7c6249f79ab1012e726fd84d872b";
     //微信支付回调地址
     public static final String WXPAY_CALLBACK_URL_TEST = "http://test.app.jhla.com.cn/act/pay/wxpayNotifyUrl";
-    public static final String WXPAY_CALLBACK_URL = "http://app.jhla.com.cn/act/pay/wxpayNotifyUrl";
+    public static final String WXPAY_CALLBACK_URL = "http://test.app.jhla.com.cn/act/pay/wxpayNotifyUrl";
 
 	/**
 	 * 支付宝

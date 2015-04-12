@@ -12,15 +12,24 @@ import android.widget.TextView;
 
 import com.gather.android.R;
 import com.gather.android.constant.Constant;
+import com.gather.android.dialog.LoadingDialog;
+import com.gather.android.http.AsyncHttpTask;
+import com.gather.android.http.ResponseHandler;
+import com.gather.android.model.CreateOrderModel;
+import com.gather.android.params.ActCreateOrderParam;
 import com.gather.android.widget.swipeback.SwipeBackActivity;
 import com.gather.android.wxpay.MD5;
 import com.gather.android.wxpay.Util;
+import com.google.gson.Gson;
 import com.tencent.mm.sdk.modelpay.PayReq;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
 
+import org.apache.http.Header;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.StringReader;
@@ -46,6 +55,8 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
     TextView show;
     Map<String, String> resultunifiedorder;
     StringBuffer sb;
+    CreateOrderModel model;
+    LoadingDialog mLoadingDialog;
 
     @Override
     protected int layoutResId() {
@@ -68,6 +79,7 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
         this.ivLeft.setOnClickListener(this);
 
 
+        this.mLoadingDialog = LoadingDialog.createDialog(WXPayTest.this, true);
         show = (TextView) findViewById(R.id.editText_prepay_id);
         req = new PayReq();
         sb = new StringBuffer();
@@ -87,7 +99,8 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
 
             @Override
             public void onClick(View v) {
-                sendPayReq();
+                genPayReq();
+    //            sendPayReq();
             }
         });
 
@@ -100,6 +113,8 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
                 genPayReq();
             }
         });
+
+        CreateOrder();
     }
 
 
@@ -285,9 +300,12 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
 
         req.appId = Constant.WE_CHAT_APPID;
         req.partnerId = Constant.MCH_ID;
-        req.prepayId = resultunifiedorder.get("prepay_id");
-        req.packageValue = "prepay_id=" + resultunifiedorder.get("prepay_id");
-        req.nonceStr = genNonceStr();
+        req.prepayId = model.getWx().getPrepay_id();
+     //   req.prepayId = resultunifiedorder.get("prepay_id");
+     //   req.packageValue = "prepay_id=" + resultunifiedorder.get("prepay_id");
+        req.packageValue = "prepay_id=" + model.getWx().getPrepay_id();
+     //   req.nonceStr = genNonceStr();
+        req.nonceStr = model.getWx().getNonce_str();
         req.timeStamp = String.valueOf(genTimeStamp());
 
         List<NameValuePair> signParams = new LinkedList<NameValuePair>();
@@ -299,12 +317,16 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
         signParams.add(new BasicNameValuePair("timestamp", req.timeStamp));
 
         req.sign = genAppSign(signParams);
+     //   req.sign = model.getWx().getSign();
 
         sb.append("sign\n" + req.sign + "\n\n");
 
         show.setText(sb.toString());
 
         Log.e("orion", signParams.toString());
+
+        toast("签名成功，马上微信支付");
+        sendPayReq();
 
     }
 
@@ -320,5 +342,38 @@ public class WXPayTest extends SwipeBackActivity implements View.OnClickListener
                 finish();
                 break;
         }
+    }
+
+    private void CreateOrder() {
+        mLoadingDialog.setMessage("下单中...");
+        mLoadingDialog.show();
+        ActCreateOrderParam param = new ActCreateOrderParam(1,1,2);
+        AsyncHttpTask.post(param.getUrl(), param, new ResponseHandler() {
+            @Override
+            public void onResponseSuccess(int returnCode, Header[] headers, String result) {
+                mLoadingDialog.dismiss();
+                toast("下订单成功\n" + result);
+                Gson gson = new Gson();
+                try {
+                    JSONObject object = new JSONObject(result);
+                    model = gson.fromJson(object.getString("order"), CreateOrderModel.class);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onNeedLogin(String msg) {
+                mLoadingDialog.dismiss();
+                toast("重新登录");
+            }
+
+            @Override
+            public void onResponseFailed(int returnCode, String errorMsg) {
+                mLoadingDialog.dismiss();
+                toast("下订单失败   returnCode=" + returnCode);
+            }
+        });
     }
 }

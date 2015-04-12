@@ -12,6 +12,7 @@
 
 
     <Button
+        android:visibility="gone"
         android:id="@+id/unifiedorder_btn"
         style="@style/MMLineActionButton"
         android:layout_margin="10dp"
@@ -20,6 +21,7 @@
 
 
     <Button
+        android:visibility="gone"
         android:id="@+id/appay_pre_btn"
         style="@style/MMLineActionButton"
         android:layout_margin="10dp"
